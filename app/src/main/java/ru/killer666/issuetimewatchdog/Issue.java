@@ -12,13 +12,16 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString
 public class Issue extends SugarRecord implements Serializable, Comparable<Issue> {
     public static final int TIME_RECORD_SHOW_LIMIT = 7;
 
+    private Long id;
     private String name;
     private String description;
 
@@ -46,6 +49,6 @@ public class Issue extends SugarRecord implements Serializable, Comparable<Issue
         TimeRecord timeRecord = this.getLastTimeRecord();
         TimeRecord timeRecordAnother = another.getLastTimeRecord();
 
-        return timeRecord == null ? -1 : (timeRecordAnother == null ? 1 : (timeRecord.compareTo(timeRecordAnother)));
+        return timeRecord == null ? 1 : (timeRecordAnother == null ? -1 : (timeRecord.compareTo(timeRecordAnother)));
     }
 }

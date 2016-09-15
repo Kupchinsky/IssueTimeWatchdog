@@ -25,6 +25,7 @@ import com.orm.SugarRecord;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -78,22 +79,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         EventBus.getDefault().register(this);
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTimeRecordUpdated(WatchdogService.TimeRecordUpdatedEvent event) {
-        this.listAdapter.notifyItemChanged(this.items.indexOf(event.getTimeRecord()));
+        Issue issue = this.wrapIssue(event.getTimeRecord().getIssue());
+        this.listAdapter.notifyItemChanged(this.items.indexOf(issue));
     }
 
-    @Subscribe
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void onTimeRecordUsing(WatchdogService.TimeRecordUsingEvent event) {
-        Issue issue = event.getTimeRecord().getIssue();
+        Issue issue = this.wrapIssue(event.getTimeRecord().getIssue());
         int position = this.items.indexOf(issue);
 
-        if (position != 0) {
+        if (issue.getState() != IssueState.Working) {
+            issue.setState(IssueState.Working);
+            this.listAdapter.notifyItemChanged(position);
+        }
+
+        if (position > 0) {
             this.items.remove(position);
             this.items.add(0, issue);
 
             this.listAdapter.notifyItemMoved(position, 0);
         }
+    }
+
+    // ORM не регистрирует конкретные объекты, поэтому ищем подходящий по id в items
+    private Issue wrapIssue(Issue issue) {
+        for (Issue checkIssue : this.items) {
+            if (checkIssue.getId().equals(issue.getId())) {
+                return checkIssue;
+            }
+        }
+
+        throw new IllegalStateException("Equal issue not found " + issue);
     }
 
     @Override
@@ -248,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            Issue issue = (Issue) item.getIntent().getSerializableExtra("issue");
+            Issue issue = MainActivity.this.wrapIssue((Issue) item.getIntent().getSerializableExtra("issue"));
 
             switch (item.getItemId()) {
                 case R.id.action_timerecord: {
@@ -260,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         MainActivity.this.stopService(new Intent(MainActivity.this, WatchdogService.class));
 
                         issue.setState(IssueState.Idle);
+                        this.showTimeRecord(issue);
                     } else {
                         for (Issue checkIssue : this.items) {
                             if (checkIssue.getState() == IssueState.Working) {

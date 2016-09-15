@@ -16,6 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class TimeRecord extends SugarRecord implements Serializable, Comparable<TimeRecord> {
+    private Long id;
     private Issue issue;
     private Date date;
     private float workedTime;

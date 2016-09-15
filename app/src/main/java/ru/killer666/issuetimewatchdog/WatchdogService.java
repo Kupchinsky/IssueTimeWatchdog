@@ -132,7 +132,7 @@ public class WatchdogService extends Service {
 
         EventBus.getDefault().postSticky(new TimeRecordUsingEvent(this.timeRecord));
 
-        return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     @Override
