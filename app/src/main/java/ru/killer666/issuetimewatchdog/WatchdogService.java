@@ -14,6 +14,8 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.Calendar;
 import java.util.Date;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
 
 public class WatchdogService extends Service {
@@ -71,6 +73,8 @@ public class WatchdogService extends Service {
 
                 WatchdogService.this.timeRecord = new TimeRecord(WatchdogService.this.timeRecord.getIssue());
 
+                EventBus.getDefault().postSticky(new TimeRecordUsingEvent(WatchdogService.this.timeRecord));
+
                 // Высчитываем сколько времени не было учтено после начала нового дня
                 increaseTime = this.convertToHours(WatchdogService.this.currentTime() -
                         this.getStartOfDay(WatchdogService.this.timeRecord.getDate()).getTime());
@@ -107,6 +111,8 @@ public class WatchdogService extends Service {
 
         this.handler.removeCallbacks(this.runnable);
         this.stopForeground(true);
+
+        EventBus.getDefault().removeStickyEvent(TimeRecordUsingEvent.class);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -124,6 +130,8 @@ public class WatchdogService extends Service {
 
         this.startForeground(1000, notification);
 
+        EventBus.getDefault().postSticky(new TimeRecordUsingEvent(this.timeRecord));
+
         return START_STICKY;
     }
 
@@ -132,16 +140,17 @@ public class WatchdogService extends Service {
         throw new UnsupportedOperationException();
     }
 
+    @AllArgsConstructor
+    @Getter
     public static class TimeRecordUpdatedEvent {
         @NonNull
         private TimeRecord timeRecord;
+    }
 
-        public TimeRecordUpdatedEvent(TimeRecord timeRecord) {
-            this.timeRecord = timeRecord;
-        }
-
-        public TimeRecord getTimeRecord() {
-            return timeRecord;
-        }
+    @AllArgsConstructor
+    @Getter
+    public static class TimeRecordUsingEvent {
+        @NonNull
+        private TimeRecord timeRecord;
     }
 }

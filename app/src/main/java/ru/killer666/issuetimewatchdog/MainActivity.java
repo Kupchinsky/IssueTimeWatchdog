@@ -83,6 +83,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.listAdapter.notifyItemChanged(this.items.indexOf(event.getTimeRecord()));
     }
 
+    @Subscribe
+    public void onTimeRecordUsing(WatchdogService.TimeRecordUsingEvent event) {
+        Issue issue = event.getTimeRecord().getIssue();
+        int position = this.items.indexOf(issue);
+
+        if (position != 0) {
+            this.items.remove(position);
+            this.items.add(0, issue);
+
+            this.listAdapter.notifyItemMoved(position, 0);
+        }
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -211,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private String formatTimeRecordHistory(TimeRecord timeRecord) {
             return (DateUtils.isToday(timeRecord.getDate().getTime()) ? "<b>Today</b>" :
                     this.dateTimeFormatter.format(timeRecord.getDate())) + ": " +
-                    this.numberFormat.format(timeRecord.getWorkedTime()) + "hrs.";
+                    this.numberFormat.format(timeRecord.getWorkedTime()) + " hrs.";
         }
 
         @Override
