@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="ru.killer666.issuetimewatchdog.MainActivity">
+
+    <item
+        android:id="@+id/action_timerecord"
+        android:title="Time record" />
+    <item
+        android:id="@+id/action_switchstate"
+        android:title="Start/stop working" />
+    <item
+        android:id="@+id/action_removeissue"
+        android:title="Remove issue" />
+</menu>
