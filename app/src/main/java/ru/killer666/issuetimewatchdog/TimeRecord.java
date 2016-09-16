@@ -4,31 +4,31 @@ import android.support.annotation.NonNull;
 
 import com.orm.SugarRecord;
 
-import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class TimeRecord extends SugarRecord implements Serializable, Comparable<TimeRecord> {
-    private Long id;
+@ToString
+public class TimeRecord extends SugarRecord implements Comparable<TimeRecord> {
     private Issue issue;
     private Date date;
     private float workedTime;
 
     public TimeRecord(Issue issue) {
         this.issue = issue;
-        this.date = Calendar.getInstance().getTime();
+        this.date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
     public void increaseWorkedTime(float value) {
         this.workedTime += value;
-        SugarRecord.save(this);
+        this.save();
     }
 
     @Override

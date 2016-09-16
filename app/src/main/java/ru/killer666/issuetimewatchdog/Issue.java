@@ -6,7 +6,6 @@ import com.google.common.collect.Iterables;
 import com.orm.SugarRecord;
 import com.orm.dsl.Ignore;
 
-import java.io.Serializable;
 import java.util.List;
 
 import lombok.Getter;
@@ -18,10 +17,9 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class Issue extends SugarRecord implements Serializable, Comparable<Issue> {
+public class Issue extends SugarRecord implements Comparable<Issue> {
     public static final int TIME_RECORD_SHOW_LIMIT = 7;
 
-    private Long id;
     private String name;
     private String description;
 

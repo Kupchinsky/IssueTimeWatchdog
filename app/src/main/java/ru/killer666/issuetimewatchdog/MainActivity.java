@@ -26,6 +26,8 @@ import com.orm.SugarRecord;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -37,6 +39,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final Logger logger = LoggerFactory.getLogger(MainActivity.class.getSimpleName());
+
     private final List<Issue> items = Lists.newArrayList();
     private IssueEntryAdapter listAdapter;
 
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -81,19 +86,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTimeRecordUpdated(WatchdogService.TimeRecordUpdatedEvent event) {
-        Issue issue = this.wrapIssue(event.getTimeRecord().getIssue());
+        TimeRecord timeRecord = SugarRecord.findById(TimeRecord.class, event.getTimeRecordId());
+        Issue issue = this.findIssueById(timeRecord.getIssue().getId());
+
         this.listAdapter.notifyItemChanged(this.items.indexOf(issue));
+    }
+
+    private Issue findIssueById(long id) {
+        for (Issue issue : this.items) {
+            if (id == issue.getId()) {
+                return issue;
+            }
+        }
+
+        throw new IllegalStateException();
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void onTimeRecordUsing(WatchdogService.TimeRecordUsingEvent event) {
-        Issue issue = this.wrapIssue(event.getTimeRecord().getIssue());
+        TimeRecord timeRecord = SugarRecord.findById(TimeRecord.class, event.getTimeRecordId());
+        Issue issue = this.findIssueById(timeRecord.getIssue().getId());
+
         int position = this.items.indexOf(issue);
 
         if (issue.getState() != IssueState.Working) {
             issue.setState(IssueState.Working);
-            this.listAdapter.notifyItemChanged(position);
         }
+
+        this.listAdapter.notifyItemChanged(position);
 
         if (position > 0) {
             this.items.remove(position);
@@ -101,17 +121,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             this.listAdapter.notifyItemMoved(position, 0);
         }
-    }
-
-    // ORM не регистрирует конкретные объекты, поэтому ищем подходящий по id в items
-    private Issue wrapIssue(Issue issue) {
-        for (Issue checkIssue : this.items) {
-            if (checkIssue.getId().equals(issue.getId())) {
-                return checkIssue;
-            }
-        }
-
-        throw new IllegalStateException("Equal issue not found " + issue);
     }
 
     @Override
@@ -189,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         MainActivity.this.items.remove(position);
                         MainActivity.this.listAdapter.notifyItemRemoved(position);
 
-                        SugarRecord.delete(issue);
+                        issue.delete();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -206,6 +215,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private final List<Issue> items;
         private final NumberFormat numberFormat = new DecimalFormat();
         private final DateFormat dateTimeFormatter = DateFormat.getDateInstance();
+
+        private static final String EXTRA_ISSUE_POSITION = "issuePosition";
 
         {
             this.numberFormat.setMaximumFractionDigits(2);
@@ -266,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            Issue issue = MainActivity.this.wrapIssue((Issue) item.getIntent().getSerializableExtra("issue"));
+            Issue issue = this.items.get(item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1));
 
             switch (item.getItemId()) {
                 case R.id.action_timerecord: {
@@ -295,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         if (timeRecord == null || !DateUtils.isToday(timeRecord.getDate().getTime())) {
                             timeRecord = new TimeRecord(issue);
-                            SugarRecord.save(timeRecord);
+                            timeRecord.save();
                         }
 
                         issue.setState(IssueState.Working);
@@ -308,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         this.notifyItemMoved(position, 0);
 
                         MainActivity.this.startService(new Intent(MainActivity.this, WatchdogService.class)
-                                .putExtra(WatchdogService.EXTRA_TIME_RECORD, timeRecord));
+                                .putExtra(WatchdogService.EXTRA_TIME_RECORD_ID, timeRecord.getId()));
                     }
 
                     this.notifyItemChanged(this.items.indexOf(issue));
@@ -331,11 +342,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             popup.getMenuInflater().inflate(R.menu.menu_issue, popup.getMenu());
 
             int position = MainActivity.this.recyclerView.getChildViewHolder(v).getAdapterPosition();
-            Issue issue = this.items.get(position);
 
             for (int i = 0; i < popup.getMenu().size(); i++) {
                 popup.getMenu().getItem(i).setIntent(new Intent(MainActivity.this, MainActivity.class)
-                        .putExtra("issue", issue));
+                        .putExtra(EXTRA_ISSUE_POSITION, position));
             }
 
             popup.show();

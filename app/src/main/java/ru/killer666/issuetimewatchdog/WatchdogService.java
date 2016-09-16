@@ -9,83 +9,75 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 
+import com.orm.SugarRecord;
+
 import org.greenrobot.eventbus.EventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 
 public class WatchdogService extends Service {
+    private static final Logger logger = LoggerFactory.getLogger(WatchdogService.class.getSimpleName());
+
     private static final int TIME_RECORD_DELAY = 60;
     private static final int TIME_RECORD_DELAY_MS = TIME_RECORD_DELAY * 1000;
 
-    public static final String EXTRA_TIME_RECORD = "timeRecord";
+    public static final String EXTRA_TIME_RECORD_ID = "timeRecordId";
 
     private TimeRecord timeRecord;
 
     private long postTime;
     private Handler handler = new Handler();
     private Runnable runnable = new Runnable() {
-        private Date getEndOfDay(Date date) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            calendar.set(Calendar.HOUR_OF_DAY, 23);
-            calendar.set(Calendar.MINUTE, 59);
-            calendar.set(Calendar.SECOND, 59);
-            calendar.set(Calendar.MILLISECOND, 999);
-
-            return calendar.getTime();
-        }
-
-        private Date getStartOfDay(Date date) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-
-            return calendar.getTime();
-        }
-
         private float convertToHours(long time) {
             return time / TIME_RECORD_DELAY_MS / (float) TIME_RECORD_DELAY;
         }
 
         @Override
         public void run() {
+            logger.info("Running watcher");
+
             float increaseTime;
+            boolean isToday = DateUtils.isToday(WatchdogService.this.timeRecord.getDate().getTime());
+
+            logger.info("Time record: {}", WatchdogService.this.timeRecord);
+            logger.info("isToday: {}", isToday);
 
             // Если день сменился, то создаём новый TimeRecord
-            if (!DateUtils.isToday(WatchdogService.this.timeRecord.getDate().getTime())) {
+            if (!isToday) {
                 TimeRecord prevDayTimeRecord = WatchdogService.this.timeRecord;
 
                 // Высчитываем сколько времени не было учтено до конца дня
-                float prevDayIncreaseTime = this.convertToHours(this.getEndOfDay(prevDayTimeRecord.getDate()).getTime() -
+                float prevDayIncreaseTime = this.convertToHours(MyDateUtils.getEndOfDay(prevDayTimeRecord.getDate()).getTime() -
                         WatchdogService.this.postTime);
 
                 if (prevDayIncreaseTime > 0) {
+                    logger.info("Increased time: {}", prevDayIncreaseTime);
                     prevDayTimeRecord.increaseWorkedTime(prevDayIncreaseTime);
                 }
 
                 WatchdogService.this.timeRecord = new TimeRecord(WatchdogService.this.timeRecord.getIssue());
 
-                EventBus.getDefault().postSticky(new TimeRecordUsingEvent(WatchdogService.this.timeRecord));
+                EventBus.getDefault().postSticky(new TimeRecordUsingEvent(WatchdogService.this.timeRecord.getId()));
 
                 // Высчитываем сколько времени не было учтено после начала нового дня
                 increaseTime = this.convertToHours(WatchdogService.this.currentTime() -
-                        this.getStartOfDay(WatchdogService.this.timeRecord.getDate()).getTime());
+                        MyDateUtils.getStartOfDay(WatchdogService.this.timeRecord.getDate()).getTime());
+
+                logger.info("Created new time record: {}", WatchdogService.this.timeRecord);
             } else {
                 // Высчитываем прошедшее время, если вдруг телефон заснул
                 increaseTime = this.convertToHours(WatchdogService.this.currentTime() -
                         WatchdogService.this.postTime);
             }
 
+            logger.info("Increased time: {}", increaseTime);
             WatchdogService.this.timeRecord.increaseWorkedTime(increaseTime);
-            EventBus.getDefault().post(new TimeRecordUpdatedEvent(WatchdogService.this.timeRecord));
+            EventBus.getDefault().post(new TimeRecordUpdatedEvent(WatchdogService.this.timeRecord.getId()));
 
             WatchdogService.this.postDelayed();
         }
@@ -116,7 +108,11 @@ public class WatchdogService extends Service {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.timeRecord = (TimeRecord) intent.getSerializableExtra(EXTRA_TIME_RECORD);
+        logger.info("Intent extras: {}", intent.getExtras().keySet());
+
+        this.timeRecord = SugarRecord.findById(TimeRecord.class, intent.getLongExtra(EXTRA_TIME_RECORD_ID, -1));
+        logger.info("Time record loaded: {}", this.timeRecord);
+
         this.postDelayed();
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -130,7 +126,7 @@ public class WatchdogService extends Service {
 
         this.startForeground(1000, notification);
 
-        EventBus.getDefault().postSticky(new TimeRecordUsingEvent(this.timeRecord));
+        EventBus.getDefault().postSticky(new TimeRecordUsingEvent(this.timeRecord.getId()));
 
         return START_REDELIVER_INTENT;
     }
@@ -143,14 +139,12 @@ public class WatchdogService extends Service {
     @AllArgsConstructor
     @Getter
     public static class TimeRecordUpdatedEvent {
-        @NonNull
-        private TimeRecord timeRecord;
+        private long timeRecordId;
     }
 
     @AllArgsConstructor
     @Getter
     public static class TimeRecordUsingEvent {
-        @NonNull
-        private TimeRecord timeRecord;
+        private long timeRecordId;
     }
 }
