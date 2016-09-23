@@ -16,17 +16,28 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class TimeRecord extends SugarRecord implements Comparable<TimeRecord> {
+public class TimeRecord extends SugarRecord implements Comparable<TimeRecord>, TrackorType {
+    @TrackorField
     private Issue issue;
+
+    @TrackorField("VQS_IT_WORK_DATE")
     private Date date;
+
+    @TrackorField("VQS_IT_SPENT_HOURS")
     private float workedTime;
 
-    public TimeRecord(Issue issue) {
+    @TrackorField(TrackorType.ID)
+    private Long trackorId;
+
+    @TrackorField(TrackorType.KEY)
+    private String trackorKey;
+
+    TimeRecord(Issue issue) {
         this.issue = issue;
         this.date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
-    public void increaseWorkedTime(float value) {
+    void increaseWorkedTime(float value) {
         this.workedTime += value;
         this.save();
     }
@@ -34,5 +45,10 @@ public class TimeRecord extends SugarRecord implements Comparable<TimeRecord> {
     @Override
     public int compareTo(@NonNull TimeRecord another) {
         return another.getDate().compareTo(this.getDate());
+    }
+
+    @Override
+    public String getTrackorName() {
+        return "Time_Record";
     }
 }

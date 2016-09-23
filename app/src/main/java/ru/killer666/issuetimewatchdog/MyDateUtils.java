@@ -3,8 +3,8 @@ package ru.killer666.issuetimewatchdog;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MyDateUtils {
-    public static Date getEndOfDay(Date date) {
+class MyDateUtils {
+    static Date getEndOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, 23);
@@ -15,7 +15,7 @@ public class MyDateUtils {
         return calendar.getTime();
     }
 
-    public static Date getStartOfDay(Date date) {
+    static Date getStartOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, 0);

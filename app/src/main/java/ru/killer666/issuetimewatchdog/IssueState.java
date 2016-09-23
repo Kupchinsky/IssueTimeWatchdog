@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum IssueState {
+enum IssueState {
     Working("working now"), Idle("idle");
 
     @Getter
