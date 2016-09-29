@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.killer666.issuetimewatchdog">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".Application"
         android:allowBackup="true"
@@ -37,9 +42,19 @@
             android:name=".WatchdogService"
             android:enabled="true"
             android:exported="false" />
-        <service
-            android:name=".TrackorApiService"
-            android:exported="false"></service>
+
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".SelectFilterActivity" />
+        <activity android:name=".SelectIssueActivity" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -3,9 +3,7 @@ package ru.killer666.issuetimewatchdog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -20,14 +18,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.orm.SugarRecord;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -37,29 +34,26 @@ import java.util.Iterator;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import roboguice.inject.ContentView;
+import roboguice.inject.InjectView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final Logger logger = LoggerFactory.getLogger(MainActivity.class.getSimpleName());
-
+@ContentView(R.layout.activity_main)
+public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
     private final List<Issue> items = Lists.newArrayList();
     private IssueEntryAdapter listAdapter;
 
+    @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(this);
-
         this.listAdapter = new IssueEntryAdapter(this.items);
 
-        this.recyclerView = (RecyclerView) this.findViewById(R.id.recyclerView);
         this.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         this.recyclerView.setAdapter(this.listAdapter);
 
@@ -123,28 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.fab: {
-
-                // Create issue
-                this.askNewIssueDialog(new Callable<Issue>() {
-                    @Override
-                    public void result(Issue issue) {
-                        issue.save();
-
-                        MainActivity.this.items.add(issue);
-                        MainActivity.this.listAdapter.notifyItemInserted(MainActivity.this.items.size() - 1);
-                    }
-                });
-
-                break;
-            }
-        }
-    }
-
-    private void askNewIssueDialog(final Callable<Issue> callable) {
+    private void askNewIssueDialog(final Function<Issue, Void> callable) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -168,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         issue.setName(input1.getText().toString());
                         issue.setDescription(input2.getText().toString());
 
-                        callable.result(issue);
+                        callable.apply(issue);
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -208,6 +181,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 })
                 .show();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.fab: {
+
+                // Create issue
+                this.askNewIssueDialog(new Function<Issue, Void>() {
+                    @Override
+                    public Void apply(Issue issue) {
+                        issue.save();
+
+                        MainActivity.this.items.add(issue);
+                        MainActivity.this.listAdapter.notifyItemInserted(MainActivity.this.items.size() - 1);
+
+                        return null;
+                    }
+                });
+
+                break;
+            }
+        }
     }
 
     @RequiredArgsConstructor
@@ -323,10 +319,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     this.notifyItemChanged(this.items.indexOf(issue));
-                    break;
-                }
-                case R.id.action_removeissue: {
-                    MainActivity.this.askRemoveIssueDialog(issue);
                     break;
                 }
             }

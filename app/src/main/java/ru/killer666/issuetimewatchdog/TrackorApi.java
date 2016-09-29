@@ -1,8 +1,5 @@
 package ru.killer666.issuetimewatchdog;
 
-import android.app.IntentService;
-import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Pair;
 
@@ -12,20 +9,26 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
 
 import java.lang.reflect.Field;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class TrackorApiService extends IntentService {
+public class TrackorApi {
     private static final Gson gson = new Gson();
 
     static class ReadFilters extends AsyncTask<Class<? extends TrackorType>, Void, Multimap<Class<? extends TrackorType>, String>> {
         private static final String URL = Application.TRACKOR_BASEURL + "/api/v2/TRACKOR_BROWSER/filters";
+
+        @Inject
+        private OkHttpClient httpClient;
 
         @SafeVarargs
         @Override
@@ -40,7 +43,7 @@ public class TrackorApiService extends IntentService {
                             .addQueryParameter("trackor_type", TrackorTypeObjectConverter.getTrackorTypeNamesMap().get(typeClass))
                             .build();
 
-                    Response response = Application.getHttpClient().newCall(new Request.Builder()
+                    Response response = this.httpClient.newCall(new Request.Builder()
                             .url(httpUrl)
                             .get()
                             .build()).execute();
@@ -66,6 +69,9 @@ public class TrackorApiService extends IntentService {
     static class ReadTrackorData extends AsyncTask<Pair<String, Class<? extends TrackorType>>, Void, Multimap<Class<? extends TrackorType>, TrackorType>> {
         private static final String URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/{0}?filter={1}";
 
+        @Inject
+        private OkHttpClient httpClient;
+
         @SafeVarargs
         @Override
         protected final Multimap<Class<? extends TrackorType>, TrackorType> doInBackground(Pair<String, Class<? extends TrackorType>>... params) {
@@ -80,7 +86,7 @@ public class TrackorApiService extends IntentService {
                             .addQueryParameter("filter", pair.first)
                             .build();
 
-                    Response response = Application.getHttpClient().newCall(new Request.Builder()
+                    Response response = this.httpClient.newCall(new Request.Builder()
                             .url(httpUrl)
                             .get()
                             .build()).execute();
@@ -105,6 +111,9 @@ public class TrackorApiService extends IntentService {
     static class CreateOrUpdateTrackorData extends AsyncTask<Pair<TrackorType, TrackorTypeObjectConverter.FieldFilter>, Void, Void> {
         private static final String BASE_URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/";
         private static final MediaType JSON = MediaType.parse("application/json");
+
+        @Inject
+        private OkHttpClient httpClient;
 
         @SafeVarargs
         @Override
@@ -165,7 +174,7 @@ public class TrackorApiService extends IntentService {
                     HttpUrl httpUrl = httpUrlBuilder.build();
                     RequestBody requestBody = RequestBody.create(JSON, jsonObject.toString());
 
-                    Response response = Application.getHttpClient().newCall(new Request.Builder()
+                    Response response = this.httpClient.newCall(new Request.Builder()
                             .url(httpUrl)
                             .method(hasKey ? "PUT" : "POST", requestBody)
                             .build()
@@ -184,82 +193,5 @@ public class TrackorApiService extends IntentService {
 
             return null;
         }
-    }
-
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "ru.killer666.issuetimewatchdog.action.FOO";
-    private static final String ACTION_BAZ = "ru.killer666.issuetimewatchdog.action.BAZ";
-
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "ru.killer666.issuetimewatchdog.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "ru.killer666.issuetimewatchdog.extra.PARAM2";
-
-    public TrackorApiService() {
-        super("TrackorApiService");
-    }
-
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, TrackorApiService.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, TrackorApiService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
-            }
-        }
-    }
-
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }

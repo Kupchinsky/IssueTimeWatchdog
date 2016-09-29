@@ -13,7 +13,6 @@ import com.orm.SugarRecord;
 
 import org.greenrobot.eventbus.EventBus;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
 
@@ -21,7 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class WatchdogService extends Service {
-    private static final Logger logger = LoggerFactory.getLogger(WatchdogService.class.getSimpleName());
+    private static Logger logger;
 
     private static final int TIME_RECORD_DELAY = 60;
     private static final int TIME_RECORD_DELAY_MS = TIME_RECORD_DELAY * 1000;
