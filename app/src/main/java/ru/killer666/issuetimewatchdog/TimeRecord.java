@@ -2,7 +2,8 @@ package ru.killer666.issuetimewatchdog;
 
 import android.support.annotation.NonNull;
 
-import com.orm.SugarRecord;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -16,20 +17,29 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class TimeRecord extends SugarRecord implements Comparable<TimeRecord>, TrackorType {
+@DatabaseTable(daoClass = TimeRecordDao.class)
+public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
+    @DatabaseField(generatedId = true)
+    private int id;
+
     @TrackorField
+    @DatabaseField
     private Issue issue;
 
     @TrackorField("VQS_IT_WORK_DATE")
+    @DatabaseField
     private Date date;
 
     @TrackorField("VQS_IT_SPENT_HOURS")
+    @DatabaseField
     private float workedTime;
 
     @TrackorField(TrackorType.ID)
+    @DatabaseField
     private Long trackorId;
 
     @TrackorField(TrackorType.KEY)
+    @DatabaseField
     private String trackorKey;
 
     TimeRecord(Issue issue) {
@@ -39,7 +49,6 @@ public class TimeRecord extends SugarRecord implements Comparable<TimeRecord>, T
 
     void increaseWorkedTime(float value) {
         this.workedTime += value;
-        this.save();
     }
 
     @Override

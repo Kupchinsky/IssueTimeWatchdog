@@ -22,7 +22,7 @@ import android.widget.TextView;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.orm.SugarRecord;
+import com.google.inject.Inject;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -32,7 +32,6 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -42,12 +41,14 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     private final List<Issue> items = Lists.newArrayList();
     private IssueEntryAdapter listAdapter;
 
-    @InjectView(R.id.recyclerView)
-    private RecyclerView recyclerView;
+    @Inject
+    private IssueDao issueDao;
+    @Inject
+    private Issue.Comparator issueComparator;
 
+    private RecyclerView recyclerView;
     @InjectView(R.id.toolbar)
     private Toolbar toolbar;
-
     @InjectView(R.id.fab)
     private FloatingActionButton fab;
 
@@ -65,13 +66,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         this.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         this.recyclerView.setAdapter(this.listAdapter);
 
-        Iterator<Issue> iterator = SugarRecord.findAll(Issue.class);
-
-        while (iterator.hasNext()) {
-            this.items.add(iterator.next());
-        }
-
-        Collections.sort(this.items);
+        this.items.addAll(this.issueDao.queryForAll());
+        Collections.sort(this.items, this.issueComparator);
     }
 
     @Override
@@ -87,11 +83,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onTimeRecordUpdated(WatchdogService.TimeRecordUpdatedEvent event) {
-        TimeRecord timeRecord = SugarRecord.findById(TimeRecord.class, event.getTimeRecordId());
-        Issue issue = this.findIssueById(timeRecord.getIssue().getId());
-
-        this.listAdapter.notifyItemChanged(this.items.indexOf(issue));
+    public void onTimeRecordUpdated(WatchdogService.OnTimeRecordUpdatedEvent event) {
+        this.listAdapter.notifyItemChanged(this.items.indexOf(event.getTimeRecord().getIssue()));
     }
 
     private Issue findIssueById(long id) {
@@ -105,9 +98,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    public void onTimeRecordUsing(WatchdogService.TimeRecordUsingEvent event) {
-        TimeRecord timeRecord = SugarRecord.findById(TimeRecord.class, event.getTimeRecordId());
-        Issue issue = this.findIssueById(timeRecord.getIssue().getId());
+    public void onTimeRecordUsing(WatchdogService.OnTimeRecordUsingEvent event) {
+        Issue issue = event.getTimeRecord().getIssue();
 
         int position = this.items.indexOf(issue);
 
@@ -142,15 +134,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         builder
                 .setTitle("New issue")
                 .setView(layout)
-                .setPositiveButton("Create", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Issue issue = new Issue();
-                        issue.setName(input1.getText().toString());
-                        issue.setDescription(input2.getText().toString());
+                .setPositiveButton("Create", (dialog, which) -> {
+                    Issue issue = new Issue();
+                    issue.setName(input1.getText().toString());
+                    issue.setDescription(input2.getText().toString());
 
-                        callable.apply(issue);
-                    }
+                    callable.apply(issue);
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override

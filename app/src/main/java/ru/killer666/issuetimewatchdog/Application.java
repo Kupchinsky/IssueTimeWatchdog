@@ -7,7 +7,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import com.orm.SugarContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        SugarContext.init(this);
         RoboGuice.overrideApplicationInjector(this, new MyModule());
     }
 
@@ -36,6 +34,9 @@ public class Application extends android.app.Application {
         public void configure(Binder binder) {
             binder.bindListener(Matchers.any(), new LoggerTypeListener());
             binder.bind(OkHttpClient.class).toProvider(HttpClientProvider.class);
+
+            binder.bind(IssueDao.class).toProvider(DaoProvider.IssueProvider.class);
+            binder.bind(TimeRecordDao.class).toProvider(DaoProvider.TimeRecordProvider.class);
         }
     }
 

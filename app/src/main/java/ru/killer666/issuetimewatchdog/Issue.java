@@ -1,12 +1,9 @@
 package ru.killer666.issuetimewatchdog;
 
-import android.support.annotation.NonNull;
-
-import com.google.common.collect.Iterables;
-import com.orm.SugarRecord;
-import com.orm.dsl.Ignore;
-
-import java.util.List;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,43 +14,27 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class Issue extends SugarRecord implements Comparable<Issue>, TrackorType {
-    public static final int TIME_RECORD_SHOW_LIMIT = 7;
+@DatabaseTable(daoClass = IssueDao.class)
+public class Issue implements TrackorType {
+    @DatabaseField(generatedId = true)
+    private int id;
 
     @TrackorField(TrackorType.KEY)
+    @DatabaseField
     private String name;
 
     @TrackorField("VQS_IT_XITOR_NAME")
+    @DatabaseField
     private String description;
 
     @TrackorField(TrackorType.ID)
+    @DatabaseField
     private Long trackorId;
 
-    @Ignore
     private IssueState state = IssueState.Idle;
 
     String getReadableName() {
         return name + " (" + description + ")";
-    }
-
-    List<TimeRecord> getLastTimeRecords() {
-        return SugarRecord.find(TimeRecord.class, "issue = ?",
-                new String[]{String.valueOf(this.getId())}, null, "date DESC",
-                String.valueOf(TIME_RECORD_SHOW_LIMIT));
-    }
-
-    TimeRecord getLastTimeRecord() {
-        return Iterables.getFirst(SugarRecord.find(TimeRecord.class, "issue = ?",
-                new String[]{String.valueOf(this.getId())}, null, "date DESC",
-                String.valueOf(1)), null);
-    }
-
-    @Override
-    public int compareTo(@NonNull Issue another) {
-        TimeRecord timeRecord = this.getLastTimeRecord();
-        TimeRecord timeRecordAnother = another.getLastTimeRecord();
-
-        return timeRecord == null ? 1 : (timeRecordAnother == null ? -1 : (timeRecord.compareTo(timeRecordAnother)));
     }
 
     @Override
@@ -64,5 +45,19 @@ public class Issue extends SugarRecord implements Comparable<Issue>, TrackorType
     @Override
     public String getTrackorKey() {
         return this.name;
+    }
+
+    @Singleton
+    static class Comparator implements java.util.Comparator<Issue> {
+        @Inject
+        private TimeRecordDao timeRecordDao;
+
+        @Override
+        public int compare(Issue lhs, Issue rhs) {
+            TimeRecord timeRecordLhs = this.timeRecordDao.getLastOfIssue(lhs);
+            TimeRecord timeRecordRhs = this.timeRecordDao.getLastOfIssue(rhs);
+
+            return timeRecordLhs == null ? 1 : (timeRecordRhs == null ? -1 : (timeRecordLhs.compareTo(timeRecordRhs)));
+        }
     }
 }

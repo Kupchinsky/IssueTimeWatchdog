@@ -8,6 +8,8 @@ import com.google.gson.JsonElement;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+
 import java.util.List;
 
 import okhttp3.Call;
@@ -19,6 +21,8 @@ import rx.Observable;
 
 @Singleton
 public class TrackorApiService {
+    private static Logger logger;
+
     private final Gson gson = new Gson();
 
     @Inject
@@ -54,6 +58,7 @@ public class TrackorApiService {
                 subscriber.onNext(result);
                 subscriber.onCompleted();
             } catch (Exception e) {
+                logger.error("Request exception", e);
                 subscriber.onError(e);
             }
         });
