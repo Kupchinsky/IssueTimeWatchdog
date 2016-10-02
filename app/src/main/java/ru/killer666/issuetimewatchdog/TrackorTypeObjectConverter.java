@@ -258,7 +258,7 @@ class TrackorTypeObjectConverter {
                 }
             }
 
-            Preconditions.checkState(instance.getTrackorKey() != null && !instance.getTrackorKey().isEmpty(), "Trackor xitor_key is empty");
+            Preconditions.checkState(instance.getTrackorKey() != null && !instance.getTrackorKey().isEmpty(), "Trackor key is empty");
 
             return instance;
         }

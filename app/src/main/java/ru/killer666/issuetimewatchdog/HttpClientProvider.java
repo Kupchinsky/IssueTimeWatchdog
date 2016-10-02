@@ -1,9 +1,8 @@
 package ru.killer666.issuetimewatchdog;
 
-import android.util.Log;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 
@@ -24,11 +23,14 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
     @Inject
     private LoginCredentials loginCredentials;
 
+    @Inject
+    private LoggingInterceptor loggingInterceptor;
+
     @Override
     public OkHttpClient get() {
         return new OkHttpClient.Builder()
                 .addInterceptor(new BasicAuthInterceptor())
-                .addInterceptor(new LoggingInterceptor())
+                .addInterceptor(this.loggingInterceptor)
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
@@ -58,7 +60,9 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
         }
     }
 
-    public class LoggingInterceptor implements Interceptor {
+    @Singleton
+    public static class LoggingInterceptor implements Interceptor {
+        private static Logger logger;
 
         private static final String F_BREAK = " %n";
         private static final String F_URL = " %s";
@@ -90,14 +94,19 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
 
             double time = (t2 - t1) / 1e6d;
 
-            if (request.method().equals("GET")) {
-                Log.i("TrackorApi", String.format("GET " + F_REQUEST_WITHOUT_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), response.code(), response.headers(), stringifyResponseBody(bodyString)));
-            } else if (request.method().equals("POST")) {
-                Log.i("TrackorApi", String.format("POST " + F_REQUEST_WITH_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), stringifyRequestBody(request), response.code(), response.headers(), stringifyResponseBody(bodyString)));
-            } else if (request.method().equals("PUT")) {
-                Log.i("TrackorApi", String.format("PUT " + F_REQUEST_WITH_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), request.body().toString(), response.code(), response.headers(), stringifyResponseBody(bodyString)));
-            } else if (request.method().equals("DELETE")) {
-                Log.i("TrackorApi", String.format("DELETE " + F_REQUEST_WITHOUT_BODY + F_RESPONSE_WITHOUT_BODY, request.url(), time, request.headers(), response.code(), response.headers()));
+            switch (request.method()) {
+                case "GET":
+                    logger.info(String.format("GET " + F_REQUEST_WITHOUT_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), response.code(), response.headers(), stringifyResponseBody(bodyString)));
+                    break;
+                case "POST":
+                    logger.info(String.format("POST " + F_REQUEST_WITH_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), stringifyRequestBody(request), response.code(), response.headers(), stringifyResponseBody(bodyString)));
+                    break;
+                case "PUT":
+                    logger.info(String.format("PUT " + F_REQUEST_WITH_BODY + F_RESPONSE_WITH_BODY, request.url(), time, request.headers(), request.body().toString(), response.code(), response.headers(), stringifyResponseBody(bodyString)));
+                    break;
+                case "DELETE":
+                    logger.info(String.format("DELETE " + F_REQUEST_WITHOUT_BODY + F_RESPONSE_WITHOUT_BODY, request.url(), time, request.headers(), response.code(), response.headers()));
+                    break;
             }
 
             if (response.body() != null) {
@@ -119,7 +128,7 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
             }
         }
 
-        public String stringifyResponseBody(String responseBody) {
+        String stringifyResponseBody(String responseBody) {
             return responseBody;
         }
     }
