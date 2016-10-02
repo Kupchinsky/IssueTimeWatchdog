@@ -5,6 +5,8 @@ import android.util.Log;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +19,8 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public class HttpClientProvider implements Provider<OkHttpClient> {
+    private static Logger logger;
+
     @Inject
     private LoginCredentials loginCredentials;
 
@@ -35,14 +39,22 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
         @Override
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
-            String credentials = HttpClientProvider.this.loginCredentials.getCredentials();
 
-            if (credentials == null) {
-                return chain.proceed(request);
+            if (request.url().host().equals(Application.TRACKOR_DOMAIN) &&
+                    (request.url().scheme() + "://").equals(Application.TRACKOR_PROTOCOL)) {
+                logger.info("Handled request to Trackor");
+
+                String credentials = HttpClientProvider.this.loginCredentials.getCredentials();
+
+                if (credentials == null) {
+                    throw new NoLoginCredentialsException();
+                }
+
+                Request authenticatedRequest = request.newBuilder().header("Authorization", credentials).build();
+                return chain.proceed(authenticatedRequest);
             }
 
-            Request authenticatedRequest = request.newBuilder().header("Authorization", credentials).build();
-            return chain.proceed(authenticatedRequest);
+            return chain.proceed(request);
         }
     }
 
@@ -95,7 +107,7 @@ public class HttpClientProvider implements Provider<OkHttpClient> {
                 return response;
             }
         }
-        
+
         private String stringifyRequestBody(Request request) {
             try {
                 final Request copy = request.newBuilder().build();

@@ -23,4 +23,16 @@ class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
             throw new RuntimeException(e);
         }
     }
+
+    Issue queryForTrackorKey(String trackorKey) {
+        QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
+
+        try {
+            queryBuilder.where().eq("trackorKey", trackorKey);
+
+            return this.queryForFirst(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

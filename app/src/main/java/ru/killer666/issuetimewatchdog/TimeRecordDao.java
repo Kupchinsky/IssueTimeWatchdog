@@ -40,4 +40,16 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
             throw new RuntimeException(e);
         }
     }
+
+    TimeRecord queryForTrackorKey(String trackorKey) {
+        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+
+        try {
+            queryBuilder.where().eq("trackorKey", trackorKey);
+
+            return this.queryForFirst(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

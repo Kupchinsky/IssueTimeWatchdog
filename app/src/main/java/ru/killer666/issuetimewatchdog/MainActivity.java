@@ -43,6 +43,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     private Issue.Comparator issueComparator;
     @Inject
     private TimeRecordDao timeRecordDao;
+    @Inject
+    private SelectorDialog selectorDialog;
+    @Inject
+    private FiltersSettings filtersSettings;
+    @Inject
+    private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
@@ -110,7 +116,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
+                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersSettings.getIssueFilter(), issueSelectorDialogSettings)
+                        .subscribe(next -> {
+                        });
 
+
+//TODO
 
                 // Create issue
                 /*this.askNewIssueDialog(new Function<Issue, Void>() {
@@ -210,7 +221,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         public void onBindViewHolder(ViewHolder holder, int position) {
             Issue issue = this.items.get(position);
 
-            holder.text1.setText(Html.fromHtml("<b>" + issue.getName() + "</b> " + issue.getDescription()));
+            holder.text1.setText(Html.fromHtml("<b>" + issue.getTrackorKey() + "</b> " + issue.getSummary()));
             holder.text2.setText(Html.fromHtml("Status: " + this.formatState(issue.getState())));
 
             TimeRecord timeRecord = MainActivity.this.timeRecordDao.queryLastOfIssue(issue);

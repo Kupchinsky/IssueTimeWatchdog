@@ -1,6 +1,7 @@
 package ru.killer666.issuetimewatchdog;
 
 import com.google.inject.Binder;
+import com.google.inject.Injector;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
@@ -26,7 +27,10 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        RoboGuice.overrideApplicationInjector(this, new MyModule());
+        Injector injector = RoboGuice.overrideApplicationInjector(this, new MyModule());
+
+        // Do nothing, auto initialize
+        injector.getInstance(CreateTimeRecordsSettings.class);
     }
 
     public static class MyModule implements Module {

@@ -34,12 +34,8 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField(canBeNull = false)
     private float workedTime;
 
-    @TrackorField(TrackorType.ID)
-    @DatabaseField
-    private Long trackorId;
-
     @TrackorField(TrackorType.KEY)
-    @DatabaseField
+    @DatabaseField(index = true)
     private String trackorKey;
 
     @DatabaseField(canBeNull = false)

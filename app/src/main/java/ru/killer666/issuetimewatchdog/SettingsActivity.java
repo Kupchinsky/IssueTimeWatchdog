@@ -29,7 +29,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
     @Inject
     private FiltersSettings filtersSettings;
     @Inject
-    private FilterSelectorDialog filterSelectorDialog;
+    private SelectorDialog selectorDialog;
 
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
@@ -56,8 +56,8 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
         this.buttonSelectTimeRecordFilter.setOnClickListener(this);
         this.buttonChangeLoginCredentials.setOnClickListener(this);
 
-        this.switchCreateTimeRecords.setOnCheckedChangeListener(this);
         this.switchCreateTimeRecords.setChecked(this.createTimeRecordsSettings.isEnabled());
+        this.switchCreateTimeRecords.setOnCheckedChangeListener(this);
 
         this.updateLoginCredentials();
         this.updateFilters();
@@ -88,23 +88,6 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
         this.textViewTimeRecordFilter.setText(timerecordFilter != null ? timerecordFilter : "None");
     }
 
-    private boolean checkIsValidLoginCredentials() {
-        if (!this.loginCredentials.isValid()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            builder
-                    .setTitle("Warning")
-                    .setMessage("Set login credentials before!")
-                    .setIcon(android.R.drawable.stat_sys_warning)
-                    .setNegativeButton("OK", (dialog, which) -> dialog.cancel())
-                    .show();
-
-            return false;
-        }
-
-        return true;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -121,11 +104,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSelectIssueFilter: {
-                if (!this.checkIsValidLoginCredentials()) {
-                    break;
-                }
-
-                this.filterSelectorDialog.show(Issue.class).subscribe((filter) -> {
+                this.selectorDialog.showFilterSelect(Issue.class).subscribe((filter) -> {
                     SettingsActivity.this.filtersSettings.setIssueFilter(filter);
                     SettingsActivity.this.updateFilters();
                 });
@@ -133,11 +112,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
                 break;
             }
             case R.id.buttonSelectTimeRecordFilter: {
-                if (!this.checkIsValidLoginCredentials()) {
-                    break;
-                }
-
-                this.filterSelectorDialog.show(TimeRecord.class).subscribe((filter) -> {
+                this.selectorDialog.showFilterSelect(TimeRecord.class).subscribe((filter) -> {
                     SettingsActivity.this.filtersSettings.setTimerecordFilter(filter);
                     SettingsActivity.this.updateFilters();
                 });

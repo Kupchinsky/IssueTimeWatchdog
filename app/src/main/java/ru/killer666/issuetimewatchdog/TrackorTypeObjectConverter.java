@@ -6,8 +6,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
@@ -18,18 +20,25 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import lombok.Getter;
+import roboguice.util.Strings;
 
 @Singleton
 class TrackorTypeObjectConverter {
     @Getter
     private ListMultimap<Class<? extends TrackorType>, Pair<Field, Parser>> typesMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.<Class<? extends TrackorType>, Pair<Field, Parser>>create());
-    @Getter
     private Map<Class<? extends TrackorType>, String> trackorTypeNamesMap = Maps.newConcurrentMap();
+    private Map<Class<? extends TrackorType>, JsonToPlainObjectHelper> trackorTypeHelperMap = Maps.newConcurrentMap();
+
+    @Inject
+    private IssueDao issueDao;
+    @Inject
+    private TimeRecordDao timeRecordDao;
 
     @Inject
     public TrackorTypeObjectConverter(TrackorTypeClasspathScanner trackorTypeClasspathScanner) {
@@ -49,6 +58,8 @@ class TrackorTypeObjectConverter {
                 if (!field.isAnnotationPresent(TrackorField.class)) {
                     continue;
                 }
+
+                field.setAccessible(true);
 
                 Class<?> fieldTypeClass = field.getType();
                 Parser parser = parserMap.get(fieldTypeClass);
@@ -70,73 +81,77 @@ class TrackorTypeObjectConverter {
                 this.trackorTypeNamesMap.put(typeClass, typeInstance.getTrackorName());
             }
         }
+
+        this.trackorTypeHelperMap.put(Issue.class, trackorKey -> this.issueDao.queryForTrackorKey(trackorKey));
+        this.trackorTypeHelperMap.put(TimeRecord.class, trackorKey -> this.timeRecordDao.queryForTrackorKey(trackorKey));
     }
 
     String getTrackorTypeName(Class<? extends TrackorType> trackorTypeClass) {
         return this.trackorTypeNamesMap.get(trackorTypeClass);
     }
 
-    <T extends TrackorType> T fromJson(Class<T> typeClass, final JsonObject jsonObject) {
-        Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
+    <T extends TrackorType> T fromJson(Class<T> typeClass, JsonObject jsonObject) {
+        Preconditions.checkState(this.typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
 
-        T instance;
+        @SuppressWarnings("unchecked")
+        JsonToPlainObjectHelper<T> helper = this.trackorTypeHelperMap.get(typeClass);
 
-        try {
-            instance = typeClass.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        T instance = null;
+
+        if (helper != null) {
+            instance = helper.findExisting(jsonObject.get(TrackorType.KEY).getAsString());
         }
 
-        Callable<JsonObject> callable = new Callable<JsonObject>() {
-            @Override
-            public JsonObject call() throws Exception {
-                return jsonObject;
-            }
-        };
-
-        for (Pair<Field, Parser> pair : typesMap.get(typeClass)) {
-            TrackorField trackorField = pair.first.getAnnotation(TrackorField.class);
-            JsonPrimitive jsonPrimitiveLocal = jsonObject.getAsJsonPrimitive(trackorField.value());
-
-            if (jsonPrimitiveLocal != null) {
-                try {
-                    pair.first.set(instance, pair.second.parse(pair.first, jsonPrimitiveLocal, callable));
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
+        if (instance == null) {
+            try {
+                instance = typeClass.newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 
+        this.fromJson(typeClass, instance, jsonObject);
         Preconditions.checkState(instance.getTrackorKey() != null && !instance.getTrackorKey().isEmpty(), "Trackor xitor_key is empty");
 
         return instance;
     }
 
-    <T extends TrackorType> void fromJson(Class<T> typeClass, TrackorType instance, final JsonObject jsonObject) {
-        Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
-
-        Callable<JsonObject> callable = new Callable<JsonObject>() {
-            @Override
-            public JsonObject call() throws Exception {
-                return jsonObject;
-            }
-        };
+    private <T extends TrackorType> void fromJson(Class<T> typeClass, TrackorType instance, final JsonObject jsonObject) {
+        Callable<JsonObject> callable = () -> jsonObject;
 
         for (Pair<Field, Parser> pair : typesMap.get(typeClass)) {
             TrackorField trackorField = pair.first.getAnnotation(TrackorField.class);
-            JsonPrimitive jsonPrimitiveLocal = jsonObject.getAsJsonPrimitive(trackorField.value());
+            Object fieldValue;
+            JsonElement jsonElement = jsonObject.get(trackorField.value());
 
-            if (jsonPrimitiveLocal != null) {
-                try {
-                    pair.first.set(instance, pair.second.parse(pair.first, jsonPrimitiveLocal, callable));
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
+            if (jsonElement.isJsonPrimitive()) {
+                fieldValue = pair.second.parse(pair.first, jsonElement.getAsJsonPrimitive(), callable);
+            } else if (jsonElement.isJsonNull()) {
+                fieldValue = null;
+            } else {
+                throw new IllegalArgumentException("Invalid json element: not primitive and not null");
+            }
+
+            try {
+                pair.first.set(instance, fieldValue);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
-    <T extends TrackorType> JsonObject toJson(T instance, FieldFilter fieldFilter) {
+    <T extends TrackorType> String getFieldsOf(Class<T> trackorTypeClass) {
+        List<String> result = Lists.newArrayList();
+
+        for (Pair<Field, Parser> pair : this.typesMap.get(trackorTypeClass)) {
+            TrackorField trackorField = pair.first.getAnnotation(TrackorField.class);
+            result.add(trackorField.value());
+        }
+
+        return Strings.join(",", result);
+    }
+
+    /*<T extends TrackorType> JsonObject toJson(T instance, FieldFilter fieldFilter) {
         Class<? extends TrackorType> typeClass = instance.getClass();
 
         Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
@@ -166,7 +181,7 @@ class TrackorTypeObjectConverter {
         }
 
         return jsonObject;
-    }
+    }*/
 
     private class PrimitiveParser implements Parser {
         private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
@@ -265,5 +280,9 @@ class TrackorTypeObjectConverter {
     }
 
     interface FieldFilter extends Function<Field, Boolean> {
+    }
+
+    interface JsonToPlainObjectHelper<T extends TrackorType> {
+        T findExisting(String trackorKey);
     }
 }

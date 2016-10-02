@@ -6,21 +6,35 @@ import android.os.PowerManager;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+
+import roboguice.RoboGuice;
 import roboguice.receiver.RoboBroadcastReceiver;
 
 public class CreateTimeRecordsBroadcastReceiver extends RoboBroadcastReceiver {
+    private static Logger logger;
+
     @Inject
     private TrackorApiService trackorApiService;
 
+    @Inject
+    private PowerManager powerManager;
+
     @Override
     public void handleReceive(Context context, Intent intent) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        RoboGuice.injectMembers(context, this);
 
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
+        logger.debug("Alarm received");
+
+        PowerManager.WakeLock wl = this.powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
         wl.acquire();
+
+        logger.debug("Wakelock acquired");
 
         // TODO
 
         wl.release();
+
+        logger.debug("Wakelock released");
     }
 }

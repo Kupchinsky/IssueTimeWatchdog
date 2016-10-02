@@ -42,7 +42,6 @@ public class TrackorApiService {
             Call call = this.httpClient.newCall(new Request.Builder()
                     .url(httpUrl)
                     .get().build());
-            List<String> result = Lists.newArrayList();
 
             try {
                 Response response = call.execute();
@@ -50,6 +49,7 @@ public class TrackorApiService {
                 Preconditions.checkState(response.isSuccessful(), "Invalid response code: " + response.code());
 
                 JsonArray jsonArray = this.gson.fromJson(response.body().charStream(), JsonArray.class);
+                List<String> result = Lists.newArrayList();
 
                 for (JsonElement jsonElement : jsonArray) {
                     result.add(jsonElement.getAsString());
@@ -64,49 +64,43 @@ public class TrackorApiService {
         });
     }
 
-/*
-    @Singleton
-    static class ReadTrackorData extends AsyncTask<Pair<String, Class<? extends TrackorType>>, Void, Multimap<Class<? extends TrackorType>, TrackorType>> {
-        private static final String URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/{0}?filter={1}";
+    <T extends TrackorType> Observable<List<T>> readTrackorData(Class<T> trackorTypeClass, String filter) {
+        return Observable.create(subscriber -> {
+            final String URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/";
 
-        @Setter
-        private OkHttpClient httpClient;
+            HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
+            HttpUrl httpUrl = httpUrlBuilder
+                    .addPathSegment(this.trackorTypeObjectConverter.getTrackorTypeName(trackorTypeClass))
+                    .addQueryParameter("filter", filter)
+                    .addQueryParameter("fields", this.trackorTypeObjectConverter.getFieldsOf(trackorTypeClass))
+                    .build();
 
-        @SafeVarargs
-        @Override
-        protected final Multimap<Class<? extends TrackorType>, TrackorType> doInBackground(Pair<String, Class<? extends TrackorType>>... params) {
-            Multimap<Class<? extends TrackorType>, TrackorType> multimap = ArrayListMultimap.create();
+            Call call = this.httpClient.newCall(new Request.Builder()
+                    .url(httpUrl)
+                    .get().build());
 
-            for (Pair<String, Class<? extends TrackorType>> pair : params) {
-                try {
-                    HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
-                    HttpUrl httpUrl = httpUrlBuilder
-                            .addPathSegment(TrackorTypeObjectConverter.getTrackorTypeNamesMap().get(pair.second))
-                            .addQueryParameter("filter", pair.first)
-                            .build();
+            try {
+                Response response = call.execute();
+                Preconditions.checkState(response.code() != 403, "Invalid credentials!");
+                Preconditions.checkState(response.isSuccessful(), "Invalid response code: " + response.code());
 
-                    Response response = this.httpClient.newCall(new Request.Builder()
-                            .url(httpUrl)
-                            .get()
-                            .build()).execute();
+                JsonArray jsonArray = this.gson.fromJson(response.body().charStream(), JsonArray.class);
+                List<T> result = Lists.newArrayList();
 
-                    if (!response.isSuccessful()) {
-                        throw new IllegalStateException();
-                    }
-
-                    JsonObject jsonObject = gson.fromJson(response.body().charStream(), JsonObject.class);
-                    TrackorType instance = TrackorTypeObjectConverter.fromJson(pair.second, jsonObject);
-
-                    multimap.put(pair.second, instance);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                for (JsonElement jsonElement : jsonArray) {
+                    result.add(this.trackorTypeObjectConverter.fromJson(trackorTypeClass, jsonElement.getAsJsonObject()));
                 }
-            }
 
-            return multimap;
-        }
+                subscriber.onNext(result);
+                subscriber.onCompleted();
+            } catch (Exception e) {
+                logger.error("Request exception", e);
+                subscriber.onError(e);
+            }
+        });
     }
 
+/*
     @Singleton
     static class CreateOrUpdateTrackorData extends AsyncTask<Pair<TrackorType, TrackorTypeObjectConverter.FieldFilter>, Void, Void> {
         private static final String BASE_URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/";
