@@ -1,75 +1,70 @@
 package ru.killer666.issuetimewatchdog;
 
-import android.os.AsyncTask;
-import android.util.Pair;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
-import java.lang.reflect.Field;
+import java.util.List;
 
+import okhttp3.Call;
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
+import rx.Observable;
 
-public class TrackorApi {
-    private static final Gson gson = new Gson();
+@Singleton
+public class TrackorApiService {
+    private final Gson gson = new Gson();
 
-    static class ReadFilters extends AsyncTask<Class<? extends TrackorType>, Void, Multimap<Class<? extends TrackorType>, String>> {
-        private static final String URL = Application.TRACKOR_BASEURL + "/api/v2/TRACKOR_BROWSER/filters";
+    @Inject
+    private OkHttpClient httpClient;
+    @Inject
+    private TrackorTypeObjectConverter trackorTypeObjectConverter;
 
-        @Inject
-        private OkHttpClient httpClient;
+    Observable<List<String>> readFilters(Class<? extends TrackorType> trackorTypeClass) {
+        return Observable.create(subscriber -> {
+            final String URL = Application.TRACKOR_BASEURL + "/api/v2/TRACKOR_BROWSER/filters";
 
-        @SafeVarargs
-        @Override
-        protected final Multimap<Class<? extends TrackorType>, String> doInBackground(Class<? extends TrackorType>... typeClasses) {
-            Multimap<Class<? extends TrackorType>, String> multimap = ArrayListMultimap.create();
+            HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
+            HttpUrl httpUrl = httpUrlBuilder
+                    .addQueryParameter("trackor_type", this.trackorTypeObjectConverter.getTrackorTypeName(trackorTypeClass))
+                    .build();
 
-            for (Class<? extends TrackorType> typeClass : typeClasses) {
-                try {
-                    HttpUrl.Builder httpUrlBuilder = new HttpUrl.Builder();
-                    HttpUrl httpUrl = httpUrlBuilder
-                            .addPathSegments(URL)
-                            .addQueryParameter("trackor_type", TrackorTypeObjectConverter.getTrackorTypeNamesMap().get(typeClass))
-                            .build();
+            Call call = this.httpClient.newCall(new Request.Builder()
+                    .url(httpUrl)
+                    .get().build());
+            List<String> result = Lists.newArrayList();
 
-                    Response response = this.httpClient.newCall(new Request.Builder()
-                            .url(httpUrl)
-                            .get()
-                            .build()).execute();
+            try {
+                Response response = call.execute();
+                Preconditions.checkState(response.code() != 403, "Invalid credentials!");
+                Preconditions.checkState(response.isSuccessful(), "Invalid response code: " + response.code());
 
-                    if (!response.isSuccessful()) {
-                        throw new IllegalStateException();
-                    }
+                JsonArray jsonArray = this.gson.fromJson(response.body().charStream(), JsonArray.class);
 
-                    JsonArray jsonArray = gson.fromJson(response.body().charStream(), JsonArray.class);
-
-                    for (JsonElement jsonElement : jsonArray) {
-                        multimap.put(typeClass, jsonElement.getAsString());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                for (JsonElement jsonElement : jsonArray) {
+                    result.add(jsonElement.getAsString());
                 }
-            }
 
-            return multimap;
-        }
+                subscriber.onNext(result);
+                subscriber.onCompleted();
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
+        });
     }
 
+/*
+    @Singleton
     static class ReadTrackorData extends AsyncTask<Pair<String, Class<? extends TrackorType>>, Void, Multimap<Class<? extends TrackorType>, TrackorType>> {
         private static final String URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/{0}?filter={1}";
 
-        @Inject
+        @Setter
         private OkHttpClient httpClient;
 
         @SafeVarargs
@@ -79,9 +74,8 @@ public class TrackorApi {
 
             for (Pair<String, Class<? extends TrackorType>> pair : params) {
                 try {
-                    HttpUrl.Builder httpUrlBuilder = new HttpUrl.Builder();
+                    HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
                     HttpUrl httpUrl = httpUrlBuilder
-                            .addPathSegments(URL)
                             .addPathSegment(TrackorTypeObjectConverter.getTrackorTypeNamesMap().get(pair.second))
                             .addQueryParameter("filter", pair.first)
                             .build();
@@ -108,11 +102,12 @@ public class TrackorApi {
         }
     }
 
+    @Singleton
     static class CreateOrUpdateTrackorData extends AsyncTask<Pair<TrackorType, TrackorTypeObjectConverter.FieldFilter>, Void, Void> {
         private static final String BASE_URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/";
         private static final MediaType JSON = MediaType.parse("application/json");
 
-        @Inject
+        @Setter
         private OkHttpClient httpClient;
 
         @SafeVarargs
@@ -162,10 +157,8 @@ public class TrackorApi {
                 }
 
                 try {
-                    HttpUrl.Builder httpUrlBuilder = new HttpUrl.Builder();
-                    httpUrlBuilder
-                            .addPathSegments(BASE_URL)
-                            .addPathSegment(pair.first.getTrackorName());
+                    HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(BASE_URL).newBuilder();
+                    httpUrlBuilder.addPathSegment(pair.first.getTrackorName());
 
                     if (hasKey) {
                         httpUrlBuilder.addQueryParameter("filters", TrackorType.KEY + "=" + pair.first.getTrackorKey());
@@ -193,5 +186,5 @@ public class TrackorApi {
 
             return null;
         }
-    }
+    }*/
 }

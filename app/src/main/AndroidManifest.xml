@@ -43,9 +43,11 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".SettingsActivity" />
-        <activity android:name=".SelectFilterActivity" />
-        <activity android:name=".SelectIssueActivity" />
+        <activity android:name=".SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="ru.killer666.issuetimewatchdog.MainActivity" />
+        </activity>
 
         <receiver
             android:name=".BootReceiver"

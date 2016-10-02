@@ -3,6 +3,7 @@ package ru.killer666.issuetimewatchdog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
@@ -11,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,10 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
-import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 
-@ContentView(R.layout.activity_main)
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
     private final List<Issue> items = Lists.newArrayList();
     private IssueEntryAdapter listAdapter;
@@ -45,12 +45,20 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
 
+    @InjectView(R.id.toolbar)
+    private Toolbar toolbar;
+
+    @InjectView(R.id.fab)
+    private FloatingActionButton fab;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        this.setSupportActionBar(this.toolbar);
+
+        this.fab.setOnClickListener(this);
 
         this.listAdapter = new IssueEntryAdapter(this.items);
 
@@ -204,6 +212,24 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                 break;
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        this.getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings: {
+                this.startActivity(new Intent(this, SettingsActivity.class));
+                break;
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @RequiredArgsConstructor

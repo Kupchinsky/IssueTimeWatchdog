@@ -26,10 +26,9 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        SugarContext.init(this);
 
-        RoboGuice.getOrCreateBaseApplicationInjector(this, RoboGuice.DEFAULT_STAGE,
-                RoboGuice.newDefaultRoboModule(this), new MyModule());
+        SugarContext.init(this);
+        RoboGuice.overrideApplicationInjector(this, new MyModule());
     }
 
     public static class MyModule implements Module {

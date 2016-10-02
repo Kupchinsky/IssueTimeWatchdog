@@ -10,8 +10,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
-import org.reflections.Reflections;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
@@ -24,15 +24,15 @@ import java.util.concurrent.Callable;
 
 import lombok.Getter;
 
+@Singleton
 class TrackorTypeObjectConverter {
     @Getter
-    private static ListMultimap<Class<? extends TrackorType>, Pair<Field, Parser>> typesMap =
-            Multimaps.synchronizedListMultimap(ArrayListMultimap.<Class<? extends TrackorType>, Pair<Field, Parser>>create());
-
+    private ListMultimap<Class<? extends TrackorType>, Pair<Field, Parser>> typesMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.<Class<? extends TrackorType>, Pair<Field, Parser>>create());
     @Getter
-    private static Map<Class<? extends TrackorType>, String> trackorTypeNamesMap = Maps.newConcurrentMap();
+    private Map<Class<? extends TrackorType>, String> trackorTypeNamesMap = Maps.newConcurrentMap();
 
-    static {
+    @Inject
+    public TrackorTypeObjectConverter(TrackorTypeClasspathScanner trackorTypeClasspathScanner) {
         Map<Class<?>, Parser> parserMap = Maps.newHashMap();
 
         PrimitiveParser primitiveParser = new PrimitiveParser();
@@ -44,25 +44,39 @@ class TrackorTypeObjectConverter {
 
         TrackorTypeParser trackorTypeParser = new TrackorTypeParser();
 
-        Reflections reflections = new Reflections(TrackorTypeObjectConverter.class.getPackage().getName());
+        for (Class<? extends TrackorType> typeClass : trackorTypeClasspathScanner.scan()) {
+            for (Field field : typeClass.getDeclaredFields()) {
+                if (!field.isAnnotationPresent(TrackorField.class)) {
+                    continue;
+                }
 
-        for (Class<? extends TrackorType> typeClass : reflections.getSubTypesOf(TrackorType.class)) {
-            for (Field field : (new Reflections(typeClass)).getFieldsAnnotatedWith(TrackorField.class)) {
                 Class<?> fieldTypeClass = field.getType();
                 Parser parser = parserMap.get(fieldTypeClass);
+                TrackorType typeInstance;
 
-                if (parser == null && fieldTypeClass.isAssignableFrom(TrackorType.class)) {
+                try {
+                    typeInstance = typeClass.newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (parser == null && TrackorType.class.isInstance(typeInstance)) {
                     parser = trackorTypeParser;
                 }
 
                 Preconditions.checkState(parser != null, "Parser not found for " + typeClass.getSimpleName() + "." + field.getName());
 
-                typesMap.put(typeClass, Pair.create(field, parser));
+                this.typesMap.put(typeClass, Pair.create(field, parser));
+                this.trackorTypeNamesMap.put(typeClass, typeInstance.getTrackorName());
             }
         }
     }
 
-    static <T extends TrackorType> T fromJson(Class<T> typeClass, final JsonObject jsonObject) {
+    String getTrackorTypeName(Class<? extends TrackorType> trackorTypeClass) {
+        return this.trackorTypeNamesMap.get(trackorTypeClass);
+    }
+
+    <T extends TrackorType> T fromJson(Class<T> typeClass, final JsonObject jsonObject) {
         Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
 
         T instance;
@@ -98,7 +112,7 @@ class TrackorTypeObjectConverter {
         return instance;
     }
 
-    static <T extends TrackorType> void fromJson(Class<T> typeClass, TrackorType instance, final JsonObject jsonObject) {
+    <T extends TrackorType> void fromJson(Class<T> typeClass, TrackorType instance, final JsonObject jsonObject) {
         Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
 
         Callable<JsonObject> callable = new Callable<JsonObject>() {
@@ -122,7 +136,7 @@ class TrackorTypeObjectConverter {
         }
     }
 
-    static <T extends TrackorType> JsonObject toJson(T instance, FieldFilter fieldFilter) {
+    <T extends TrackorType> JsonObject toJson(T instance, FieldFilter fieldFilter) {
         Class<? extends TrackorType> typeClass = instance.getClass();
 
         Preconditions.checkState(typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
@@ -154,7 +168,7 @@ class TrackorTypeObjectConverter {
         return jsonObject;
     }
 
-    private static class PrimitiveParser implements Parser {
+    private class PrimitiveParser implements Parser {
         private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
         {
@@ -200,7 +214,7 @@ class TrackorTypeObjectConverter {
         }
     }
 
-    private static class TrackorTypeParser implements Parser {
+    private class TrackorTypeParser implements Parser {
         @SuppressWarnings("unchecked")
         @Override
         public Object parse(Field field, JsonPrimitive jsonPrimitive, Callable<JsonObject> jsonObjectCallable) {

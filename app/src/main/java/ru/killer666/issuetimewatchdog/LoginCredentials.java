@@ -38,7 +38,7 @@ public class LoginCredentials {
         this.credentials = Credentials.basic(login, password);
     }
 
-    public void setCredentials(String login, String password) {
+    void setCredentials(String login, String password) {
         SharedPreferences.Editor editor = this.preferences.edit();
 
         editor.putString(PREFS_LOGIN, login);
@@ -48,11 +48,15 @@ public class LoginCredentials {
         this.updateCredentials();
     }
 
-    private String getLogin() {
+    String getLogin() {
         return this.preferences.getString(PREFS_LOGIN, null);
     }
 
     private String getPassword() {
         return this.preferences.getString(PREFS_PASSWORD, null);
+    }
+
+    boolean isValid() {
+        return this.credentials != null;
     }
 }
