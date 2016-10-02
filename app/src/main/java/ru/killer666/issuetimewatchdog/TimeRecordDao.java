@@ -18,7 +18,7 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
-            queryBuilder.where().eq("issue", issue);
+            queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
             queryBuilder.limit(Long.valueOf(SHOW_LIMIT));
 
@@ -32,7 +32,7 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
-            queryBuilder.where().eq("issue", issue);
+            queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
 
             return this.queryForFirst(queryBuilder.prepare());

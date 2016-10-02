@@ -116,26 +116,23 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
-                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersSettings.getIssueFilter(), issueSelectorDialogSettings)
-                        .subscribe(next -> {
+                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersSettings.getIssueFilter(),
+                        this.issueSelectorDialogSettings)
+                        .subscribe(issue -> {
+                            if (issue.isAutoRemove()) {
+                                issue.setAutoRemove(false);
+                            }
+
+                            this.issueDao.createOrUpdate(issue);
+                            int position = this.items.indexOf(issue);
+
+                            if (position == -1) {
+                                this.items.add(issue);
+                                this.listAdapter.notifyItemInserted(this.items.size() - 1);
+                            } else {
+                                this.listAdapter.notifyItemChanged(position);
+                            }
                         });
-
-
-//TODO
-
-                // Create issue
-                /*this.askNewIssueDialog(new Function<Issue, Void>() {
-                    @Override
-                    public Void apply(Issue issue) {
-                        issue.save();
-
-                        MainActivity.this.items.add(issue);
-                        MainActivity.this.listAdapter.notifyItemInserted(MainActivity.this.items.size() - 1);
-
-                        return null;
-                    }
-                });*/
-
                 break;
             }
         }
@@ -286,6 +283,13 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                     this.notifyItemChanged(this.items.indexOf(issue));
                     break;
                 }
+                case R.id.action_show_info: {
+                    (new AlertDialog.Builder(MainActivity.this))
+                            .setTitle("Information")
+                            .setMessage(MainActivity.this.issueSelectorDialogSettings.getSelectItem(issue))
+                            .show();
+                    break;
+                }
                 case R.id.action_update_timerecords: {
                     // TODO
                     break;
@@ -338,7 +342,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         private TextView text1;
         private TextView text2;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
 
             this.text1 = (TextView) itemView.findViewById(android.R.id.text1);

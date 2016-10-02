@@ -9,6 +9,9 @@
         android:id="@+id/action_switchstate"
         android:title="Start/stop working" />
     <item
+        android:id="@+id/action_show_info"
+        android:title="Show info" />
+    <item
         android:id="@+id/action_update_timerecords"
         android:title="Update Trackor time records" />
     <item
