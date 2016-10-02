@@ -2,6 +2,9 @@ package ru.killer666.issuetimewatchdog;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.j256.ormlite.dao.Dao;
+
+import java.sql.SQLException;
 
 public class DaoProvider {
     static class IssueProvider implements Provider<IssueDao> {
@@ -10,9 +13,14 @@ public class DaoProvider {
 
         @Override
         public IssueDao get() {
-            IssueDao result = this.databaseHelper.getRuntimeExceptionDao(Issue.class);
-            result.setObjectCache(true);
-            return result;
+            try {
+                Dao<Issue, Integer> dao = this.databaseHelper.getDao(Issue.class);
+                dao.setObjectCache(true);
+
+                return new IssueDao(dao);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -22,9 +30,14 @@ public class DaoProvider {
 
         @Override
         public TimeRecordDao get() {
-            TimeRecordDao result = this.databaseHelper.getRuntimeExceptionDao(TimeRecord.class);
-            result.setObjectCache(true);
-            return result;
+            try {
+                Dao<TimeRecord, Integer> dao = this.databaseHelper.getDao(TimeRecord.class);
+                dao.setObjectCache(true);
+
+                return new TimeRecordDao(dao);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

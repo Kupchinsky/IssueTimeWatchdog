@@ -11,4 +11,7 @@
     <item
         android:id="@+id/action_update_timerecords"
         android:title="Update Trackor time records" />
+    <item
+        android:id="@+id/action_remove"
+        android:title="Remove (local)" />
 </menu>

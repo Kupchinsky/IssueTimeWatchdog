@@ -14,22 +14,25 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-@DatabaseTable(daoClass = IssueDao.class)
+@DatabaseTable
 public class Issue implements TrackorType {
     @DatabaseField(generatedId = true)
     private int id;
 
     @TrackorField(TrackorType.KEY)
-    @DatabaseField
+    @DatabaseField(canBeNull = false)
     private String name;
 
     @TrackorField("VQS_IT_XITOR_NAME")
-    @DatabaseField
+    @DatabaseField(canBeNull = false)
     private String description;
 
     @TrackorField(TrackorType.ID)
     @DatabaseField
     private Long trackorId;
+
+    @DatabaseField(canBeNull = false)
+    private boolean autoRemove;
 
     private IssueState state = IssueState.Idle;
 
@@ -54,8 +57,14 @@ public class Issue implements TrackorType {
 
         @Override
         public int compare(Issue lhs, Issue rhs) {
-            TimeRecord timeRecordLhs = this.timeRecordDao.getLastOfIssue(lhs);
-            TimeRecord timeRecordRhs = this.timeRecordDao.getLastOfIssue(rhs);
+            if (lhs.isAutoRemove()) {
+                return 1;
+            } else if (rhs.isAutoRemove()) {
+                return -1;
+            }
+
+            TimeRecord timeRecordLhs = this.timeRecordDao.queryLastOfIssue(lhs);
+            TimeRecord timeRecordRhs = this.timeRecordDao.queryLastOfIssue(rhs);
 
             return timeRecordLhs == null ? 1 : (timeRecordRhs == null ? -1 : (timeRecordLhs.compareTo(timeRecordRhs)));
         }

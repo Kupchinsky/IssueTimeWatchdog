@@ -7,18 +7,20 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import java.sql.SQLException;
 import java.util.List;
 
-public class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
-    public TimeRecordDao(Dao<TimeRecord, Integer> dao) {
+class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
+    static final int SHOW_LIMIT = 7;
+
+    TimeRecordDao(Dao<TimeRecord, Integer> dao) {
         super(dao);
     }
 
-    List<TimeRecord> getLastOfIssueList(Issue issue) {
+    List<TimeRecord> queryLastOfIssueList(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
             queryBuilder.where().eq("issue", issue);
             queryBuilder.orderBy("date", false);
-            queryBuilder.limit(7L);
+            queryBuilder.limit(Long.valueOf(SHOW_LIMIT));
 
             return this.query(queryBuilder.prepare());
         } catch (SQLException e) {
@@ -26,7 +28,7 @@ public class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    TimeRecord getLastOfIssue(Issue issue) {
+    TimeRecord queryLastOfIssue(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {

@@ -48,7 +48,7 @@ public class Application extends android.app.Application {
                     if (field.getType() == Logger.class &&
                             Modifier.isStatic(field.getModifiers()) &&
                             Modifier.isPrivate(field.getModifiers())) {
-                        typeEncounter.register(new LoggerMembersInjector<T>(field));
+                        typeEncounter.register(new LoggerMembersInjector<>(field));
                     }
                 }
                 clazz = clazz.getSuperclass();
@@ -62,7 +62,7 @@ public class Application extends android.app.Application {
 
         LoggerMembersInjector(Field field) {
             this.field = field;
-            this.logger = LoggerFactory.getLogger(field.getDeclaringClass());
+            this.logger = LoggerFactory.getLogger(field.getDeclaringClass().getSimpleName());
             field.setAccessible(true);
         }
 

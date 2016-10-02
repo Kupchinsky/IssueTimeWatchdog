@@ -17,21 +17,21 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-@DatabaseTable(daoClass = TimeRecordDao.class)
+@DatabaseTable
 public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField(generatedId = true)
     private int id;
 
     @TrackorField
-    @DatabaseField
+    @DatabaseField(canBeNull = false, foreign = true)
     private Issue issue;
 
     @TrackorField("VQS_IT_WORK_DATE")
-    @DatabaseField
+    @DatabaseField(canBeNull = false)
     private Date date;
 
     @TrackorField("VQS_IT_SPENT_HOURS")
-    @DatabaseField
+    @DatabaseField(canBeNull = false)
     private float workedTime;
 
     @TrackorField(TrackorType.ID)
@@ -41,6 +41,9 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @TrackorField(TrackorType.KEY)
     @DatabaseField
     private String trackorKey;
+
+    @DatabaseField(canBeNull = false)
+    private float wroteTime;
 
     TimeRecord(Issue issue) {
         this.issue = issue;

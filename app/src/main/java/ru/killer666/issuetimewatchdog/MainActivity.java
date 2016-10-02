@@ -1,6 +1,5 @@
 package ru.killer666.issuetimewatchdog;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -16,11 +15,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -45,7 +41,10 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     private IssueDao issueDao;
     @Inject
     private Issue.Comparator issueComparator;
+    @Inject
+    private TimeRecordDao timeRecordDao;
 
+    @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
     @InjectView(R.id.toolbar)
     private Toolbar toolbar;
@@ -66,7 +65,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         this.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         this.recyclerView.setAdapter(this.listAdapter);
 
-        this.items.addAll(this.issueDao.queryForAll());
+        this.items.addAll(this.issueDao.queryNotAutoRemove());
         Collections.sort(this.items, this.issueComparator);
     }
 
@@ -85,16 +84,6 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTimeRecordUpdated(WatchdogService.OnTimeRecordUpdatedEvent event) {
         this.listAdapter.notifyItemChanged(this.items.indexOf(event.getTimeRecord().getIssue()));
-    }
-
-    private Issue findIssueById(long id) {
-        for (Issue issue : this.items) {
-            if (id == issue.getId()) {
-                return issue;
-            }
-        }
-
-        throw new IllegalStateException();
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
@@ -117,76 +106,14 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         }
     }
 
-    private void askNewIssueDialog(final Function<Issue, Void> callable) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-
-        final EditText input1 = new EditText(this);
-        input1.setHint("Issue name");
-        layout.addView(input1);
-
-        final EditText input2 = new EditText(this);
-        input2.setHint("Issue description");
-        layout.addView(input2);
-
-        builder
-                .setTitle("New issue")
-                .setView(layout)
-                .setPositiveButton("Create", (dialog, which) -> {
-                    Issue issue = new Issue();
-                    issue.setName(input1.getText().toString());
-                    issue.setDescription(input2.getText().toString());
-
-                    callable.apply(issue);
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                })
-                .show();
-    }
-
-    private void askRemoveIssueDialog(final Issue issue) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder
-                .setTitle("Confirm remove issue")
-                .setMessage("Are you sure you want to remove issue " + issue.getReadableName() + "?")
-                .setPositiveButton("Remove", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (issue.getState() == IssueState.Working) {
-                            MainActivity.this.stopService(new Intent(MainActivity.this, WatchdogService.class));
-                        }
-
-                        int position = MainActivity.this.items.indexOf(issue);
-
-                        MainActivity.this.items.remove(position);
-                        MainActivity.this.listAdapter.notifyItemRemoved(position);
-
-                        issue.delete();
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                })
-                .show();
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
 
+
                 // Create issue
-                this.askNewIssueDialog(new Function<Issue, Void>() {
+                /*this.askNewIssueDialog(new Function<Issue, Void>() {
                     @Override
                     public Void apply(Issue issue) {
                         issue.save();
@@ -196,7 +123,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
                         return null;
                     }
-                });
+                });*/
 
                 break;
             }
@@ -236,13 +163,13 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         private void showTimeRecord(Issue issue) {
             String message = "";
 
-            for (TimeRecord timeRecord : issue.getLastTimeRecords()) {
-                message += Html.fromHtml(this.formatTimeRecordHistory(timeRecord)) + "\n";
+            for (TimeRecord timeRecord : MainActivity.this.timeRecordDao.queryLastOfIssueList(issue)) {
+                message += Html.fromHtml(this.formatTimeRecordHistory(timeRecord, true)) + "\n";
             }
 
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Time records of " + issue.getReadableName())
-                    .setMessage(message + "\n(Time records of last " + Issue.TIME_RECORD_SHOW_LIMIT + " days)")
+                    .setMessage(message + "\n(Time records of last " + TimeRecordDao.SHOW_LIMIT + " days)")
                     .show();
         }
 
@@ -261,10 +188,22 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             return (escape ? "<b>" : "") + state.getValue() + (escape ? "</b>" : "");
         }
 
-        private String formatTimeRecordHistory(TimeRecord timeRecord) {
-            return (DateUtils.isToday(timeRecord.getDate().getTime()) ? "<b>Today</b>" :
+        private String formatTimeRecordHistory(TimeRecord timeRecord, boolean isLong) {
+            String message = (DateUtils.isToday(timeRecord.getDate().getTime()) ? "<b>Today</b>" :
                     this.dateTimeFormatter.format(timeRecord.getDate())) + ": " +
-                    this.numberFormat.format(timeRecord.getWorkedTime()) + " hrs.";
+                    this.numberFormat.format(timeRecord.getWorkedTime());
+
+            boolean isFullWrite = timeRecord.getWorkedTime() == timeRecord.getWroteTime();
+
+            if (isLong) {
+                message += " h. (wrote" + (isFullWrite ? "[full]" : "") + " " +
+                        this.numberFormat.format(timeRecord.getWroteTime()) + " h.)";
+            } else {
+                message += "/" + this.numberFormat.format(timeRecord.getWroteTime()) + " (w" +
+                        (isFullWrite ? "[f]" : "") + ") hrs.";
+            }
+
+            return message;
         }
 
         @Override
@@ -274,10 +213,10 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             holder.text1.setText(Html.fromHtml("<b>" + issue.getName() + "</b> " + issue.getDescription()));
             holder.text2.setText(Html.fromHtml("Status: " + this.formatState(issue.getState())));
 
-            TimeRecord timeRecord = issue.getLastTimeRecord();
+            TimeRecord timeRecord = MainActivity.this.timeRecordDao.queryLastOfIssue(issue);
 
             if (timeRecord != null) {
-                holder.text2.append(" " + Html.fromHtml(this.formatTimeRecordHistory(timeRecord)));
+                holder.text2.append(" " + Html.fromHtml(this.formatTimeRecordHistory(timeRecord, false)));
             }
         }
 
@@ -313,11 +252,11 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                         }
 
                         // Создаём TimeRecord, если необходимо
-                        TimeRecord timeRecord = issue.getLastTimeRecord();
+                        TimeRecord timeRecord = MainActivity.this.timeRecordDao.queryLastOfIssue(issue);
 
                         if (timeRecord == null || !DateUtils.isToday(timeRecord.getDate().getTime())) {
                             timeRecord = new TimeRecord(issue);
-                            timeRecord.save();
+                            MainActivity.this.timeRecordDao.create(timeRecord);
                         }
 
                         issue.setState(IssueState.Working);
@@ -334,6 +273,31 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                     }
 
                     this.notifyItemChanged(this.items.indexOf(issue));
+                    break;
+                }
+                case R.id.action_update_timerecords: {
+                    // TODO
+                    break;
+                }
+                case R.id.action_remove: {
+                    (new AlertDialog.Builder(MainActivity.this))
+                            .setTitle("Confirm remove issue")
+                            .setMessage("Are you sure you want to remove issue " + issue.getReadableName() + " from local database?")
+                            .setPositiveButton("Remove", (dialog, which) -> {
+                                if (issue.getState() == IssueState.Working) {
+                                    MainActivity.this.stopService(new Intent(MainActivity.this, WatchdogService.class));
+                                }
+
+                                int position = this.items.indexOf(issue);
+
+                                this.items.remove(position);
+                                this.notifyItemRemoved(position);
+
+                                issue.setAutoRemove(true);
+                                MainActivity.this.issueDao.update(issue);
+                            })
+                            .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
+                            .show();
                     break;
                 }
             }
