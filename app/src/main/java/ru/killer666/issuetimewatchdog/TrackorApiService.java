@@ -68,18 +68,21 @@ public class TrackorApiService {
         return Observable.create(subscriber -> {
             final String URL = Application.TRACKOR_BASEURL + "/api/v2/trackor_type/";
 
-            HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
-            HttpUrl httpUrl = httpUrlBuilder
-                    .addPathSegment(this.trackorTypeObjectConverter.getTrackorTypeName(trackorTypeClass))
-                    .addQueryParameter("filter", filter)
-                    .addQueryParameter("fields", this.trackorTypeObjectConverter.getFieldsOf(trackorTypeClass))
-                    .build();
-
-            Call call = this.httpClient.newCall(new Request.Builder()
-                    .url(httpUrl)
-                    .get().build());
-
             try {
+                Preconditions.checkArgument(filter != null && !filter.isEmpty(), "Filter is not set!");
+
+                HttpUrl.Builder httpUrlBuilder = HttpUrl.parse(URL).newBuilder();
+                HttpUrl httpUrl = httpUrlBuilder
+                        .addPathSegment(this.trackorTypeObjectConverter.getTrackorTypeName(trackorTypeClass))
+                        .addQueryParameter("filter", filter)
+                        .addQueryParameter("fields", this.trackorTypeObjectConverter.getFieldsOf(trackorTypeClass))
+                        .build();
+
+                Call call = this.httpClient.newCall(new Request.Builder()
+                        .url(httpUrl)
+                        .get().build());
+
+
                 Response response = call.execute();
                 Preconditions.checkState(response.code() != 403, "Invalid credentials!");
                 Preconditions.checkState(response.isSuccessful(), "Invalid response code: " + response.code());

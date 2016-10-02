@@ -219,7 +219,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             Issue issue = this.items.get(position);
 
             holder.text1.setText(Html.fromHtml("<b>" + issue.getTrackorKey() + "</b> " + issue.getSummary()));
-            holder.text2.setText(Html.fromHtml("Status: " + this.formatState(issue.getState())));
+            holder.text2.setText(Html.fromHtml("Work status: " + this.formatState(issue.getState())));
 
             TimeRecord timeRecord = MainActivity.this.timeRecordDao.queryLastOfIssue(issue);
 
@@ -286,8 +286,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                 case R.id.action_show_info: {
                     (new AlertDialog.Builder(MainActivity.this))
                             .setTitle("Information")
-                            .setMessage(MainActivity.this.issueSelectorDialogSettings.getSelectItem(issue))
+                            .setMessage(MainActivity.this.issueSelectorDialogSettings.getDetailsMessage(issue))
                             .show();
+                    break;
+                }
+                case R.id.action_change_status: {
+                    // TODO
                     break;
                 }
                 case R.id.action_update_timerecords: {

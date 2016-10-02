@@ -96,7 +96,7 @@ public class SelectorDialog {
                                 if (dialogSettings.isConfirmable()) {
                                     (new AlertDialog.Builder(this.context))
                                             .setTitle("Confirmation")
-                                            .setMessage(dialogSettings.getConfirmMessage(itemInstance))
+                                            .setMessage(dialogSettings.getDetailsMessage(itemInstance))
                                             .setPositiveButton("Accept", (dialog1, which) -> {
                                                 subscriber.onNext(itemInstance);
                                                 subscriber.onCompleted();
@@ -137,7 +137,7 @@ public class SelectorDialog {
             return instance.getTrackorKey();
         }
 
-        String getConfirmMessage(T instance) {
+        String getDetailsMessage(T instance) {
             List<Pair<Field, TrackorTypeObjectConverter.Parser>> pairList = this.trackorTypeObjectConverter.getTypesMap().get(instance.getClass());
             String message = "";
 
