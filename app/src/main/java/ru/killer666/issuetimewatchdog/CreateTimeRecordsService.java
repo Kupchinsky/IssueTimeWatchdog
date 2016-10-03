@@ -11,6 +11,7 @@ public class CreateTimeRecordsService extends RoboService {
 
     // TODO: upload "unuploaded" (Не забывать проверять, если кто-нить часы перекрутил руками)
     // TODO: remove local issues+timerecords with autoremove field == true
+    // TODO: remove timerecords older than {#TimeRecordDao.SHOW_LIMIT}
 
     @Override
     public IBinder onBind(Intent intent) {
