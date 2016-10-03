@@ -293,7 +293,16 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                     break;
                 }
                 case R.id.action_change_status: {
-                    // TODO
+                    (new AlertDialog.Builder(MainActivity.this))
+                            .setTitle("Select new status\n(old status: " + issue.getStatus() + ")")
+                            .setItems(Issue.getStatuses(), (dialog, itemIndex) -> {
+                                dialog.dismiss();
+
+                                String newStatus = Issue.getStatuses()[itemIndex];
+                                // TODO: update trackor with new status
+                            })
+                            .show();
+
                     break;
                 }
                 case R.id.action_add_unwatched_time: {

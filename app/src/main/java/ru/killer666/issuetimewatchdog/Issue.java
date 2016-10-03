@@ -18,6 +18,18 @@ import lombok.ToString;
 @ToString
 @DatabaseTable
 public class Issue implements TrackorType {
+    @Getter
+    static final String[] statuses = {"Opened",
+            "In Progress",
+            "Ready for Test",
+            "Testing In Progress",
+            "Tested",
+            "Closed",
+            "Awaiting Response",
+            "Deferred",
+            "On Track",
+            "Reopened"};
+
     @DatabaseField(generatedId = true)
     private int id;
 
