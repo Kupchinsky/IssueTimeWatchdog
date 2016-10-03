@@ -288,7 +288,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                 case R.id.action_show_info: {
                     (new AlertDialog.Builder(MainActivity.this))
                             .setTitle("Information")
-                            .setMessage(MainActivity.this.issueSelectorDialogSettings.getDetailsMessage(issue))
+                            .setMessage(MainActivity.this.issueSelectorDialogSettings.getDetailsMessage(issue, false))
                             .show();
                     break;
                 }
@@ -326,6 +326,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                                 if (issue.getState() == IssueState.Working) {
                                     MainActivity.this.stopService(new Intent(MainActivity.this, WatchdogService.class));
                                 }
+
+                                // TODO: remove full wroted time records
 
                                 int position = this.items.indexOf(issue);
 
