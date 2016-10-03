@@ -28,6 +28,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -294,13 +295,20 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                 }
                 case R.id.action_change_status: {
                     (new AlertDialog.Builder(MainActivity.this))
-                            .setTitle("Select new status\n(old status: " + issue.getStatus() + ")")
-                            .setItems(Issue.getStatuses(), (dialog, itemIndex) -> {
-                                dialog.dismiss();
+                            .setTitle("Select new status")
+                            .setSingleChoiceItems(Issue.getStatuses(),
+                                    Arrays.asList(Issue.getStatuses()).indexOf(issue.getStatus()),
+                                    (dialog, itemIndex) -> {
+                                        dialog.dismiss();
 
-                                String newStatus = Issue.getStatuses()[itemIndex];
-                                // TODO: update trackor with new status
-                            })
+                                        String newStatus = Issue.getStatuses()[itemIndex];
+
+                                        if (newStatus.equals(issue.getStatus())) {
+                                            return;
+                                        }
+
+                                        // TODO: update trackor with new status
+                                    })
                             .show();
 
                     break;

@@ -45,7 +45,7 @@ public class SelectorDialog {
                             AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
 
                             builder.setTitle("Select filter");
-                            builder.setSingleChoiceItems(items, -1, (dialog, item) -> {
+                            builder.setItems(items, (dialog, item) -> {
                                 dialog.dismiss();
 
                                 subscriber.onNext(items[item].toString());
@@ -88,7 +88,7 @@ public class SelectorDialog {
                             AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
 
                             builder.setTitle(dialogSettings.getSelectTitle());
-                            builder.setSingleChoiceItems(items, -1, (dialog, item) -> {
+                            builder.setItems(items, (dialog, item) -> {
                                 dialog.dismiss();
 
                                 T itemInstance = list.get(item);
