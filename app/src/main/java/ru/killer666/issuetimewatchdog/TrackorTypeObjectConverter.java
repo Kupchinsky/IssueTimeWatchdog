@@ -151,6 +151,7 @@ class TrackorTypeObjectConverter {
         return Strings.join(",", result);
     }
 
+    // TODO
     /*<T extends TrackorType> JsonObject toJson(T instance, FieldFilter fieldFilter) {
         Class<? extends TrackorType> typeClass = instance.getClass();
 

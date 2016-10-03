@@ -1,5 +1,6 @@
 package ru.killer666.issuetimewatchdog;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -27,6 +28,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -294,8 +296,26 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                     // TODO
                     break;
                 }
+                case R.id.action_add_unwatched_time: {
+                    Calendar calendar = Calendar.getInstance();
+                    DatePickerDialog datePickerDialog = new DatePickerDialog(
+                            MainActivity.this,
+                            (view, year, monthOfYear, dayOfMonth) -> {
+                                // TODO: check if date is in this month
+                                // TODO: if contains time records:
+                                // TODO: Ask confirm
+                                // TODO: Else: Ask confirm to create new time record for this date
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                    );
+                    datePickerDialog.show();
+
+                    break;
+                }
                 case R.id.action_update_timerecords: {
-                    // TODO
+                    // TODO: start service with specific intent
                     break;
                 }
                 case R.id.action_remove: {

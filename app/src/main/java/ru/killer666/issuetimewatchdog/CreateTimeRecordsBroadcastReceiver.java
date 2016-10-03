@@ -31,7 +31,7 @@ public class CreateTimeRecordsBroadcastReceiver extends RoboBroadcastReceiver {
 
         logger.debug("Wakelock acquired");
 
-        // TODO
+        // TODO: start service with specific intent
 
         wl.release();
 
