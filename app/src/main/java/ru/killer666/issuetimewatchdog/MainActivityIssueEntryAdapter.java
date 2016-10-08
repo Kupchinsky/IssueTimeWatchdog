@@ -265,7 +265,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                     .setAction(CreateTimeRecordsService.ACTION_UPDATE_SINGLE)
                     .putExtra(CreateTimeRecordsService.EXTRA_ISSUE_ID, issue.getId()));
         } else {
-            this.issueDao.delete(issue);
+            this.issueDao.deleteWithAllChilds(issue);
             EventBus.getDefault().post(new CreateTimeRecordsService.OnTimeRecordsUpdatedEvent(issue));
         }
     }

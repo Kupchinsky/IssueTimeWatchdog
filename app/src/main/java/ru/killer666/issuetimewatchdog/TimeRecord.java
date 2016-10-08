@@ -2,7 +2,9 @@ package ru.killer666.issuetimewatchdog;
 
 import android.support.annotation.NonNull;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Calendar;
@@ -23,7 +25,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     private int id;
 
     @TrackorField
-    @DatabaseField(canBeNull = false, foreign = true)
+    @DatabaseField(canBeNull = false, foreign = true, foreignAutoRefresh = true)
     private Issue issue;
 
     @TrackorField("VQS_IT_WORK_DATE")
@@ -40,6 +42,9 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
 
     @DatabaseField(canBeNull = false)
     private float wroteTime;
+
+    @ForeignCollectionField
+    private ForeignCollection<TimeRecordStartStop> timeRecordStartStopForeignCollection;
 
     TimeRecord(Issue issue) {
         this.issue = issue;

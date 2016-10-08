@@ -1,11 +1,14 @@
 package ru.killer666.issuetimewatchdog;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.io.Serializable;
 import java.util.Date;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,21 +19,23 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
+public class TimeRecordsUpdateLog {
     @DatabaseField(generatedId = true)
     private int id;
-
-    @DatabaseField(canBeNull = false, foreign = true, foreignAutoRefresh = true)
-    private TimeRecord timeRecord;
 
     @DatabaseField(canBeNull = false)
     private Date date;
 
-    @DatabaseField(canBeNull = false, dataType = DataType.ENUM_INTEGER)
-    private TimeRecordStartStopType type;
+    @DatabaseField(canBeNull = false)
+    private boolean isIssueRemoved;
 
-    @Override
-    public int compareTo(TimeRecordStartStop another) {
-        return another.getDate().compareTo(this.getDate());
+    @DatabaseField(dataType = DataType.SERIALIZABLE)
+    private ArrayListMultimap<String, TimeRecordCopy> timeRecords;
+
+    @AllArgsConstructor
+    @Getter
+    static class TimeRecordCopy implements Serializable {
+        private Date date;
+        private float wrote;
     }
 }

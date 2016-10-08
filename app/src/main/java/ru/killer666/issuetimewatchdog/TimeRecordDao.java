@@ -5,6 +5,7 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
 
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -15,13 +16,30 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         super(dao);
     }
 
+    List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
+        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+
+        try {
+            queryBuilder.where()
+                    .eq("issue_id", issue)
+                    .and()
+                    .not()
+                    .raw("workedTime = wroteTime");
+            queryBuilder.orderBy("date", false);
+
+            return this.query(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     List<TimeRecord> queryLastOfIssueList(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
             queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
-            queryBuilder.limit(Long.valueOf(SHOW_LIMIT));
+            queryBuilder.limit(SHOW_LIMIT);
 
             return this.query(queryBuilder.prepare());
         } catch (SQLException e) {
@@ -64,6 +82,24 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
             queryBuilder.where().eq("trackorKey", trackorKey);
 
             return this.queryForFirst(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    List<TimeRecord> queryOldOfIssue(Issue issue) {
+        Calendar calendar = Calendar.getInstance();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+
+        try {
+            calendar.add(Calendar.DATE, -(SHOW_LIMIT + 1));
+
+            queryBuilder.where()
+                    .eq("issue_id", issue)
+                    .and()
+                    .lt("date", calendar.getTime());
+
+            return this.query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

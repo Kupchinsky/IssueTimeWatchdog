@@ -2,7 +2,9 @@ package ru.killer666.issuetimewatchdog;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Date;
@@ -67,6 +69,9 @@ public class Issue implements TrackorType {
 
     @DatabaseField
     private boolean autoRemove;
+
+    @ForeignCollectionField
+    private ForeignCollection<TimeRecord> timeRecordForeignCollection;
 
     private IssueState state = IssueState.Idle;
 

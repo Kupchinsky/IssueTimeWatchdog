@@ -119,7 +119,6 @@ public class WatchdogService extends RoboService {
         logger.info("Intent extras: {}", intent.getExtras().keySet());
 
         this.timeRecord = this.timeRecordDao.queryForId(intent.getIntExtra(EXTRA_TIME_RECORD_ID, -1));
-        this.issueDao.refresh(this.timeRecord.getIssue());
 
         logger.info("Time record loaded: {}", this.timeRecord);
 
