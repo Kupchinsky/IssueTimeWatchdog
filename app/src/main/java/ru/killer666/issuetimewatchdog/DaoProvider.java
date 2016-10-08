@@ -40,4 +40,21 @@ public class DaoProvider {
             }
         }
     }
+
+    static class TimeRecordStartStopProvider implements Provider<TimeRecordStartStopDao> {
+        @Inject
+        private DatabaseHelper databaseHelper;
+
+        @Override
+        public TimeRecordStartStopDao get() {
+            try {
+                Dao<TimeRecordStartStop, Integer> dao = this.databaseHelper.getDao(TimeRecordStartStop.class);
+                dao.setObjectCache(true);
+
+                return new TimeRecordStartStopDao(dao);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

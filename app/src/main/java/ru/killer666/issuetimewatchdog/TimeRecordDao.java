@@ -5,6 +5,7 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
@@ -23,6 +24,21 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
             queryBuilder.limit(Long.valueOf(SHOW_LIMIT));
 
             return this.query(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    TimeRecord queryForIssueAndDate(Issue issue, Date date) {
+        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+
+        try {
+            queryBuilder.where()
+                    .eq("issue_id", issue)
+                    .and()
+                    .eq("date", date);
+
+            return this.queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

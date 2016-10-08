@@ -3,23 +3,37 @@
     tools:context="ru.killer666.issuetimewatchdog.MainActivity">
 
     <item
-        android:id="@+id/action_timerecord"
-        android:title="Time record" />
-    <item
         android:id="@+id/action_switchstate"
         android:title="Start/stop working" />
     <item
-        android:id="@+id/action_show_info"
-        android:title="Show info" />
-    <item
-        android:id="@+id/action_change_status"
-        android:title="Change status" />
+        android:id="@+id/action_timerecord"
+        android:title="Time records" />
     <item
         android:id="@+id/action_add_unwatched_time"
         android:title="Add unwatched time" />
     <item
+        android:id="@+id/action_remove_watched_time"
+        android:title="Remove watched time" />
+    <item
+        android:title="Miscellaneous"
+        android:enabled="false"
+        />
+    <item
+        android:id="@+id/action_show_info"
+        android:title="Show info"
+        />
+    <item
+        android:id="@+id/action_change_status"
+        android:title="Change status" />
+    <item
+        android:id="@+id/action_startstoplog"
+        android:title="Start/stop log" />
+    <item
+        android:id="@+id/action_timerecords_remote"
+        android:title="Show remote time records" />
+    <item
         android:id="@+id/action_update_timerecords"
-        android:title="Update Trackor time records" />
+        android:title="Update Trackor time records (force)" />
     <item
         android:id="@+id/action_remove"
         android:title="Remove (local)" />

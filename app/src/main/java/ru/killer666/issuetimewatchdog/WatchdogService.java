@@ -29,6 +29,10 @@ public class WatchdogService extends RoboService {
 
     @Inject
     private TimeRecordDao timeRecordDao;
+    @Inject
+    private IssueDao issueDao;
+    @Inject
+    private TimeRecordStartStopDao timeRecordStartStopDao;
 
     private TimeRecord timeRecord;
 
@@ -68,6 +72,9 @@ public class WatchdogService extends RoboService {
                     MyDateUtils.getStartOfDay(this.timeRecord.getDate()).getTime());
 
             logger.info("Created new time record: {}", this.timeRecord);
+
+            this.timeRecordStartStopDao.createWithType(prevDayTimeRecord, TimeRecordStartStopType.TypeStopForDayEnd);
+            this.timeRecordStartStopDao.createWithType(this.timeRecord, TimeRecordStartStopType.TypeStart);
         } else {
             // Высчитываем прошедшее время, если вдруг телефон заснул
             increaseTime = this.convertToHours(this.currentTime() -
@@ -112,8 +119,11 @@ public class WatchdogService extends RoboService {
         logger.info("Intent extras: {}", intent.getExtras().keySet());
 
         this.timeRecord = this.timeRecordDao.queryForId(intent.getIntExtra(EXTRA_TIME_RECORD_ID, -1));
+        this.issueDao.refresh(this.timeRecord.getIssue());
+
         logger.info("Time record loaded: {}", this.timeRecord);
 
+        this.timeRecordStartStopDao.createWithType(this.timeRecord, TimeRecordStartStopType.TypeStart);
         this.postDelayed();
 
         Intent notificationIntent = new Intent(this, MainActivity.class);

@@ -25,4 +25,14 @@ class MyDateUtils {
 
         return calendar.getTime();
     }
+
+    static boolean isCurrentMonth(Date date) {
+        Calendar calendarDate = Calendar.getInstance();
+        calendarDate.setTime(date);
+
+        Calendar calendar = Calendar.getInstance();
+
+        return (calendar.get(Calendar.YEAR) == calendarDate.get(Calendar.YEAR))
+                && (calendar.get(Calendar.MONTH) == calendarDate.get(Calendar.MONTH));
+    }
 }

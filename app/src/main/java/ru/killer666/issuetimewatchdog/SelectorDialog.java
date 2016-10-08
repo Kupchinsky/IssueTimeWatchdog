@@ -30,7 +30,7 @@ public class SelectorDialog {
         return progressDialog;
     }
 
-    Observable<String> showFilterSelect(Class<? extends TrackorType> trackorTypeClass) {
+    Observable<String> showFilterSelect(Class<? extends TrackorType> trackorTypeClass, String currentFilter) {
         return Observable.defer(() -> {
             ProgressDialog progressDialog = this.showProgressDialog();
 
@@ -45,7 +45,7 @@ public class SelectorDialog {
                             AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
 
                             builder.setTitle("Select filter");
-                            builder.setItems(items, (dialog, item) -> {
+                            builder.setSingleChoiceItems(items, list.indexOf(currentFilter), (dialog, item) -> {
                                 dialog.dismiss();
 
                                 subscriber.onNext(items[item].toString());

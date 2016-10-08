@@ -41,6 +41,7 @@ public class Application extends android.app.Application {
 
             binder.bind(IssueDao.class).toProvider(DaoProvider.IssueProvider.class);
             binder.bind(TimeRecordDao.class).toProvider(DaoProvider.TimeRecordProvider.class);
+            binder.bind(TimeRecordStartStopDao.class).toProvider(DaoProvider.TimeRecordStartStopProvider.class);
         }
     }
 

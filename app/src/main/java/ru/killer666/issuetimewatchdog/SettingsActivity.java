@@ -104,7 +104,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSelectIssueFilter: {
-                this.selectorDialog.showFilterSelect(Issue.class).subscribe((filter) -> {
+                this.selectorDialog.showFilterSelect(Issue.class, this.filtersSettings.getIssueFilter()).subscribe((filter) -> {
                     SettingsActivity.this.filtersSettings.setIssueFilter(filter);
                     SettingsActivity.this.updateFilters();
                 });
@@ -112,7 +112,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
                 break;
             }
             case R.id.buttonSelectTimeRecordFilter: {
-                this.selectorDialog.showFilterSelect(TimeRecord.class).subscribe((filter) -> {
+                this.selectorDialog.showFilterSelect(TimeRecord.class, this.filtersSettings.getTimerecordFilter()).subscribe((filter) -> {
                     SettingsActivity.this.filtersSettings.setTimerecordFilter(filter);
                     SettingsActivity.this.updateFilters();
                 });

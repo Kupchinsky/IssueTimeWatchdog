@@ -75,7 +75,7 @@ public class Issue implements TrackorType {
         return "Issue";
     }
 
-    public String getReadableName() {
+    String getReadableName() {
         return this.getTrackorKey() + " (" + this.getSummary() + ")";
     }
 
