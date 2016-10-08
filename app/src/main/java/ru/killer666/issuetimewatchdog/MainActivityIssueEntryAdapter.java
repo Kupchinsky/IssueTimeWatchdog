@@ -62,17 +62,33 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         RoboGuice.injectMembers(context, this);
     }
 
-    private void showTimeRecord(Issue issue) {
+    void showTimeRecord(Issue issue) {
         String message = "";
 
         for (TimeRecord timeRecord : this.timeRecordDao.queryLastOfIssueList(issue)) {
             message += Html.fromHtml(this.formatTimeRecordHistory(timeRecord, true)) + "\n";
         }
 
-        new AlertDialog.Builder(this.context)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.context)
                 .setTitle("Time records of " + issue.getReadableName())
                 .setMessage(message + "\n(Time records of last " + TimeRecordDao.SHOW_LIMIT + " days)")
-                .show();
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+
+        if (issue.getState() == IssueState.Working) {
+            builder.setNeutralButton("Stop working", ((dialog, which) -> {
+                dialog.dismiss();
+
+                this.context.stopService(new Intent(this.context, WatchdogService.class));
+                issue.setState(IssueState.Idle);
+
+                TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(issue);
+                this.timeRecordStartStopDao.createWithType(timeRecord, TimeRecordStartStopType.TypeStop);
+
+                this.notifyItemChanged(this.items.indexOf(issue));
+            }));
+        }
+
+        builder.show();
     }
 
     @Override

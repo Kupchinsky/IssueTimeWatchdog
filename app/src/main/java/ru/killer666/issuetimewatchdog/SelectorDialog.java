@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import roboguice.context.event.OnDestroyEvent;
+import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -23,23 +25,40 @@ public class SelectorDialog {
     @Inject
     private TrackorApiService trackorApiService;
 
-    private ProgressDialog showProgressDialog() {
-        ProgressDialog progressDialog = ProgressDialog.show(this.context, "Please wait", "Loading please wait..", true);
-        progressDialog.setCancelable(false);
+    private ProgressDialog progressDialog;
 
-        return progressDialog;
+    @Inject
+    public SelectorDialog(EventManager eventManager) {
+        eventManager.registerObserver(OnDestroyEvent.class, event -> {
+            this.dismissProgressDialog();
+        });
+    }
+
+    private void showProgressDialog() {
+        this.progressDialog = ProgressDialog.show(this.context, "Please wait", "Loading please wait..", true);
+        this.progressDialog.setCancelable(false);
+    }
+
+    private void dismissProgressDialog() {
+        if (this.progressDialog != null) {
+            if (this.progressDialog.isShowing()) {
+                this.progressDialog.dismiss();
+            }
+
+            this.progressDialog = null;
+        }
     }
 
     Observable<String> showFilterSelect(Class<? extends TrackorType> trackorTypeClass, String currentFilter) {
         return Observable.defer(() -> {
-            ProgressDialog progressDialog = this.showProgressDialog();
+            this.showProgressDialog();
 
             return Observable.create(subscriber -> {
                 this.trackorApiService.readFilters(trackorTypeClass)
                         .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(list -> {
-                            progressDialog.dismiss();
+                            this.dismissProgressDialog();
 
                             final CharSequence[] items = list.toArray(new CharSequence[list.size()]);
                             AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
@@ -53,7 +72,7 @@ public class SelectorDialog {
                             });
                             builder.create().show();
                         }, error -> {
-                            progressDialog.dismiss();
+                            this.dismissProgressDialog();
 
                             (new AlertDialog.Builder(this.context))
                                     .setTitle("Error")
@@ -69,14 +88,14 @@ public class SelectorDialog {
     <T extends TrackorType> Observable<T> showTrackorReadSelect(Class<T> trackorTypeClass,
                                                                 String filter, DialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
-            ProgressDialog progressDialog = this.showProgressDialog();
+            this.showProgressDialog();
 
             return Observable.create(subscriber -> {
                 this.trackorApiService.readTrackorData(trackorTypeClass, filter)
                         .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(list -> {
-                            progressDialog.dismiss();
+                            this.dismissProgressDialog();
 
                             List<String> itemsList = Lists.newArrayList();
 
@@ -111,7 +130,7 @@ public class SelectorDialog {
                             });
                             builder.create().show();
                         }, error -> {
-                            progressDialog.dismiss();
+                            this.dismissProgressDialog();
 
                             (new AlertDialog.Builder(this.context))
                                     .setTitle("Error")

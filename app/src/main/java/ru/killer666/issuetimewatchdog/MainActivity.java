@@ -23,6 +23,9 @@ import java.util.List;
 import roboguice.inject.InjectView;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
+    static final String ACTION_SHOW_TIMERECORD = "showTimeRecord";
+    static final String EXTRA_ISSUE_ID = "issueId";
+
     private final List<Issue> items = Lists.newArrayList();
     private MainActivityIssueEntryAdapter listAdapter;
 
@@ -60,6 +63,15 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
         this.items.addAll(this.issueDao.queryNotAutoRemove());
         Collections.sort(this.items, this.issueComparator);
+
+        if (this.getIntent().getAction().equals(ACTION_SHOW_TIMERECORD) && this.getIntent().hasExtra(EXTRA_ISSUE_ID)) {
+            int issueId = this.getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
+            Issue issue = this.issueDao.queryForId(issueId);
+
+            if (issue != null) {
+                this.listAdapter.showTimeRecord(issue);
+            }
+        }
     }
 
     @Override

@@ -127,6 +127,9 @@ public class WatchdogService extends RoboService {
         this.postDelayed();
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setAction(MainActivity.ACTION_SHOW_TIMERECORD);
+        notificationIntent.putExtra(MainActivity.EXTRA_ISSUE_ID, this.timeRecord.getIssue().getId());
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this)
