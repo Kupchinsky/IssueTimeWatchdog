@@ -18,6 +18,10 @@ import android.widget.TextView;
 
 import com.google.inject.Inject;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -236,6 +240,36 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    private void onTimeRecordsUpdated(CreateTimeRecordsService.OnTimeRecordsUpdatedEvent event) {
+        Issue issue = event.getIssue();
+
+        if (issue.isAutoRemove()) {
+            int position = this.items.indexOf(issue);
+            this.items.remove(position);
+
+            this.notifyItemRemoved(position);
+        }
+    }
+
+    private void removeIssue(Issue issue, boolean update) {
+        if (issue.getState() == IssueState.Working) {
+            this.context.stopService(new Intent(this.context, WatchdogService.class));
+        }
+
+        issue.setAutoRemove(true);
+        this.issueDao.update(issue);
+
+        if (update) {
+            this.context.startActivity(new Intent(this.context, CreateTimeRecordsService.class)
+                    .setAction(CreateTimeRecordsService.ACTION_UPDATE_SINGLE)
+                    .putExtra(CreateTimeRecordsService.EXTRA_ISSUE_ID, issue.getId()));
+        } else {
+            this.issueDao.delete(issue);
+            EventBus.getDefault().post(new CreateTimeRecordsService.OnTimeRecordsUpdatedEvent(issue));
+        }
+    }
+
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         Issue issue = this.items.get(item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1));
@@ -343,6 +377,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                             // TODO: if contains time records:
                             // TODO: Ask confirm
                             // TODO: Else: Ask confirm to create new time record for this date
+                            // TODO: Сделать активность и сущности просмотра логов заливки
                         },
                         calendar.get(Calendar.YEAR),
                         calendar.get(Calendar.MONTH),
@@ -365,23 +400,14 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                         .setTitle("Confirm remove issue")
                         .setMessage("Are you sure you want to remove issue " + issue.getReadableName() + " from local database?\n\n" +
                                 "Note: you can also remove issue with time records that not uploaded to Trackor")
-                        .setNeutralButton("Upload and remove", (dialog, which) -> {
-                        })
-                        .setPositiveButton("Remove without upload", (dialog, which) -> {
-                            if (issue.getState() == IssueState.Working) {
-                                this.context.stopService(new Intent(this.context, WatchdogService.class));
-                            }
-
-                            // TODO: remove full wroted time records
-
-                            int position = this.items.indexOf(issue);
-
-                            this.items.remove(position);
-                            this.notifyItemRemoved(position);
-
-                            issue.setAutoRemove(true);
-                            this.issueDao.update(issue);
-                        })
+                        .setNeutralButton("Upload and remove", (dialog, which) -> this.removeIssue(issue, true))
+                        .setPositiveButton("Remove without upload", (dialog, which) ->
+                                (new AlertDialog.Builder(this.context))
+                                        .setTitle("Confirm remove issue without upload")
+                                        .setMessage("Confirm this action?")
+                                        .setPositiveButton("Remove without upload", (dialog1, which1) -> this.removeIssue(issue, false))
+                                        .setNegativeButton("Cancel", (dialog1, which1) -> dialog.cancel())
+                                        .show())
                         .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                         .show();
                 break;
