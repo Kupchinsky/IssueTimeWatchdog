@@ -24,9 +24,10 @@ public class Issue implements TrackorType {
     @Getter
     static final String[] statuses = {"Opened",
             "In Progress",
-            "Ready for Test",
+            "Ready for Test by OV",
             "Testing In Progress",
             "Tested",
+            "Ready for Test by Customer",
             "Closed",
             "Awaiting Response",
             "Deferred",
