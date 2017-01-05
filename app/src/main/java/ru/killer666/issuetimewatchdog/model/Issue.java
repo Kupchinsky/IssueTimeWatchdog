@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 
 @Getter
 @Setter
@@ -35,7 +36,7 @@ public class Issue implements TrackorType {
     @DatabaseField(generatedId = true)
     private int id;
 
-    @TrackorField(value = TrackorType.KEY, humanName = "Issue ID")
+    @TrackorField(value = KEY, humanName = "Issue ID")
     @DatabaseField(canBeNull = false, index = true)
     private String trackorKey;
 
@@ -80,12 +81,12 @@ public class Issue implements TrackorType {
         return "Issue";
     }
 
-    String getReadableName() {
+    public String getReadableName() {
         return this.getTrackorKey() + " (" + this.getSummary() + ")";
     }
 
     @Singleton
-    static class Comparator implements java.util.Comparator<Issue> {
+    public static class Comparator implements java.util.Comparator<Issue> {
         @Inject
         private TimeRecordDao timeRecordDao;
 

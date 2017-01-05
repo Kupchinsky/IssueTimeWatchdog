@@ -32,6 +32,13 @@ import java.util.List;
 
 import roboguice.RoboGuice;
 import roboguice.inject.ContextSingleton;
+import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.IssueState;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 @ContextSingleton
 class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder> implements PopupMenu.OnMenuItemClickListener, View.OnClickListener {
@@ -75,7 +82,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this.context)
                 .setTitle("Time records of " + issue.getReadableName())
-                .setMessage(message + "\n(Time records of last " + TimeRecordDao.SHOW_LIMIT + " days)")
+                .setMessage(message + "\n(Time records of last " + TimeRecordDaoImpl.SHOW_LIMIT + " days)")
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
 
         if (issue.getState() == IssueState.Working) {

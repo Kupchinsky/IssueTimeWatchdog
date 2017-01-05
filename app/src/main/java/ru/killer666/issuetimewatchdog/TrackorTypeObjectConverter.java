@@ -27,6 +27,12 @@ import java.util.concurrent.Callable;
 
 import lombok.Getter;
 import roboguice.util.Strings;
+import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TrackorField;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
 
 @Singleton
 class TrackorTypeObjectConverter {

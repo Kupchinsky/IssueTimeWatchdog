@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.dao;
 
 import com.google.inject.Inject;
 import com.j256.ormlite.dao.Dao;
@@ -10,7 +10,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
+import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
+
+class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
     static final int LOAD_LIMIT_DAYS = 7;
 
     @Inject
@@ -18,11 +22,12 @@ class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
     @Inject
     private TimeRecordDao timeRecordDao;
 
-    IssueDao(Dao<Issue, Integer> dao) {
+    IssueDaoImpl(Dao<Issue, Integer> dao) {
         super(dao);
     }
 
-    List<Issue> queryNotAutoRemove() {
+    @Override
+    public List<Issue> queryNotAutoRemove() {
         QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -34,7 +39,8 @@ class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
         }
     }
 
-    List<Issue> queryWithLoadLimit() {
+    @Override
+    public List<Issue> queryWithLoadLimit() {
         Calendar calendar = Calendar.getInstance();
         QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
 
@@ -56,7 +62,8 @@ class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
         }
     }
 
-    Issue queryForTrackorKey(String trackorKey) {
+    @Override
+    public Issue queryForTrackorKey(String trackorKey) {
         QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -68,7 +75,8 @@ class IssueDao extends RuntimeExceptionDao<Issue, Integer> {
         }
     }
 
-    void deleteWithAllChilds(Issue issue) {
+    @Override
+    public void deleteWithAllChilds(Issue issue) {
         for (TimeRecord timeRecord : issue.getTimeRecordForeignCollection()) {
             for (TimeRecordStartStop timeRecordStartStop : timeRecord.getTimeRecordStartStopForeignCollection()) {
                 this.timeRecordStartStopDao.delete(timeRecordStartStop);

@@ -18,6 +18,10 @@ import java.util.Calendar;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import roboguice.service.RoboService;
+import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public class WatchdogService extends RoboService {
     private static Logger logger;

@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import android.support.annotation.NonNull;
 
@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.killer666.issuetimewatchdog.MyDateUtils;
+import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
 
 @Getter
 @Setter
@@ -36,7 +38,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField(canBeNull = false)
     private float workedTime;
 
-    @TrackorField(TrackorType.KEY)
+    @TrackorField(KEY)
     @DatabaseField(index = true)
     private String trackorKey;
 
@@ -46,12 +48,12 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @ForeignCollectionField
     private ForeignCollection<TimeRecordStartStop> timeRecordStartStopForeignCollection;
 
-    TimeRecord(Issue issue) {
+    public TimeRecord(Issue issue) {
         this.issue = issue;
         this.date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
-    void increaseWorkedTime(float value) {
+    public void increaseWorkedTime(float value) {
         this.workedTime += value;
     }
 

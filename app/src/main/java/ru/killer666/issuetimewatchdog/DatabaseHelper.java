@@ -12,6 +12,9 @@ import org.slf4j.Logger;
 
 import java.sql.SQLException;
 
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
+
 @Singleton
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static Logger logger;

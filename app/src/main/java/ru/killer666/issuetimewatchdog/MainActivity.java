@@ -21,6 +21,9 @@ import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
+import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.IssueState;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
     static final String ACTION_SHOW_TIMERECORD = "showTimeRecord";

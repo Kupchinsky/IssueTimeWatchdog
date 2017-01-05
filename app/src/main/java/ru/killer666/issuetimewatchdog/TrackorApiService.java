@@ -17,6 +17,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
 import rx.Observable;
 
 @Singleton

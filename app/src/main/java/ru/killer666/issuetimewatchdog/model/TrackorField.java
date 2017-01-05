@@ -1,10 +1,10 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@interface TrackorField {
+public @interface TrackorField {
     String value() default "";
     String humanName() default "";
 }

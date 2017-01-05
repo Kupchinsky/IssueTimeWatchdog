@@ -1,11 +1,8 @@
 package ru.killer666.issuetimewatchdog;
 
-import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.MembersInjector;
-import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 
@@ -15,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-import okhttp3.OkHttpClient;
 import roboguice.RoboGuice;
 
 public class Application extends android.app.Application {
@@ -27,22 +23,11 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        Injector injector = RoboGuice.overrideApplicationInjector(this, new MyModule());
+        RoboGuice.setUseAnnotationDatabases(false);
+        Injector injector = RoboGuice.getOrCreateBaseApplicationInjector(this);
 
         // Do nothing, auto initialize
         injector.getInstance(CreateTimeRecordsSettings.class);
-    }
-
-    public static class MyModule implements Module {
-        @Override
-        public void configure(Binder binder) {
-            binder.bindListener(Matchers.any(), new LoggerTypeListener());
-            binder.bind(OkHttpClient.class).toProvider(HttpClientProvider.class);
-
-            binder.bind(IssueDao.class).toProvider(DaoProvider.IssueProvider.class);
-            binder.bind(TimeRecordDao.class).toProvider(DaoProvider.TimeRecordProvider.class);
-            binder.bind(TimeRecordStartStopDao.class).toProvider(DaoProvider.TimeRecordStartStopProvider.class);
-        }
     }
 
     public static class LoggerTypeListener implements TypeListener {

@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.dao;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
@@ -9,14 +9,18 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
-    static final int SHOW_LIMIT = 7;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
-    TimeRecordDao(Dao<TimeRecord, Integer> dao) {
+public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> implements TimeRecordDao {
+    public static final int SHOW_LIMIT = 7;
+
+    TimeRecordDaoImpl(Dao<TimeRecord, Integer> dao) {
         super(dao);
     }
 
-    List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
+    @Override
+    public List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -33,7 +37,8 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    List<TimeRecord> queryLastOfIssueList(Issue issue) {
+    @Override
+    public List<TimeRecord> queryLastOfIssueList(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -47,7 +52,8 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    TimeRecord queryForIssueAndDate(Issue issue, Date date) {
+    @Override
+    public TimeRecord queryForIssueAndDate(Issue issue, Date date) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -62,7 +68,8 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    TimeRecord queryLastOfIssue(Issue issue) {
+    @Override
+    public TimeRecord queryLastOfIssue(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -75,7 +82,8 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    TimeRecord queryForTrackorKey(String trackorKey) {
+    @Override
+    public TimeRecord queryForTrackorKey(String trackorKey) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 
         try {
@@ -87,7 +95,8 @@ class TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
         }
     }
 
-    List<TimeRecord> queryOldOfIssue(Issue issue) {
+    @Override
+    public List<TimeRecord> queryOldOfIssue(Issue issue) {
         Calendar calendar = Calendar.getInstance();
         QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
 

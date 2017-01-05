@@ -3,8 +3,8 @@ package ru.killer666.issuetimewatchdog;
 import java.util.Calendar;
 import java.util.Date;
 
-class MyDateUtils {
-    static Date getEndOfDay(Date date) {
+public class MyDateUtils {
+    public static Date getEndOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, 23);
@@ -15,7 +15,7 @@ class MyDateUtils {
         return calendar.getTime();
     }
 
-    static Date getStartOfDay(Date date) {
+    public static Date getStartOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -26,7 +26,7 @@ class MyDateUtils {
         return calendar.getTime();
     }
 
-    static boolean isCurrentMonth(Date date) {
+    public static boolean isCurrentMonth(Date date) {
         Calendar calendarDate = Calendar.getInstance();
         calendarDate.setTime(date);
 

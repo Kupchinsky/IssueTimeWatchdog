@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 @Getter
 @Setter

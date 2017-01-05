@@ -5,6 +5,10 @@ import com.google.inject.Singleton;
 
 import java.util.List;
 
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
+
 @Singleton
 public class TrackorTypeClasspathScanner {
     List<Class<? extends TrackorType>> scan() {

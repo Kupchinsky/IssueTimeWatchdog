@@ -1,29 +1,32 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.dao;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.j256.ormlite.dao.Dao;
 
 import java.sql.SQLException;
 
-import roboguice.RoboGuice;
+import ru.killer666.issuetimewatchdog.DatabaseHelper;
+import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
-public class DaoProvider {
-    static class IssueProvider implements Provider<IssueDao> {
+public class DaoProviders {
+    public static class IssueProvider implements Provider<IssueDaoImpl> {
         @Inject
         private DatabaseHelper databaseHelper;
         @Inject
-        private Application application;
+        private Injector injector;
 
         @Override
-        public IssueDao get() {
+        public IssueDaoImpl get() {
             try {
                 Dao<Issue, Integer> dao = this.databaseHelper.getDao(Issue.class);
                 dao.setObjectCache(true);
 
-                IssueDao result = new IssueDao(dao);
-                RoboGuice.getOrCreateBaseApplicationInjector(this.application).injectMembers(result);
-
+                IssueDaoImpl result = new IssueDaoImpl(dao);
+                injector.injectMembers(result);
                 return result;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -31,44 +34,34 @@ public class DaoProvider {
         }
     }
 
-    static class TimeRecordProvider implements Provider<TimeRecordDao> {
+    public static class TimeRecordProvider implements Provider<TimeRecordDaoImpl> {
         @Inject
         private DatabaseHelper databaseHelper;
-        @Inject
-        private Application application;
 
         @Override
-        public TimeRecordDao get() {
+        public TimeRecordDaoImpl get() {
             try {
                 Dao<TimeRecord, Integer> dao = this.databaseHelper.getDao(TimeRecord.class);
                 dao.setObjectCache(true);
 
-                TimeRecordDao result = new TimeRecordDao(dao);
-                RoboGuice.getOrCreateBaseApplicationInjector(this.application).injectMembers(result);
-
-                return result;
+                return new TimeRecordDaoImpl(dao);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    static class TimeRecordStartStopProvider implements Provider<TimeRecordStartStopDao> {
+    public static class TimeRecordStartStopProvider implements Provider<TimeRecordStartStopDaoImpl> {
         @Inject
         private DatabaseHelper databaseHelper;
-        @Inject
-        private Application application;
 
         @Override
-        public TimeRecordStartStopDao get() {
+        public TimeRecordStartStopDaoImpl get() {
             try {
                 Dao<TimeRecordStartStop, Integer> dao = this.databaseHelper.getDao(TimeRecordStartStop.class);
                 dao.setObjectCache(true);
 
-                TimeRecordStartStopDao result = new TimeRecordStartStopDao(dao);
-                RoboGuice.getOrCreateBaseApplicationInjector(this.application).injectMembers(result);
-
-                return result;
+                return new TimeRecordStartStopDaoImpl(dao);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

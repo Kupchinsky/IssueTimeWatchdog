@@ -19,6 +19,8 @@ import com.google.inject.Inject;
 
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 @ContentView(R.layout.activity_settings)
 public class SettingsActivity extends RoboAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {

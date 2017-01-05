@@ -14,6 +14,8 @@ import java.util.List;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
+import ru.killer666.issuetimewatchdog.model.TrackorField;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;

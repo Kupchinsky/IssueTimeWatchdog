@@ -1,10 +1,10 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-enum IssueState {
+public enum IssueState {
     Working("working now"), Idle("idle");
 
     @Getter

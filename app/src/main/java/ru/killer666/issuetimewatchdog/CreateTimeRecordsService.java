@@ -13,6 +13,10 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import roboguice.service.RoboIntentService;
+import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public class CreateTimeRecordsService extends RoboIntentService {
     private static Logger logger;
