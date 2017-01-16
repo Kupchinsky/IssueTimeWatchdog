@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,10 +6,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum TimeRecordStartStopType {
+
     TypeStart("Started"),
     TypeStop("Stopped"),
     TypeStopForOtherTask("Stopped (other task working)"),
     TypeStopForDayEnd("Stopped (day ends)");
 
     private final String value;
+
 }

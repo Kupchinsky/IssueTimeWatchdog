@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,13 +21,18 @@ import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
+import ru.killer666.issuetimewatchdog.FiltersSettings;
+import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.R;
+import ru.killer666.issuetimewatchdog.helper.IssueComparator;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
-    static final String ACTION_SHOW_TIMERECORD = "showTimeRecord";
-    static final String EXTRA_ISSUE_ID = "issueId";
+
+    public static final String ACTION_SHOW_TIMERECORD = "showTimeRecord";
+    public static final String EXTRA_ISSUE_ID = "issueId";
 
     private final List<Issue> items = Lists.newArrayList();
     private MainActivityIssueEntryAdapter listAdapter;
@@ -35,7 +40,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Inject
     private IssueDao issueDao;
     @Inject
-    private Issue.Comparator issueComparator;
+    private IssueComparator issueComparator;
     @Inject
     private SelectorDialog selectorDialog;
     @Inject
@@ -157,4 +162,5 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
         return super.onOptionsItemSelected(item);
     }
+
 }

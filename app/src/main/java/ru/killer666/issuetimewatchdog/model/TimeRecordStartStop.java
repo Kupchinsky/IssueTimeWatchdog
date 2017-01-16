@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.model;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 @Getter
 @Setter
@@ -18,6 +17,7 @@ import ru.killer666.issuetimewatchdog.model.TimeRecord;
 @ToString
 @DatabaseTable
 public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
+
     @DatabaseField(generatedId = true)
     private int id;
 
@@ -34,4 +34,5 @@ public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
     public int compareTo(TimeRecordStartStop another) {
         return another.getDate().compareTo(this.getDate());
     }
+
 }

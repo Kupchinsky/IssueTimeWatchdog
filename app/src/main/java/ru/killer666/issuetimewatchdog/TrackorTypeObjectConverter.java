@@ -31,11 +31,9 @@ import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TrackorField;
-import ru.killer666.issuetimewatchdog.model.TrackorType;
 
 @Singleton
-class TrackorTypeObjectConverter {
+public class TrackorTypeObjectConverter {
     @Getter
     private ListMultimap<Class<? extends TrackorType>, Pair<Field, Parser>> typesMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.<Class<? extends TrackorType>, Pair<Field, Parser>>create());
     private Map<Class<? extends TrackorType>, String> trackorTypeNamesMap = Maps.newConcurrentMap();
@@ -92,11 +90,11 @@ class TrackorTypeObjectConverter {
         this.trackorTypeHelperMap.put(TimeRecord.class, trackorKey -> this.timeRecordDao.queryForTrackorKey(trackorKey));
     }
 
-    String getTrackorTypeName(Class<? extends TrackorType> trackorTypeClass) {
+    public String getTrackorTypeName(Class<? extends TrackorType> trackorTypeClass) {
         return this.trackorTypeNamesMap.get(trackorTypeClass);
     }
 
-    <T extends TrackorType> T fromJson(Class<T> typeClass, JsonObject jsonObject) {
+    public <T extends TrackorType> T fromJson(Class<T> typeClass, JsonObject jsonObject) {
         Preconditions.checkState(this.typesMap.containsKey(typeClass), "Class " + typeClass.getSimpleName() + " is not TrackorType");
 
         @SuppressWarnings("unchecked")
@@ -146,7 +144,7 @@ class TrackorTypeObjectConverter {
         }
     }
 
-    <T extends TrackorType> String getFieldsOf(Class<T> trackorTypeClass) {
+    public <T extends TrackorType> String getFieldsOf(Class<T> trackorTypeClass) {
         List<String> result = Lists.newArrayList();
 
         for (Pair<Field, Parser> pair : this.typesMap.get(trackorTypeClass)) {
@@ -280,7 +278,7 @@ class TrackorTypeObjectConverter {
         }
     }
 
-    interface Parser {
+    public interface Parser {
         Object parse(Field field, JsonPrimitive jsonPrimitive, Callable<JsonObject> jsonObjectCallable);
 
         JsonPrimitive parseTo(Field field, Object object);

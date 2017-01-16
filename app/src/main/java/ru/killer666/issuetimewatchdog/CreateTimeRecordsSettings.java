@@ -43,7 +43,7 @@ public class CreateTimeRecordsSettings {
         }
     }
 
-    void setEnabled(boolean enabled) {
+    public void setEnabled(boolean enabled) {
         SharedPreferences.Editor editor = this.preferences.edit();
 
         editor.putBoolean(PREFS_ENABLED, enabled);
@@ -52,7 +52,7 @@ public class CreateTimeRecordsSettings {
         this.updateAlarm(true);
     }
 
-    boolean isEnabled() {
+    public boolean isEnabled() {
         return this.preferences.getBoolean(PREFS_ENABLED, false);
     }
 

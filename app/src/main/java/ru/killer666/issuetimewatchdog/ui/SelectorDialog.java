@@ -1,31 +1,29 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.ui;
 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.v7.app.AlertDialog;
-import android.util.Pair;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
-import ru.killer666.issuetimewatchdog.model.TrackorField;
-import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.services.ApiClient;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 @ContextSingleton
 public class SelectorDialog {
+
     @Inject
     private Context context;
     @Inject
-    private TrackorApiService trackorApiService;
+    private ApiClient apiClient;
 
     private ProgressDialog progressDialog;
 
@@ -56,7 +54,7 @@ public class SelectorDialog {
             this.showProgressDialog();
 
             return Observable.create(subscriber -> {
-                this.trackorApiService.readFilters(trackorTypeClass)
+                this.apiClient.readFilters(trackorTypeClass)
                         .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(list -> {
@@ -93,7 +91,7 @@ public class SelectorDialog {
             this.showProgressDialog();
 
             return Observable.create(subscriber -> {
-                this.trackorApiService.readTrackorData(trackorTypeClass, filter)
+                this.apiClient.readTrackorData(trackorTypeClass, filter)
                         .subscribeOn(Schedulers.newThread())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(list -> {
@@ -145,45 +143,4 @@ public class SelectorDialog {
         });
     }
 
-    abstract static class DialogSettings<T extends TrackorType> {
-        private TrackorTypeObjectConverter trackorTypeObjectConverter;
-
-        DialogSettings(TrackorTypeObjectConverter trackorTypeObjectConverter) {
-            this.trackorTypeObjectConverter = trackorTypeObjectConverter;
-        }
-
-        abstract String getSelectTitle();
-
-        String getSelectItem(T instance) {
-            return instance.getTrackorKey();
-        }
-
-        String getDetailsMessage(T instance) {
-            List<Pair<Field, TrackorTypeObjectConverter.Parser>> pairList = this.trackorTypeObjectConverter.getTypesMap().get(instance.getClass());
-            String message = "";
-
-            for (Pair<Field, TrackorTypeObjectConverter.Parser> pair : pairList) {
-                TrackorField trackorField = pair.first.getAnnotation(TrackorField.class);
-                String humanName = trackorField.humanName();
-
-                if (humanName.isEmpty()) {
-                    humanName = pair.first.getName() + "[auto]";
-                }
-
-                try {
-                    Object value = pair.first.get(instance);
-                    message += "\n" + humanName + ": " +
-                            (value != null ? pair.second.parseTo(pair.first, value).getAsString() : "[empty]");
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            return message.trim();
-        }
-
-        boolean isConfirmable() {
-            return false;
-        }
-    }
 }

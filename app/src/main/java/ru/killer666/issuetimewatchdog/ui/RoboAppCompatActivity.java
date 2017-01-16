@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.ui;
 
 import android.app.Activity;
 import android.os.Bundle;

@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.ui;
 
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -19,6 +19,10 @@ import com.google.inject.Inject;
 
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
+import ru.killer666.issuetimewatchdog.CreateTimeRecordsSettings;
+import ru.killer666.issuetimewatchdog.FiltersSettings;
+import ru.killer666.issuetimewatchdog.helper.LoginCredentials;
+import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 

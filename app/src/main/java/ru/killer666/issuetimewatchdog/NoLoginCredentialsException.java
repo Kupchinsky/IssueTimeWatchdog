@@ -1,7 +1,9 @@
 package ru.killer666.issuetimewatchdog;
 
-class NoLoginCredentialsException extends RuntimeException {
-    NoLoginCredentialsException() {
+public class NoLoginCredentialsException extends RuntimeException {
+
+    public NoLoginCredentialsException() {
         super("Set login credentials first!");
     }
+
 }

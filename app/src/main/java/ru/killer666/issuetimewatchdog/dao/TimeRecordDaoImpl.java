@@ -13,9 +13,10 @@ import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> implements TimeRecordDao {
+
     public static final int SHOW_LIMIT = 7;
 
-    TimeRecordDaoImpl(Dao<TimeRecord, Integer> dao) {
+    public TimeRecordDaoImpl(Dao<TimeRecord, Integer> dao) {
         super(dao);
     }
 
@@ -113,4 +114,5 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
             throw new RuntimeException(e);
         }
     }
+
 }

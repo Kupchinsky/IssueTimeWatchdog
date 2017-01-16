@@ -2,6 +2,7 @@ package ru.killer666.issuetimewatchdog.model;
 
 import android.support.annotation.NonNull;
 
+import com.google.gson.annotations.SerializedName;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
@@ -14,33 +15,39 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.MyDateUtils;
-import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
+import ru.killer666.issuetimewatchdog.helper.ReadableName;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
+public class TimeRecord implements Comparable<TimeRecord> {
+
     @DatabaseField(generatedId = true)
     private int id;
 
-    @TrackorField
     @DatabaseField(canBeNull = false, foreign = true, foreignAutoRefresh = true)
     private Issue issue;
 
-    @TrackorField("VQS_IT_WORK_DATE")
+    @SerializedName("VQS_IT_WORK_DATE")
+    @ReadableName("Work date")
     @DatabaseField(canBeNull = false)
     private Date date;
 
-    @TrackorField("VQS_IT_SPENT_HOURS")
+    @SerializedName("VQS_IT_SPENT_HOURS")
+    @ReadableName("Spent hours")
     @DatabaseField(canBeNull = false)
     private float workedTime;
 
-    @TrackorField(KEY)
+    @SerializedName("TRACKOR_KEY")
     @DatabaseField(index = true)
     private String trackorKey;
+
+    @SerializedName("") // TODO
+    @DatabaseField(index = true)
+    private String comments;
 
     @DatabaseField(canBeNull = false)
     private float wroteTime;
@@ -62,8 +69,4 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
         return another.getDate().compareTo(this.getDate());
     }
 
-    @Override
-    public String getTrackorName() {
-        return "Time_Record";
-    }
 }

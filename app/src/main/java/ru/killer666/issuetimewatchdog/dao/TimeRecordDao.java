@@ -6,11 +6,18 @@ import java.util.List;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
-public interface TimeRecordDao extends MyRuntimeExceptionDao<TimeRecord, Integer> {
+public interface TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
+
     List<TimeRecord> queryNotUploadedOfIssue(Issue issue);
+
     List<TimeRecord> queryLastOfIssueList(Issue issue);
+
     TimeRecord queryForIssueAndDate(Issue issue, Date date);
+
     TimeRecord queryLastOfIssue(Issue issue);
+
     TimeRecord queryForTrackorKey(String trackorKey);
+
     List<TimeRecord> queryOldOfIssue(Issue issue);
+
 }

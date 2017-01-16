@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog.dao;
+package ru.killer666.issuetimewatchdog.providers;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -8,12 +8,17 @@ import com.j256.ormlite.dao.Dao;
 import java.sql.SQLException;
 
 import ru.killer666.issuetimewatchdog.DatabaseHelper;
-import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.dao.IssueDaoImpl;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDaoImpl;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
 public class DaoProviders {
+
     public static class IssueProvider implements Provider<IssueDaoImpl> {
+
         @Inject
         private DatabaseHelper databaseHelper;
         @Inject
@@ -32,9 +37,11 @@ public class DaoProviders {
                 throw new RuntimeException(e);
             }
         }
+
     }
 
     public static class TimeRecordProvider implements Provider<TimeRecordDaoImpl> {
+
         @Inject
         private DatabaseHelper databaseHelper;
 
@@ -49,9 +56,11 @@ public class DaoProviders {
                 throw new RuntimeException(e);
             }
         }
+
     }
 
     public static class TimeRecordStartStopProvider implements Provider<TimeRecordStartStopDaoImpl> {
+
         @Inject
         private DatabaseHelper databaseHelper;
 
@@ -66,5 +75,7 @@ public class DaoProviders {
                 throw new RuntimeException(e);
             }
         }
+
     }
+
 }

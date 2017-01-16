@@ -1,9 +1,10 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.helper;
 
 import java.util.Calendar;
 import java.util.Date;
 
 public class MyDateUtils {
+
     public static Date getEndOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -35,4 +36,5 @@ public class MyDateUtils {
         return (calendar.get(Calendar.YEAR) == calendarDate.get(Calendar.YEAR))
                 && (calendar.get(Calendar.MONTH) == calendarDate.get(Calendar.MONTH));
     }
+    
 }

@@ -9,12 +9,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
-import ru.killer666.issuetimewatchdog.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 
-class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordStartStop, Integer> implements TimeRecordStartStopDao {
-    TimeRecordStartStopDaoImpl(Dao<TimeRecordStartStop, Integer> dao) {
+public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordStartStop, Integer>
+        implements TimeRecordStartStopDao {
+
+    public TimeRecordStartStopDaoImpl(Dao<TimeRecordStartStop, Integer> dao) {
         super(dao);
     }
 
@@ -58,4 +60,5 @@ class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordStartStop
             throw new RuntimeException(e);
         }
     }
+
 }

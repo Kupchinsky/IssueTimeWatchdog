@@ -1,7 +1,6 @@
 package ru.killer666.issuetimewatchdog.model;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.google.gson.annotations.SerializedName;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
@@ -13,59 +12,55 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.helper.ReadableName;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class Issue implements TrackorType {
-    @Getter
-    static final String[] statuses = {"Opened",
-            "In Progress",
-            "Ready for Test by OV",
-            "Testing In Progress",
-            "Tested",
-            "Ready for Test by Customer",
-            "Closed",
-            "Awaiting Response",
-            "Deferred",
-            "On Track",
-            "Reopened"};
+public class Issue {
 
     @DatabaseField(generatedId = true)
     private int id;
 
-    @TrackorField(value = KEY, humanName = "Issue ID")
+    @SerializedName(value = "TRACKOR_KEY")
+    @ReadableName("Issue ID")
     @DatabaseField(canBeNull = false, index = true)
     private String trackorKey;
 
-    @TrackorField(value = "VQS_IT_XITOR_NAME", humanName = "Summary")
+    @SerializedName(value = "VQS_IT_XITOR_NAME")
+    @ReadableName("Summary")
     @DatabaseField(canBeNull = false)
     private String summary;
 
-    @TrackorField(value = "VQS_IT_SUBM_DATE", humanName = "Submission date")
+    @SerializedName(value = "VQS_IT_SUBM_DATE")
+    @ReadableName("Submission date")
     @DatabaseField(canBeNull = false)
     private Date submissionDate;
 
-    @TrackorField(value = "VQS_IT_SUBMITTED_BY", humanName = "Submitted by")
+    @SerializedName(value = "VQS_IT_SUBMITTED_BY")
+    @ReadableName("Submitted by")
     @DatabaseField(canBeNull = false)
     private String submittedBy;
 
-    @TrackorField(value = "VQS_IT_ASSIGNED", humanName = "Assigned to")
+    @SerializedName(value = "VQS_IT_ASSIGNED")
+    @ReadableName("Assigned to")
     @DatabaseField(canBeNull = false)
     private String assignedTo;
 
-    @TrackorField(value = "VQS_IT_PRIORITY", humanName = "Priority")
+    @SerializedName(value = "VQS_IT_PRIORITY")
+    @ReadableName("Priority")
     @DatabaseField(canBeNull = false)
     private String priority;
 
-    @TrackorField(value = "VQS_IT_STATUS", humanName = "Status")
+    @SerializedName(value = "VQS_IT_STATUS")
+    @ReadableName("Status")
     @DatabaseField(canBeNull = false)
     private String status;
 
-    @TrackorField(value = "Version.TRACKOR_KEY", humanName = "Version")
+    @SerializedName(value = "Version.TRACKOR_KEY")
+    @ReadableName("Version")
     @DatabaseField
     private String version;
 
@@ -77,32 +72,8 @@ public class Issue implements TrackorType {
 
     private IssueState state = IssueState.Idle;
 
-    @Override
-    public String getTrackorName() {
-        return "Issue";
-    }
-
     public String getReadableName() {
         return this.getTrackorKey() + " (" + this.getSummary() + ")";
     }
 
-    @Singleton
-    public static class Comparator implements java.util.Comparator<Issue> {
-        @Inject
-        private TimeRecordDao timeRecordDao;
-
-        @Override
-        public int compare(Issue lhs, Issue rhs) {
-            if (lhs.isAutoRemove()) {
-                return 1;
-            } else if (rhs.isAutoRemove()) {
-                return -1;
-            }
-
-            TimeRecord timeRecordLhs = this.timeRecordDao.queryLastOfIssue(lhs);
-            TimeRecord timeRecordRhs = this.timeRecordDao.queryLastOfIssue(rhs);
-
-            return timeRecordLhs == null ? 1 : (timeRecordRhs == null ? -1 : (timeRecordLhs.compareTo(timeRecordRhs)));
-        }
-    }
 }

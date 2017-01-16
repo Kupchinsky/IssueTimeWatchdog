@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.ui.SelectorDialog;
 
 @Singleton
 public class IssueSelectorDialogSettings extends SelectorDialog.DialogSettings<Issue> {
@@ -16,7 +17,7 @@ public class IssueSelectorDialogSettings extends SelectorDialog.DialogSettings<I
         super(trackorTypeObjectConverter);
     }
 
-    String getDetailsMessage(Issue instance, boolean showAlready) {
+    public String getDetailsMessage(Issue instance, boolean showAlready) {
         String message = super.getDetailsMessage(instance);
 
         if (showAlready && this.issueDao.idExists(instance.getId()) && !instance.isAutoRemove()) {
@@ -27,22 +28,21 @@ public class IssueSelectorDialogSettings extends SelectorDialog.DialogSettings<I
     }
 
     @Override
-    String getDetailsMessage(Issue instance) {
+    public String getDetailsMessage(Issue instance) {
         return this.getDetailsMessage(instance, true);
     }
 
     @Override
-    String getSelectTitle() {
+    public String getSelectTitle() {
         return "Select new issue";
     }
 
     @Override
-    String getSelectItem(Issue instance) {
+    public String getSelectItem(Issue instance) {
         return instance.getReadableName();
     }
 
-    @Override
-    boolean isConfirmable() {
+    public boolean isConfirmable() {
         return true;
     }
 }

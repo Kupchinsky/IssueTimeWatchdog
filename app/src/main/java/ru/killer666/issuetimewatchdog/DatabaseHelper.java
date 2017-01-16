@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
 @Singleton
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {

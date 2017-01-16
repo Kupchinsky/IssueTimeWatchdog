@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.services;
 
 import android.content.Intent;
 import android.os.PowerManager;
@@ -18,25 +18,25 @@ import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
-public class CreateTimeRecordsService extends RoboIntentService {
+public class UploadTimeRecordsService extends RoboIntentService {
     private static Logger logger;
 
-    static final String ACTION_UPDATE_ALL = "updateAll";
-    static final String ACTION_UPDATE_SINGLE = "updateSingle";
+    public static final String ACTION_UPDATE_ALL = "updateAll";
+    public static final String ACTION_UPDATE_SINGLE = "updateSingle";
 
-    static final String EXTRA_ISSUE_ID = "issueId";
+    public static final String EXTRA_ISSUE_ID = "issueId";
 
     @Inject
     private IssueDao issueDao;
     @Inject
     private TimeRecordDao timeRecordDao;
     @Inject
-    private TrackorApiService trackorApiService;
+    private ApiClient apiClient;
     @Inject
     private PowerManager powerManager;
 
-    public CreateTimeRecordsService() {
-        super(CreateTimeRecordsService.class.getSimpleName());
+    public UploadTimeRecordsService() {
+        super(UploadTimeRecordsService.class.getSimpleName());
     }
 
     @Override

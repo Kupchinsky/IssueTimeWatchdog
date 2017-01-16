@@ -10,11 +10,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import ru.killer666.issuetimewatchdog.TimeRecordStartStop;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
-class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
+public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
+
     static final int LOAD_LIMIT_DAYS = 7;
 
     @Inject
@@ -22,7 +23,7 @@ class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueD
     @Inject
     private TimeRecordDao timeRecordDao;
 
-    IssueDaoImpl(Dao<Issue, Integer> dao) {
+    public IssueDaoImpl(Dao<Issue, Integer> dao) {
         super(dao);
     }
 
@@ -86,4 +87,5 @@ class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueD
         issue.getTimeRecordForeignCollection().clear();
         this.delete(issue);
     }
+
 }

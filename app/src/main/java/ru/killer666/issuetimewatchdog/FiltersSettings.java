@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class FiltersSettings {
+
     private static final String PREFS_ISSUE_FILTER = "issue_filter";
     private static final String PREFS_TIMERECORD_FILTER = "timerecord_filter";
 
@@ -18,25 +19,26 @@ public class FiltersSettings {
         this.preferences = application.getSharedPreferences("filters_settings", Context.MODE_PRIVATE);
     }
 
-    void setIssueFilter(String value) {
+    public void setIssueFilter(String value) {
         SharedPreferences.Editor editor = this.preferences.edit();
 
         editor.putString(PREFS_ISSUE_FILTER, value);
         editor.apply();
     }
 
-    void setTimerecordFilter(String value) {
+    public void setTimerecordFilter(String value) {
         SharedPreferences.Editor editor = this.preferences.edit();
 
         editor.putString(PREFS_TIMERECORD_FILTER, value);
         editor.apply();
     }
 
-    String getIssueFilter() {
+    public String getIssueFilter() {
         return this.preferences.getString(PREFS_ISSUE_FILTER, null);
     }
 
-    String getTimerecordFilter() {
+    public String getTimerecordFilter() {
         return this.preferences.getString(PREFS_TIMERECORD_FILTER, null);
     }
+
 }

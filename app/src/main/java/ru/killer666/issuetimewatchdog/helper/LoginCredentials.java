@@ -1,5 +1,6 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.helper;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -11,6 +12,7 @@ import okhttp3.Credentials;
 
 @Singleton
 public class LoginCredentials {
+
     private static final String PREFS_LOGIN = "login";
     private static final String PREFS_PASSWORD = "password";
 
@@ -20,7 +22,7 @@ public class LoginCredentials {
     private String credentials;
 
     @Inject
-    private LoginCredentials(android.app.Application application) {
+    private LoginCredentials(Application application) {
         this.preferences = application.getSharedPreferences("login_credentials", Context.MODE_PRIVATE);
 
         this.updateCredentials();
@@ -38,7 +40,7 @@ public class LoginCredentials {
         this.credentials = Credentials.basic(login, password);
     }
 
-    void setCredentials(String login, String password) {
+    public void setCredentials(String login, String password) {
         SharedPreferences.Editor editor = this.preferences.edit();
 
         editor.putString(PREFS_LOGIN, login);
@@ -48,7 +50,7 @@ public class LoginCredentials {
         this.updateCredentials();
     }
 
-    String getLogin() {
+    public String getLogin() {
         return this.preferences.getString(PREFS_LOGIN, null);
     }
 
@@ -56,7 +58,8 @@ public class LoginCredentials {
         return this.preferences.getString(PREFS_PASSWORD, null);
     }
 
-    boolean isValid() {
+    public boolean isValid() {
         return this.credentials != null;
     }
+
 }

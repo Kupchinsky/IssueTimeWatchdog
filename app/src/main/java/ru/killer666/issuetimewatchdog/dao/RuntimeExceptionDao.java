@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public interface MyRuntimeExceptionDao<T, ID> {
+public interface RuntimeExceptionDao<T, ID> {
 
     /**
      * Retrieves an object associated with a specific ID.
@@ -772,4 +772,5 @@ public interface MyRuntimeExceptionDao<T, ID> {
      * the factory.
      */
     public void setObjectFactory(ObjectFactory<T> objectFactory);
+
 }
