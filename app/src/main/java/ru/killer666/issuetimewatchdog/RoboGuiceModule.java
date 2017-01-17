@@ -7,6 +7,8 @@ import com.google.inject.matcher.Matchers;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
+import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
+import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverterImpl;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
@@ -32,6 +34,7 @@ public class RoboGuiceModule implements Module {
         binder.bind(ApiClient.class).toProvider(ApiClientProvider.class);
         binder.bind(Retrofit.class).toProvider(RetrofitProvider.class);
         binder.bind(Gson.class).toProvider(GsonProvider.class);
+        binder.bind(TrackorTypeConverter.class).to(TrackorTypeConverterImpl.class);
     }
 
 }

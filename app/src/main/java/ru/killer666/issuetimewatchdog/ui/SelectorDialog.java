@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.v7.app.AlertDialog;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 
 import java.util.List;
@@ -15,10 +16,13 @@ import retrofit2.Response;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
+import roboguice.util.Strings;
+import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
+import ru.killer666.issuetimewatchdog.helper.SelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.killer666.issuetimewatchdog.services.ApiClient;
 import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 @ContextSingleton
 public class SelectorDialog {
@@ -28,6 +32,12 @@ public class SelectorDialog {
 
     @Inject
     private ApiClient apiClient;
+
+    @Inject
+    private TrackorTypeConverter trackorTypeConverter;
+
+    @Inject
+    private FiltersPrefs filtersPrefs;
 
     private ProgressDialog progressDialog;
 
@@ -91,59 +101,68 @@ public class SelectorDialog {
     }
 
     <T extends TrackorType> Observable<T> showTrackorReadSelect(Class<T> trackorTypeClass,
-                                                                String filter, DialogSettings<T> dialogSettings) {
+                                                                String filter, SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
             this.showProgressDialog();
 
             return Observable.create(subscriber -> {
-                this.apiClient.readTrackorData(trackorTypeClass, filter)
-                        .subscribeOn(Schedulers.newThread())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(list -> {
-                            this.dismissProgressDialog();
+                String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
+                String fields = Strings.join(", ", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                            List<String> itemsList = Lists.newArrayList();
+                Call<List<JsonObject>> call = this.apiClient.loadTrackors(trackorName, fields, filter, null);
+                call.enqueue(new Callback<List<JsonObject>>() {
+                    @Override
+                    public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
+                        dismissProgressDialog();
 
-                            for (T instance : list) {
-                                itemsList.add(dialogSettings.getSelectItem(instance));
+                        List<JsonObject> list = response.body();
+                        List<T> instanceList = Lists.newArrayList();
+                        List<String> itemsList = Lists.newArrayList();
+
+                        for (JsonObject jsonObject : list) {
+                            T instance = trackorTypeConverter.fromJson(trackorTypeClass, jsonObject);
+                            instanceList.add(instance);
+                            itemsList.add(dialogSettings.getSelectItem(instance));
+                        }
+
+                        final CharSequence[] items = itemsList.toArray(new CharSequence[itemsList.size()]);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                        builder.setTitle(dialogSettings.getSelectTitle());
+                        builder.setItems(items, (dialog, item) -> {
+                            dialog.dismiss();
+
+                            T itemInstance = instanceList.get(item);
+
+                            if (dialogSettings.isConfirmable()) {
+                                (new AlertDialog.Builder(context))
+                                        .setTitle("Confirmation")
+                                        .setMessage(dialogSettings.getDetailsMessage(itemInstance))
+                                        .setPositiveButton("Accept", (dialog1, which) -> {
+                                            subscriber.onNext(itemInstance);
+                                            subscriber.onCompleted();
+                                        })
+                                        .setNeutralButton("Back", (dialog1, which) -> builder.show())
+                                        .setNegativeButton("Cancel", (dialog1, which) -> subscriber.onCompleted())
+                                        .create().show();
+                            } else {
+                                subscriber.onNext(itemInstance);
+                                subscriber.onCompleted();
                             }
-
-                            final CharSequence[] items = itemsList.toArray(new CharSequence[itemsList.size()]);
-                            AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
-
-                            builder.setTitle(dialogSettings.getSelectTitle());
-                            builder.setItems(items, (dialog, item) -> {
-                                dialog.dismiss();
-
-                                T itemInstance = list.get(item);
-
-                                if (dialogSettings.isConfirmable()) {
-                                    (new AlertDialog.Builder(this.context))
-                                            .setTitle("Confirmation")
-                                            .setMessage(dialogSettings.getDetailsMessage(itemInstance))
-                                            .setPositiveButton("Accept", (dialog1, which) -> {
-                                                subscriber.onNext(itemInstance);
-                                                subscriber.onCompleted();
-                                            })
-                                            .setNeutralButton("Back", (dialog1, which) -> builder.show())
-                                            .setNegativeButton("Cancel", (dialog1, which) -> subscriber.onCompleted())
-                                            .create().show();
-                                } else {
-                                    subscriber.onNext(itemInstance);
-                                    subscriber.onCompleted();
-                                }
-                            });
-                            builder.create().show();
-                        }, error -> {
-                            this.dismissProgressDialog();
-
-                            (new AlertDialog.Builder(this.context))
-                                    .setTitle("Error")
-                                    .setMessage(error.getMessage())
-                                    .show();
-
-                            subscriber.onCompleted();
                         });
+                        builder.create().show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<JsonObject>> call, Throwable t) {
+                        dismissProgressDialog();
+
+                        (new AlertDialog.Builder(context))
+                                .setTitle("Error")
+                                .setMessage(t.getMessage())
+                                .show();
+                    }
+                });
             });
         });
     }

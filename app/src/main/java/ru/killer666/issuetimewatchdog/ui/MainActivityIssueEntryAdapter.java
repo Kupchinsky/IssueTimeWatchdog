@@ -1,6 +1,5 @@
 package ru.killer666.issuetimewatchdog.ui;
 
-
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -32,30 +31,35 @@ import java.util.List;
 
 import roboguice.RoboGuice;
 import roboguice.inject.ContextSingleton;
-import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
 import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
-import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 import ru.killer666.issuetimewatchdog.R;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
+import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
+import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
 
 @ContextSingleton
 class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder> implements PopupMenu.OnMenuItemClickListener, View.OnClickListener {
+
     @Inject
     private TimeRecordDao timeRecordDao;
+
     @Inject
     private TimeRecordStartStopDao timeRecordStartStopDao;
+
     @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
+
     @Inject
     private IssueDao issueDao;
+
     @Inject
     private Context context;
 
@@ -352,7 +356,8 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_change_status: {
-                (new AlertDialog.Builder(this.context))
+                // TODO: fetch vtable statuses
+                /*(new AlertDialog.Builder(this.context))
                         .setTitle("Select new status")
                         .setSingleChoiceItems(Issue.getStatuses(),
                                 Arrays.asList(Issue.getStatuses()).indexOf(issue.getStatus()),
@@ -368,7 +373,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                                     // TODO: update trackor with new status
                                 })
                         .show();
-
+*/
                 break;
             }
             case R.id.action_add_unwatched_time: {

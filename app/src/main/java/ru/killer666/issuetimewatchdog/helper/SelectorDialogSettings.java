@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.killer666.issuetimewatchdog.model.TrackorType;
 
-public abstract class DialogSettings<T extends TrackorType> {
+public abstract class SelectorDialogSettings<T extends TrackorType> {
 
     @Inject
     private TrackorTypeConverter trackorTypeConverter;
@@ -20,7 +20,6 @@ public abstract class DialogSettings<T extends TrackorType> {
         return trackorTypeConverter.instanceToString(instance);
     }
 
-    // TODO: use this or remove
     public boolean isConfirmable() {
         return false;
     }

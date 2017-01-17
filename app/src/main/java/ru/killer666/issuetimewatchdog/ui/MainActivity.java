@@ -14,20 +14,17 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
-import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
-import ru.killer666.issuetimewatchdog.helper.IssueComparator;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.helper.IssueComparator;
 import ru.killer666.issuetimewatchdog.model.Issue;
-import ru.killer666.issuetimewatchdog.model.IssueState;
+import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
 
@@ -39,19 +36,25 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
     @Inject
     private IssueDao issueDao;
+
     @Inject
     private IssueComparator issueComparator;
+
     @Inject
     private SelectorDialog selectorDialog;
+
     @Inject
     private FiltersPrefs filtersPrefs;
+
     @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
+
     @InjectView(R.id.toolbar)
     private Toolbar toolbar;
+
     @InjectView(R.id.fab)
     private FloatingActionButton fab;
 
@@ -98,7 +101,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
-                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersPrefs.getIssueFilter(),
+                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersPrefs.getFilter(Issue.class),
                         this.issueSelectorDialogSettings)
                         .subscribe(issue -> {
                             if (issue.isAutoRemove()) {

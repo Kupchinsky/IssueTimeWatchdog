@@ -10,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -32,8 +31,8 @@ public interface ApiClient {
 
     // Access to Trackors
     @GET("/api/v2/trackor_type/{trackorType}")
-    void loadTrackors(@Path("trackorType") String trackorType, @QueryMap Map<String, String> filterParams,
-                      Callback<List<JsonObject>> responseCallback);
+    Call<List<JsonObject>> loadTrackors(@Path("trackorType") String trackorType, @Query("fields") String fields,
+                      @Query("filter") String filter, @QueryMap Map<String, String> filterParams);
 
     @POST("/api/v2/trackor_type/{trackorType}")
     Call<TrackorCreateResponse> createTrackor(@Path("trackorType") String trackorType,
@@ -47,7 +46,7 @@ public interface ApiClient {
 
     // Access to Config Fields
     @PUT("/api/v2/admin/configfields")
-    Call<ConfigFieldResponse> readConfigField(@Query(value = "id") String configFieldId);
+    Call<ConfigFieldResponse> readConfigField(@Query("id") String configFieldId);
     //
 
     // Access to VTables

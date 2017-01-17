@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
-import ru.killer666.issuetimewatchdog.helper.DialogSettings;
+import ru.killer666.issuetimewatchdog.helper.SelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.model.Issue;
 
 @Singleton
-public class IssueSelectorDialogSettings extends DialogSettings<Issue> {
+public class IssueSelectorDialogSettings extends SelectorDialogSettings<Issue> {
 
     @Inject
     private IssueDao issueDao;
