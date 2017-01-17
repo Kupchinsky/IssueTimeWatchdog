@@ -347,7 +347,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
             case R.id.action_show_info: {
                 (new AlertDialog.Builder(this.context))
                         .setTitle("Information")
-                        .setMessage(this.issueSelectorDialogSettings.getDetailsMessage(issue, false))
+                        .setMessage(this.issueSelectorDialogSettings.getDetailsMessage(issue))
                         .show();
                 break;
             }

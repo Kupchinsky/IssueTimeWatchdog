@@ -9,6 +9,9 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
@@ -22,6 +25,7 @@ public class SelectorDialog {
 
     @Inject
     private Context context;
+
     @Inject
     private ApiClient apiClient;
 
@@ -29,58 +33,59 @@ public class SelectorDialog {
 
     @Inject
     public SelectorDialog(EventManager eventManager) {
-        eventManager.registerObserver(OnDestroyEvent.class, event -> {
-            this.dismissProgressDialog();
-        });
+        eventManager.registerObserver(OnDestroyEvent.class, event -> dismissProgressDialog());
     }
 
     private void showProgressDialog() {
-        this.progressDialog = ProgressDialog.show(this.context, "Please wait", "Loading please wait..", true);
-        this.progressDialog.setCancelable(false);
+        progressDialog = ProgressDialog.show(context, "Please wait", "Loading please wait..", true);
+        progressDialog.setCancelable(false);
     }
 
     private void dismissProgressDialog() {
-        if (this.progressDialog != null) {
-            if (this.progressDialog.isShowing()) {
-                this.progressDialog.dismiss();
+        if (progressDialog != null) {
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
             }
 
-            this.progressDialog = null;
+            progressDialog = null;
         }
     }
 
-    Observable<String> showFilterSelect(Class<? extends TrackorType> trackorTypeClass, String currentFilter) {
+    Observable<String> showFilterSelect(String trackorType, String currentFilter) {
         return Observable.defer(() -> {
-            this.showProgressDialog();
+            showProgressDialog();
 
             return Observable.create(subscriber -> {
-                this.apiClient.readFilters(trackorTypeClass)
-                        .subscribeOn(Schedulers.newThread())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(list -> {
-                            this.dismissProgressDialog();
+                Call<List<String>> call = this.apiClient.loadFilters(trackorType);
+                call.enqueue(new Callback<List<String>>() {
+                    @Override
+                    public void onResponse(Call<List<String>> call, Response<List<String>> response) {
+                        dismissProgressDialog();
+                        List<String> list = response.body();
 
-                            final CharSequence[] items = list.toArray(new CharSequence[list.size()]);
-                            AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
+                        final CharSequence[] items = list.toArray(new CharSequence[list.size()]);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-                            builder.setTitle("Select filter");
-                            builder.setSingleChoiceItems(items, list.indexOf(currentFilter), (dialog, item) -> {
-                                dialog.dismiss();
+                        builder.setTitle("Select filter");
+                        builder.setSingleChoiceItems(items, list.indexOf(currentFilter), (dialog, item) -> {
+                            dialog.dismiss();
 
-                                subscriber.onNext(items[item].toString());
-                                subscriber.onCompleted();
-                            });
-                            builder.create().show();
-                        }, error -> {
-                            this.dismissProgressDialog();
-
-                            (new AlertDialog.Builder(this.context))
-                                    .setTitle("Error")
-                                    .setMessage(error.getMessage())
-                                    .show();
-
+                            subscriber.onNext(items[item].toString());
                             subscriber.onCompleted();
                         });
+                        builder.create().show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<String>> call, Throwable t) {
+                        dismissProgressDialog();
+
+                        (new AlertDialog.Builder(context))
+                                .setTitle("Error")
+                                .setMessage(t.getMessage())
+                                .show();
+                    }
+                });
             });
         });
     }

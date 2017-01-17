@@ -3,6 +3,7 @@ package ru.killer666.issuetimewatchdog;
 import com.google.inject.Injector;
 
 import roboguice.RoboGuice;
+import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
 
 public class Application extends android.app.Application {
 
@@ -14,7 +15,7 @@ public class Application extends android.app.Application {
         Injector injector = RoboGuice.getOrCreateBaseApplicationInjector(this);
 
         // Do nothing, auto initialize
-        injector.getInstance(CreateTimeRecordsSettings.class);
+        injector.getInstance(CreateTimeRecordsPrefs.class);
     }
 
 }

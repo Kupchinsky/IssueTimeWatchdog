@@ -5,6 +5,10 @@ import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.http.Body;
@@ -22,9 +26,8 @@ public interface ApiClient {
     String TRACKOR_BASEURL = TRACKOR_PROTOCOL + TRACKOR_HOSTNAME;
 
     // Access to Filters
-    @GET("/api/v2/trackor_type/{trackorType}")
-    void loadFilters(@Path("trackorType") String trackorType, @QueryMap Map<String, String> filterParams,
-                     Callback<List<String>> responseCallback);
+    @GET("/api/v2/{moduleName}/filters")
+    Call<List<String>> loadFilters(@Path("moduleName") String moduleName);
     //
 
     // Access to Trackors
@@ -51,41 +54,28 @@ public interface ApiClient {
     // TODO: vtables need for read Issue statuses
     //
 
+    @Data
     class TrackorCreateRequest {
+
         private Map<String, String> fields;
 
-        public Map<String, String> getFields() {
-            return fields;
-        }
-
-        public void setFields(Map<String, String> fields) {
-            this.fields = fields;
-        }
     }
 
+    @Getter
+    @ToString
+    @EqualsAndHashCode
     class TrackorCreateResponse {
+
         private long trackorId;
         private String trackorKey;
 
-        public long getTrackorId() {
-            return trackorId;
-        }
-
-        public String getTrackorKey() {
-            return trackorKey;
-        }
     }
 
+    @Data
     class ConfigFieldResponse {
+
         private Map<String, String> fields;
 
-        public Map<String, String> getFields() {
-            return fields;
-        }
-
-        public void setFields(Map<String, String> fields) {
-            this.fields = fields;
-        }
     }
 
 }

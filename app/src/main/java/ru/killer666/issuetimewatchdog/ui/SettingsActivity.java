@@ -19,36 +19,40 @@ import com.google.inject.Inject;
 
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
-import ru.killer666.issuetimewatchdog.CreateTimeRecordsSettings;
-import ru.killer666.issuetimewatchdog.FiltersSettings;
-import ru.killer666.issuetimewatchdog.helper.LoginCredentials;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.model.Issue;
-import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
+import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
+import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 
 @ContentView(R.layout.activity_settings)
-public class SettingsActivity extends RoboAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class SettingsActivity extends RoboAppCompatActivity
+        implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+
     @Inject
-    private LoginCredentials loginCredentials;
+    private ApiAuthPrefs apiAuthPrefs;
+
     @Inject
-    private CreateTimeRecordsSettings createTimeRecordsSettings;
+    private CreateTimeRecordsPrefs createTimeRecordsPrefs;
+
     @Inject
-    private FiltersSettings filtersSettings;
+    private FiltersPrefs filtersPrefs;
+
     @Inject
     private SelectorDialog selectorDialog;
 
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
-    @InjectView(R.id.buttonSelectTimeRecordFilter)
-    private Button buttonSelectTimeRecordFilter;
+
     @InjectView(R.id.textViewIssueFilter)
     private TextView textViewIssueFilter;
-    @InjectView(R.id.textViewTimeRecordFilter)
-    private TextView textViewTimeRecordFilter;
+
     @InjectView(R.id.switchCreateTimeRecords)
     private Switch switchCreateTimeRecords;
+
     @InjectView(R.id.buttonChangeLoginCredentials)
     private Button buttonChangeLoginCredentials;
+
     @InjectView(R.id.textViewLoginCredentials)
     private TextView textViewLoginCredentials;
 
@@ -59,10 +63,9 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
         this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         this.buttonSelectIssueFilter.setOnClickListener(this);
-        this.buttonSelectTimeRecordFilter.setOnClickListener(this);
         this.buttonChangeLoginCredentials.setOnClickListener(this);
 
-        this.switchCreateTimeRecords.setChecked(this.createTimeRecordsSettings.isEnabled());
+        this.switchCreateTimeRecords.setChecked(this.createTimeRecordsPrefs.isEnabled());
         this.switchCreateTimeRecords.setOnCheckedChangeListener(this);
 
         this.updateLoginCredentials();
@@ -70,28 +73,20 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
     }
 
     private void updateLoginCredentials() {
-        if (this.loginCredentials.isValid()) {
+        if (this.apiAuthPrefs.isValid()) {
             this.textViewLoginCredentials.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-            this.textViewLoginCredentials.setText(this.loginCredentials.getLogin());
+            this.textViewLoginCredentials.setText(this.apiAuthPrefs.getLogin());
         }
     }
 
     private void updateFilters() {
-        String issueFilter = this.filtersSettings.getIssueFilter();
+        String issueFilter = this.filtersPrefs.getFilter(Issue.class);
 
         this.textViewIssueFilter.setTypeface(null, Typeface.NORMAL);
         if (issueFilter == null) {
             this.textViewIssueFilter.setTypeface(this.textViewIssueFilter.getTypeface(), Typeface.BOLD);
         }
         this.textViewIssueFilter.setText(issueFilter != null ? issueFilter : "None");
-
-        String timerecordFilter = this.filtersSettings.getTimerecordFilter();
-
-        this.textViewTimeRecordFilter.setTypeface(null, Typeface.NORMAL);
-        if (timerecordFilter == null) {
-            this.textViewTimeRecordFilter.setTypeface(this.textViewTimeRecordFilter.getTypeface(), Typeface.BOLD);
-        }
-        this.textViewTimeRecordFilter.setText(timerecordFilter != null ? timerecordFilter : "None");
     }
 
     @Override
@@ -110,16 +105,8 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSelectIssueFilter: {
-                this.selectorDialog.showFilterSelect(Issue.class, this.filtersSettings.getIssueFilter()).subscribe((filter) -> {
-                    SettingsActivity.this.filtersSettings.setIssueFilter(filter);
-                    SettingsActivity.this.updateFilters();
-                });
-
-                break;
-            }
-            case R.id.buttonSelectTimeRecordFilter: {
-                this.selectorDialog.showFilterSelect(TimeRecord.class, this.filtersSettings.getTimerecordFilter()).subscribe((filter) -> {
-                    SettingsActivity.this.filtersSettings.setTimerecordFilter(filter);
+                this.selectorDialog.showFilterSelect("Issue", this.filtersPrefs.getFilter(Issue.class)).subscribe((filter) -> {
+                    SettingsActivity.this.filtersPrefs.setFilter(Issue.class, filter);
                     SettingsActivity.this.updateFilters();
                 });
 
@@ -134,7 +121,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        this.createTimeRecordsSettings.setEnabled(isChecked);
+        this.createTimeRecordsPrefs.setEnabled(isChecked);
     }
 
     private void askLoginCredentialsDialog() {
@@ -145,7 +132,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
 
         final EditText input1 = new EditText(this);
         input1.setHint("Login");
-        input1.setText(this.loginCredentials.getLogin());
+        input1.setText(this.apiAuthPrefs.getLogin());
         layout.addView(input1);
 
         final EditText input2 = new EditText(this);
@@ -154,7 +141,7 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
         layout.addView(input2);
 
         builder
-                .setTitle("Change credentials")
+                .setTitle("Change credentials for API request")
                 .setView(layout)
                 .setPositiveButton("Change", (dialog, which) -> {
                     if (TextUtils.isEmpty(input1.getText()) || TextUtils.isEmpty(input2.getText())) {
@@ -166,11 +153,12 @@ public class SettingsActivity extends RoboAppCompatActivity implements View.OnCl
                         return;
                     }
 
-                    SettingsActivity.this.loginCredentials
+                    SettingsActivity.this.apiAuthPrefs
                             .setCredentials(input1.getText().toString(), input2.getText().toString());
                     SettingsActivity.this.updateLoginCredentials();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                 .show();
     }
+
 }

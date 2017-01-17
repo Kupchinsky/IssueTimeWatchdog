@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog.helper;
+package ru.killer666.issuetimewatchdog.prefs;
 
 import android.app.Application;
 import android.content.Context;
@@ -11,7 +11,7 @@ import lombok.Getter;
 import okhttp3.Credentials;
 
 @Singleton
-public class LoginCredentials {
+public class ApiAuthPrefs {
 
     private static final String PREFS_LOGIN = "login";
     private static final String PREFS_PASSWORD = "password";
@@ -22,8 +22,8 @@ public class LoginCredentials {
     private String credentials;
 
     @Inject
-    private LoginCredentials(Application application) {
-        this.preferences = application.getSharedPreferences("login_credentials", Context.MODE_PRIVATE);
+    private ApiAuthPrefs(Application application) {
+        this.preferences = application.getSharedPreferences("apiauth_prefs", Context.MODE_PRIVATE);
 
         this.updateCredentials();
     }

@@ -8,6 +8,7 @@ public interface IssueDao extends RuntimeExceptionDao<Issue, Integer> {
 
     List<Issue> queryNotAutoRemove();
 
+    // TODO: use or remove
     List<Issue> queryWithLoadLimit();
 
     Issue queryForTrackorKey(String trackorKey);

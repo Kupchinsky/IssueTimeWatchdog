@@ -2,6 +2,7 @@ package ru.killer666.issuetimewatchdog.model;
 
 import com.google.gson.annotations.SerializedName;
 import com.j256.ormlite.dao.ForeignCollection;
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -19,7 +20,7 @@ import ru.killer666.issuetimewatchdog.helper.ReadableName;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class Issue {
+public class Issue implements TrackorType {
 
     @DatabaseField(generatedId = true)
     private int id;
@@ -67,13 +68,18 @@ public class Issue {
     @DatabaseField
     private boolean autoRemove;
 
+    @DatabaseField(canBeNull = false, dataType = DataType.ENUM_INTEGER)
+    private IssueState state = IssueState.Idle;
+
     @ForeignCollectionField
     private ForeignCollection<TimeRecord> timeRecordForeignCollection;
 
-    private IssueState state = IssueState.Idle;
-
     public String getReadableName() {
         return this.getTrackorKey() + " (" + this.getSummary() + ")";
+    }
+
+    public static String getTrackorTypeName() {
+        return "Issue";
     }
 
 }

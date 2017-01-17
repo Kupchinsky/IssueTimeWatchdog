@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.prefs;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -14,9 +14,10 @@ import java.text.DateFormat;
 import java.util.Calendar;
 
 import roboguice.RoboGuice;
+import ru.killer666.issuetimewatchdog.CreateTimeRecordsBroadcastReceiver;
 
 @Singleton
-public class CreateTimeRecordsSettings {
+public class CreateTimeRecordsPrefs {
     private static final String PREFS_ENABLED = "enabled";
 
     private final Context context;
@@ -26,9 +27,9 @@ public class CreateTimeRecordsSettings {
     private AlarmManager alarmManager;
 
     @Inject
-    private CreateTimeRecordsSettings(android.app.Application application) {
+    private CreateTimeRecordsPrefs(android.app.Application application) {
         this.context = application;
-        this.preferences = this.context.getSharedPreferences("create_time_records_settings", Context.MODE_PRIVATE);
+        this.preferences = this.context.getSharedPreferences("create_time_records_prefs", Context.MODE_PRIVATE);
 
         RoboGuice.injectMembers(context, this);
 

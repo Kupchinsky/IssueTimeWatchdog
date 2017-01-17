@@ -6,19 +6,19 @@ import com.google.inject.Provider;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import ru.killer666.issuetimewatchdog.helper.interceptor.BasicAuthInterceptor;
-import ru.killer666.issuetimewatchdog.helper.interceptor.LoggingInterceptor;
 
 public class HttpClientProvider implements Provider<OkHttpClient> {
 
     @Inject
     private BasicAuthInterceptor basicAuthInterceptor;
 
-    @Inject
-    private LoggingInterceptor loggingInterceptor;
-
     @Override
     public OkHttpClient get() {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
         return new OkHttpClient.Builder()
                 .addInterceptor(basicAuthInterceptor)
                 .addInterceptor(loggingInterceptor)

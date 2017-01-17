@@ -68,7 +68,7 @@
         android:layout_alignParentEnd="true" />
 
     <Button
-        android:text="Change login credentials"
+        android:text="Change login credentials for API"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonChangeLoginCredentials"

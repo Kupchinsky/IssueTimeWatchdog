@@ -7,7 +7,7 @@ import com.j256.ormlite.dao.Dao;
 
 import java.sql.SQLException;
 
-import ru.killer666.issuetimewatchdog.DatabaseHelper;
+import ru.killer666.issuetimewatchdog.helper.DatabaseHelper;
 import ru.killer666.issuetimewatchdog.dao.IssueDaoImpl;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDaoImpl;

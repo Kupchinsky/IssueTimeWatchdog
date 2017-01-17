@@ -23,7 +23,7 @@ import ru.killer666.issuetimewatchdog.helper.ReadableName;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class TimeRecord implements Comparable<TimeRecord> {
+public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
 
     @DatabaseField(generatedId = true)
     private int id;
@@ -45,7 +45,7 @@ public class TimeRecord implements Comparable<TimeRecord> {
     @DatabaseField(index = true)
     private String trackorKey;
 
-    @SerializedName("") // TODO
+    @SerializedName("") // TODO: get field name
     @DatabaseField(index = true)
     private String comments;
 
@@ -67,6 +67,10 @@ public class TimeRecord implements Comparable<TimeRecord> {
     @Override
     public int compareTo(@NonNull TimeRecord another) {
         return another.getDate().compareTo(this.getDate());
+    }
+
+    public static String getTrackorTypeName() {
+        return "Time_Record";
     }
 
 }

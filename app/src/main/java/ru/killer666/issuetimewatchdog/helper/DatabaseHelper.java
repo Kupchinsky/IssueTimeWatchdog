@@ -1,4 +1,4 @@
-package ru.killer666.issuetimewatchdog;
+package ru.killer666.issuetimewatchdog.helper;
 
 import android.database.sqlite.SQLiteDatabase;
 
@@ -18,6 +18,7 @@ import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
 @Singleton
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
+
     private static Logger logger;
 
     private static final String DATABASE_NAME = "application.db";
@@ -34,6 +35,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, Issue.class);
             TableUtils.createTable(connectionSource, TimeRecord.class);
             TableUtils.createTable(connectionSource, TimeRecordStartStop.class);
+
+            logger.info("Database created successfully");
         } catch (SQLException e) {
             logger.error("Can't create database", e);
             throw new RuntimeException(e);
@@ -43,4 +46,5 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
     }
+
 }

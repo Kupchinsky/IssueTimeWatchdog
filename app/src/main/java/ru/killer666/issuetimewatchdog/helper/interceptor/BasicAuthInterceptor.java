@@ -11,7 +11,7 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import ru.killer666.issuetimewatchdog.NoLoginCredentialsException;
-import ru.killer666.issuetimewatchdog.helper.LoginCredentials;
+import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.killer666.issuetimewatchdog.services.ApiClient;
 
 @Singleton
@@ -20,7 +20,7 @@ public class BasicAuthInterceptor implements Interceptor {
     private static Logger logger;
 
     @Inject
-    private LoginCredentials loginCredentials;
+    private ApiAuthPrefs apiAuthPrefs;
 
     @Override
     public Response intercept(Chain chain) throws IOException {
@@ -30,7 +30,7 @@ public class BasicAuthInterceptor implements Interceptor {
                 (request.url().scheme() + "://").equals(ApiClient.TRACKOR_PROTOCOL)) {
             logger.info("Handled request to Trackor");
 
-            String credentials = loginCredentials.getCredentials();
+            String credentials = apiAuthPrefs.getCredentials();
 
             if (credentials == null) {
                 throw new NoLoginCredentialsException();

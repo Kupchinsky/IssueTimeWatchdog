@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
-import ru.killer666.issuetimewatchdog.FiltersSettings;
+import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.helper.IssueComparator;
@@ -44,7 +44,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Inject
     private SelectorDialog selectorDialog;
     @Inject
-    private FiltersSettings filtersSettings;
+    private FiltersPrefs filtersPrefs;
     @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
@@ -94,36 +94,11 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         EventBus.getDefault().register(this);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onTimeRecordUpdated(WatchdogService.OnTimeRecordUpdatedEvent event) {
-        this.listAdapter.notifyItemChanged(this.items.indexOf(event.getTimeRecord().getIssue()));
-    }
-
-    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    public void onTimeRecordUsing(WatchdogService.OnTimeRecordUsingEvent event) {
-        Issue issue = event.getTimeRecord().getIssue();
-
-        int position = this.items.indexOf(issue);
-
-        if (issue.getState() != IssueState.Working) {
-            issue.setState(IssueState.Working);
-        }
-
-        this.listAdapter.notifyItemChanged(position);
-
-        if (position > 0) {
-            this.items.remove(position);
-            this.items.add(0, issue);
-
-            this.listAdapter.notifyItemMoved(position, 0);
-        }
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
-                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersSettings.getIssueFilter(),
+                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersPrefs.getIssueFilter(),
                         this.issueSelectorDialogSettings)
                         .subscribe(issue -> {
                             if (issue.isAutoRemove()) {

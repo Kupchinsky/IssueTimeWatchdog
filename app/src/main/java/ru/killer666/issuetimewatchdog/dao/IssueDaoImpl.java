@@ -16,7 +16,7 @@ import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
 public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
 
-    static final int LOAD_LIMIT_DAYS = 7;
+    private static final int LOAD_LIMIT_DAYS_DEFAULT = 7;
 
     @Inject
     private TimeRecordStartStopDao timeRecordStartStopDao;
@@ -49,7 +49,7 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
             calendar.add(Calendar.DATE, 1);
             Date highDate = calendar.getTime();
 
-            calendar.set(Calendar.DAY_OF_MONTH, -(LOAD_LIMIT_DAYS + 1));
+            calendar.set(Calendar.DAY_OF_MONTH, -(LOAD_LIMIT_DAYS_DEFAULT + 1));
             Date lowDate = calendar.getTime();
 
             queryBuilder

@@ -1,18 +1,14 @@
 package ru.killer666.issuetimewatchdog.helper;
 
+import com.google.inject.Inject;
 
-import android.util.Pair;
+import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
+import ru.killer666.issuetimewatchdog.model.TrackorType;
 
-import java.lang.reflect.Field;
-import java.util.List;
+public abstract class DialogSettings<T extends TrackorType> {
 
-import ru.killer666.issuetimewatchdog.TrackorTypeObjectConverter;
-
-public abstract class DialogSettings<T> {
-
-    public DialogSettings(TrackorTypeObjectConverter trackorTypeObjectConverter) {
-        this.trackorTypeObjectConverter = trackorTypeObjectConverter;
-    }
+    @Inject
+    private TrackorTypeConverter trackorTypeConverter;
 
     public abstract String getSelectTitle();
 
@@ -21,30 +17,11 @@ public abstract class DialogSettings<T> {
     }
 
     public String getDetailsMessage(T instance) {
-        List<Pair<Field, TrackorTypeObjectConverter.Parser>> pairList = this.trackorTypeObjectConverter.getTypesMap().get(instance.getClass());
-        String message = "";
-
-        for (Pair<Field, TrackorTypeObjectConverter.Parser> pair : pairList) {
-            TrackorField trackorField = pair.first.getAnnotation(TrackorField.class);
-            String humanName = trackorField.humanName();
-
-            if (humanName.isEmpty()) {
-                humanName = pair.first.getName() + "[auto]";
-            }
-
-            try {
-                Object value = pair.first.get(instance);
-                message += "\n" + humanName + ": " +
-                        (value != null ? pair.second.parseTo(pair.first, value).getAsString() : "[empty]");
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return message.trim();
+        return trackorTypeConverter.instanceToString(instance);
     }
 
-    boolean isConfirmable() {
+    // TODO: use this or remove
+    public boolean isConfirmable() {
         return false;
     }
 
