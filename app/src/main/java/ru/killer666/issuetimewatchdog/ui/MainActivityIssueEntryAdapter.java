@@ -174,11 +174,13 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_show_info: {
-                dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
+                // TODO: implement (required v3 api for read config field labels)
+                dialogHelper.warning("Not implemented now!");
+                //dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
                 break;
             }
             case R.id.action_change_status: {
-                // TODO: implement
+                // TODO: implement (required v3 api for read all vtable values)
                 dialogHelper.warning("Not implemented now!");
                 break;
             }

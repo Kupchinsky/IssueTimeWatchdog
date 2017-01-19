@@ -60,11 +60,10 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
         date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
-    // TODO: use or remove
     public void increaseWorkedTime(float value) {
         workedTime += value;
     }
-
+    
     @Override
     public int compareTo(@NonNull TimeRecord another) {
         return another.getDate().compareTo(getDate());

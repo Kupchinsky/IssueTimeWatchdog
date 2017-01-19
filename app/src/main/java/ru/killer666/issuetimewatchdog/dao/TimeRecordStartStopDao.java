@@ -11,8 +11,12 @@ public interface TimeRecordStartStopDao extends RuntimeExceptionDao<TimeRecordSt
 
     int createWithType(TimeRecord timeRecord, TimeRecordStartStopType type);
 
+    TimeRecordStartStop queryLastStartForTimeRecord(TimeRecord timeRecord);
+
+    // TODO: use or remove
     List<TimeRecordStartStop> queryOfTimeRecordList(TimeRecord timeRecord);
 
+    // TODO: use or remove
     List<TimeRecordStartStop> queryForTimeRecordAndDate(TimeRecord timeRecord, Date date);
 
 }

@@ -32,6 +32,19 @@ public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordSt
     }
 
     @Override
+    public TimeRecordStartStop queryLastStartForTimeRecord(TimeRecord timeRecord) {
+        QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = queryBuilder();
+
+        try {
+            queryBuilder.where().eq("timeRecord_id", timeRecord).and().eq("type", TimeRecordStartStopType.TypeStart);
+
+            return queryForFirst(queryBuilder.prepare());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public List<TimeRecordStartStop> queryOfTimeRecordList(TimeRecord timeRecord) {
         QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = queryBuilder();
 

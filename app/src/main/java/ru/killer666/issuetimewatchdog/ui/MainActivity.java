@@ -19,11 +19,11 @@ import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
-import ru.killer666.issuetimewatchdog.helper.DialogHelper;
-import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueComparator;
+import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
@@ -118,7 +118,14 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                 selectorDialog.showTrackorReadSelectByFilter(Issue.class, filter,
                         issueSelectorDialogSettings)
                         .subscribe(issue -> {
+                            if (issueDao.trackorKeyExists(issue.getTrackorKey())) {
+                                dialogHelper.warning("Issue already in list!");
+                                recyclerView.scrollToPosition(items.indexOf(issue));
+                                return;
+                            }
+
                             issueDao.createOrUpdate(issue);
+
                             int position = items.indexOf(issue);
 
                             if (position == -1) {

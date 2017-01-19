@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.Calendar;
+
 import roboguice.inject.ContextSingleton;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
@@ -15,6 +17,7 @@ import ru.killer666.issuetimewatchdog.event.IssueStateChangedEvent;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.services.NotificationService;
 import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
@@ -39,7 +42,6 @@ public class IssueHelper {
         issue.setState(newState);
 
         TimeRecord timeRecord = timeRecordDao.queryLastOfIssue(issue);
-        timeRecordStartStopDao.createWithType(timeRecord, timeRecordStartStopType);
 
         if (IssueState.Working.equals(newState)) {
             // Check other issue for working
@@ -52,11 +54,19 @@ public class IssueHelper {
                     .putExtra(NotificationService.EXTRA_TIME_RECORD_ID, timeRecord.getId()));
         } else {
             context.stopService(new Intent(context, NotificationService.class));
+
+            // Put worked time at time record
+            TimeRecordStartStop timeRecordStartStop = timeRecordStartStopDao.queryLastStartForTimeRecord(timeRecord);
+
+            float workedTime = (Calendar.getInstance().getTime().getTime() - timeRecordStartStop.getDate().getTime()) / 1000 / 60 / 60;
+            timeRecord.increaseWorkedTime(workedTime);
         }
 
+        timeRecordStartStopDao.createWithType(timeRecord, timeRecordStartStopType);
         EventBus.getDefault().post(new IssueStateChangedEvent(issue, oldState, timeRecordStartStopType));
     }
 
+    // TODO: use or remove
     public void remove(Issue issue, boolean uploadTimeRecords) {
         if (issue.getState() == IssueState.Working) {
             changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeStop);

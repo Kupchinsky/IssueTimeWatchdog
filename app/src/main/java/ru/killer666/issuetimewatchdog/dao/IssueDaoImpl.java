@@ -44,7 +44,7 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
         QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
 
         try {
-            queryBuilder.where().eq("state", IssueState.Working.ordinal());
+            queryBuilder.where().eq("state", IssueState.Working);
 
             return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
@@ -53,13 +53,14 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
     }
 
     @Override
-    public Issue queryForTrackorKey(String trackorKey) {
+    public boolean trackorKeyExists(String trackorKey) {
+        // TODO: replace to count query
         QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("trackorKey", trackorKey);
 
-            return queryForFirst(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare()) != null;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

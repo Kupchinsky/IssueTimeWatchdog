@@ -10,7 +10,7 @@ public interface IssueDao extends RuntimeExceptionDao<Issue, Integer> {
 
     Issue queryWorkingState();
 
-    Issue queryForTrackorKey(String trackorKey);
+    boolean trackorKeyExists(String trackorKey);
 
     void deleteWithAllChilds(Issue issue);
 
