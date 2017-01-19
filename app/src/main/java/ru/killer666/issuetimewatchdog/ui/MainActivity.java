@@ -19,10 +19,12 @@ import java.util.Collections;
 import java.util.List;
 
 import roboguice.inject.InjectView;
-import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
+import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.helper.IssueComparator;
+import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 
@@ -49,6 +51,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
+    @Inject
+    private TimeRecordHelper timeRecordHelper;
+
+    @Inject
+    private DialogHelper dialogHelper;
+
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
 
@@ -61,26 +69,26 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
-        this.setSupportActionBar(this.toolbar);
+        setSupportActionBar(toolbar);
 
-        this.fab.setOnClickListener(this);
+        fab.setOnClickListener(this);
 
-        this.listAdapter = new MainActivityIssueEntryAdapter(this, this.recyclerView, this.items);
+        listAdapter = new MainActivityIssueEntryAdapter(this, recyclerView, items);
 
-        this.recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        this.recyclerView.setAdapter(this.listAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(listAdapter);
 
-        this.items.addAll(this.issueDao.queryNotAutoRemove());
-        Collections.sort(this.items, this.issueComparator);
+        items.addAll(issueDao.queryNotAutoRemove());
+        Collections.sort(items, issueComparator);
 
-        if (this.getIntent().getAction().equals(ACTION_SHOW_TIMERECORD) && this.getIntent().hasExtra(EXTRA_ISSUE_ID)) {
-            int issueId = this.getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
-            Issue issue = this.issueDao.queryForId(issueId);
+        if (getIntent().getAction().equals(ACTION_SHOW_TIMERECORD) && getIntent().hasExtra(EXTRA_ISSUE_ID)) {
+            int issueId = getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
+            Issue issue = issueDao.queryForId(issueId);
 
             if (issue != null) {
-                this.listAdapter.showTimeRecord(issue);
+                timeRecordHelper.showLastForIssue(issue);
             }
         }
     }
@@ -88,34 +96,36 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     @Override
     public void onPause() {
         super.onPause();
-        EventBus.getDefault().unregister(this);
+        EventBus.getDefault().unregister(listAdapter);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        EventBus.getDefault().register(this);
+        EventBus.getDefault().register(listAdapter);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab: {
-                this.selectorDialog.showTrackorReadSelect(Issue.class, this.filtersPrefs.getFilter(Issue.class),
-                        this.issueSelectorDialogSettings)
-                        .subscribe(issue -> {
-                            if (issue.isAutoRemove()) {
-                                issue.setAutoRemove(false);
-                            }
+                String filter = filtersPrefs.getFilter(Issue.class);
+                if (filter == null) {
+                    dialogHelper.warning("No filter set for Issue");
+                    return;
+                }
 
-                            this.issueDao.createOrUpdate(issue);
-                            int position = this.items.indexOf(issue);
+                selectorDialog.showTrackorReadSelectByFilter(Issue.class, filter,
+                        issueSelectorDialogSettings)
+                        .subscribe(issue -> {
+                            issueDao.createOrUpdate(issue);
+                            int position = items.indexOf(issue);
 
                             if (position == -1) {
-                                this.items.add(issue);
-                                this.listAdapter.notifyItemInserted(this.items.size() - 1);
+                                items.add(issue);
+                                listAdapter.notifyItemInserted(items.size() - 1);
                             } else {
-                                this.listAdapter.notifyItemChanged(position);
+                                listAdapter.notifyItemChanged(position);
                             }
                         });
                 break;
@@ -125,7 +135,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        this.getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -133,7 +143,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings: {
-                this.startActivity(new Intent(this, SettingsActivity.class));
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
             }
         }

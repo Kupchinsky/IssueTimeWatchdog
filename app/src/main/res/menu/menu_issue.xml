@@ -32,9 +32,9 @@
         android:id="@+id/action_timerecords_remote"
         android:title="Show remote time records" />
     <item
-        android:id="@+id/action_update_timerecords"
-        android:title="Update Trackor time records (force)" />
+        android:id="@+id/action_upload_timerecords"
+        android:title="Update Trackor time records now" />
     <item
         android:id="@+id/action_remove"
-        android:title="Remove (local)" />
+        android:title="Remove" />
 </menu>

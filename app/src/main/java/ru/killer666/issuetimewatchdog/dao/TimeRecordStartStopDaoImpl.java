@@ -28,18 +28,18 @@ public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordSt
         timeRecordStartStop.setType(type);
         timeRecordStartStop.setDate(Calendar.getInstance().getTime());
 
-        return this.create(timeRecordStartStop);
+        return create(timeRecordStartStop);
     }
 
     @Override
     public List<TimeRecordStartStop> queryOfTimeRecordList(TimeRecord timeRecord) {
-        QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("timeRecord_id", timeRecord);
             queryBuilder.orderBy("date", false);
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -47,7 +47,7 @@ public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordSt
 
     @Override
     public List<TimeRecordStartStop> queryForTimeRecordAndDate(TimeRecord timeRecord, Date date) {
-        QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecordStartStop, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where()
@@ -55,7 +55,7 @@ public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordSt
                     .and()
                     .eq("date", date);
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

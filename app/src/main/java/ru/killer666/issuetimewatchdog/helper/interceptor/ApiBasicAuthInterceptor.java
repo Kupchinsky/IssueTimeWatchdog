@@ -10,12 +10,11 @@ import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
-import ru.killer666.issuetimewatchdog.NoLoginCredentialsException;
 import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.killer666.issuetimewatchdog.services.ApiClient;
 
 @Singleton
-public class BasicAuthInterceptor implements Interceptor {
+public class ApiBasicAuthInterceptor implements Interceptor {
 
     private static Logger logger;
 
@@ -33,7 +32,7 @@ public class BasicAuthInterceptor implements Interceptor {
             String credentials = apiAuthPrefs.getCredentials();
 
             if (credentials == null) {
-                throw new NoLoginCredentialsException();
+                throw new NoApiCredentialsPresentException();
             }
 
             Request authenticatedRequest = request.newBuilder().header("Authorization", credentials).build();
@@ -41,6 +40,14 @@ public class BasicAuthInterceptor implements Interceptor {
         }
 
         return chain.proceed(request);
+    }
+
+    public static class NoApiCredentialsPresentException extends IOException {
+
+        private NoApiCredentialsPresentException() {
+            super("No API credentials present!");
+        }
+
     }
 
 }

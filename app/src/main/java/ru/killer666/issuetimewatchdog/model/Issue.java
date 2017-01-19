@@ -47,17 +47,17 @@ public class Issue implements TrackorType {
 
     @SerializedName(value = "VQS_IT_ASSIGNED")
     @ReadableName("Assigned to")
-    @DatabaseField(canBeNull = false)
+    @DatabaseField
     private String assignedTo;
 
     @SerializedName(value = "VQS_IT_PRIORITY")
     @ReadableName("Priority")
-    @DatabaseField(canBeNull = false)
+    @DatabaseField
     private String priority;
 
     @SerializedName(value = "VQS_IT_STATUS")
     @ReadableName("Status")
-    @DatabaseField(canBeNull = false)
+    @DatabaseField
     private String status;
 
     @SerializedName(value = "Version.TRACKOR_KEY")
@@ -65,17 +65,17 @@ public class Issue implements TrackorType {
     @DatabaseField
     private String version;
 
-    @DatabaseField
-    private boolean autoRemove;
-
     @DatabaseField(canBeNull = false, dataType = DataType.ENUM_INTEGER)
     private IssueState state = IssueState.Idle;
+
+    @DatabaseField(canBeNull = false)
+    private boolean removeAfterUpload;
 
     @ForeignCollectionField
     private ForeignCollection<TimeRecord> timeRecordForeignCollection;
 
     public String getReadableName() {
-        return this.getTrackorKey() + " (" + this.getSummary() + ")";
+        return getTrackorKey() + " (" + getSummary() + ")";
     }
 
     public static String getTrackorTypeName() {

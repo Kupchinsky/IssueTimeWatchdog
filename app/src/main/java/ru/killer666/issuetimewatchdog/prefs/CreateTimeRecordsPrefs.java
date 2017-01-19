@@ -18,6 +18,7 @@ import ru.killer666.issuetimewatchdog.CreateTimeRecordsBroadcastReceiver;
 
 @Singleton
 public class CreateTimeRecordsPrefs {
+
     private static final String PREFS_ENABLED = "enabled";
 
     private final Context context;
@@ -28,38 +29,38 @@ public class CreateTimeRecordsPrefs {
 
     @Inject
     private CreateTimeRecordsPrefs(android.app.Application application) {
-        this.context = application;
-        this.preferences = this.context.getSharedPreferences("create_time_records_prefs", Context.MODE_PRIVATE);
+        context = application;
+        preferences = context.getSharedPreferences("create_time_records_prefs", Context.MODE_PRIVATE);
 
         RoboGuice.injectMembers(context, this);
 
-        this.updateAlarm(false);
+        updateAlarm(false);
     }
 
     private void updateAlarm(boolean showToast) {
-        if (this.isEnabled()) {
-            this.scheduleCreateTimeRecords(showToast);
+        if (isEnabled()) {
+            scheduleCreateTimeRecords(showToast);
         } else {
-            this.disableCreateTimeRecords();
+            disableCreateTimeRecords();
         }
     }
 
     public void setEnabled(boolean enabled) {
-        SharedPreferences.Editor editor = this.preferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
 
         editor.putBoolean(PREFS_ENABLED, enabled);
         editor.apply();
 
-        this.updateAlarm(true);
+        updateAlarm(true);
     }
 
     public boolean isEnabled() {
-        return this.preferences.getBoolean(PREFS_ENABLED, false);
+        return preferences.getBoolean(PREFS_ENABLED, false);
     }
 
     private void scheduleCreateTimeRecords(boolean showToast) {
-        Intent intent = new Intent(this.context, CreateTimeRecordsBroadcastReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this.context, 0, intent, 0);
+        Intent intent = new Intent(context, CreateTimeRecordsBroadcastReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
@@ -68,20 +69,21 @@ public class CreateTimeRecordsPrefs {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        this.alarmManager.cancel(pendingIntent);
-        this.alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+        alarmManager.cancel(pendingIntent);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
 
         if (showToast) {
             DateFormat dateTimeFormatter = DateFormat.getDateTimeInstance();
-            Toast.makeText(this.context, "Next update will be at " + dateTimeFormatter.format(calendar.getTime()),
+            Toast.makeText(context, "Next update will be at " + dateTimeFormatter.format(calendar.getTime()),
                     Toast.LENGTH_LONG).show();
         }
     }
 
     private void disableCreateTimeRecords() {
-        Intent intent = new Intent(this.context, CreateTimeRecordsBroadcastReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this.context, 0, intent, 0);
+        Intent intent = new Intent(context, CreateTimeRecordsBroadcastReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
-        this.alarmManager.cancel(pendingIntent);
+        alarmManager.cancel(pendingIntent);
     }
+
 }

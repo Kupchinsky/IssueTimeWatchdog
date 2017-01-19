@@ -15,14 +15,8 @@ public class IssueComparator implements java.util.Comparator<Issue> {
 
     @Override
     public int compare(Issue lhs, Issue rhs) {
-        if (lhs.isAutoRemove()) {
-            return 1;
-        } else if (rhs.isAutoRemove()) {
-            return -1;
-        }
-
-        TimeRecord timeRecordLhs = this.timeRecordDao.queryLastOfIssue(lhs);
-        TimeRecord timeRecordRhs = this.timeRecordDao.queryLastOfIssue(rhs);
+        TimeRecord timeRecordLhs = timeRecordDao.queryLastOfIssue(lhs);
+        TimeRecord timeRecordRhs = timeRecordDao.queryLastOfIssue(rhs);
 
         return timeRecordLhs == null ? 1 : (timeRecordRhs == null ? -1 : (timeRecordLhs.compareTo(timeRecordRhs)));
     }

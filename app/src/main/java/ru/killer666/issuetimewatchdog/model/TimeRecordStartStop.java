@@ -32,7 +32,7 @@ public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
 
     @Override
     public int compareTo(TimeRecordStartStop another) {
-        return another.getDate().compareTo(this.getDate());
+        return another.getDate().compareTo(getDate());
     }
 
 }

@@ -15,7 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <meta-data android:name="roboguice.modules" android:value="ru.killer666.issuetimewatchdog.RoboGuiceModule"/>
+        <meta-data
+            android:name="roboguice.modules"
+            android:value="ru.killer666.issuetimewatchdog.RoboGuiceModule" />
 
         <activity
             android:name=".ui.MainActivity"
@@ -45,8 +47,11 @@
 
         <service
             android:name=".services.UploadTimeRecordsService"
-            android:enabled="true"
-            android:exported="true" />
+            android:enabled="true" />
+
+        <service
+            android:name=".services.NotificationService"
+            android:enabled="true" />
     </application>
 
 </manifest>

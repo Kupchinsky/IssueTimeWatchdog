@@ -14,7 +14,7 @@ public class LoggerMembersInjector<T> implements MembersInjector<T> {
 
     public LoggerMembersInjector(Field field) {
         this.field = field;
-        this.logger = LoggerFactory.getLogger(field.getDeclaringClass().getSimpleName());
+        logger = LoggerFactory.getLogger(field.getDeclaringClass().getSimpleName());
         field.setAccessible(true);
     }
 

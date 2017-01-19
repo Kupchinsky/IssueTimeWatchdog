@@ -51,6 +51,10 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
         @Override
         public Object apply(FieldWithValue fieldWithValue) {
+            if (fieldWithValue.getJsonElement().isJsonNull()) {
+                return null;
+            }
+
             Field field = fieldWithValue.getField();
             JsonPrimitive jsonPrimitive = fieldWithValue.getJsonElement().getAsJsonPrimitive();
 
@@ -64,7 +68,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
                 return jsonPrimitive.getAsInt();
             } else if (field.getType().equals(Date.class)) {
                 try {
-                    return this.dateFormat.parse(jsonPrimitive.getAsString());
+                    return dateFormat.parse(jsonPrimitive.getAsString());
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
@@ -102,7 +106,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
         for (Field field : trackorType.getClass().getDeclaredFields()) {
             if (!field.isAnnotationPresent(SerializedName.class)) {
-                return null;
+                continue;
             }
 
             String fieldName = getFieldName(field);
@@ -137,6 +141,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
                     FieldWithValue fieldWithValue = new FieldWithValue(field, entry.getValue());
                     Object value = fieldParser.getConverter().apply(fieldWithValue);
 
+                    field.setAccessible(true);
                     try {
                         field.set(trackorType, value);
                     } catch (IllegalAccessException e) {
@@ -166,7 +171,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
         for (Field field : typeClass.getDeclaredFields()) {
             if (!field.isAnnotationPresent(SerializedName.class)) {
-                return null;
+                continue;
             }
 
             SerializedName serializedName = field.getAnnotation(SerializedName.class);

@@ -22,7 +22,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     public List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where()
@@ -32,7 +32,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
                     .raw("workedTime = wroteTime");
             queryBuilder.orderBy("date", false);
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -40,14 +40,14 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     public List<TimeRecord> queryLastOfIssueList(Issue issue) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
             queryBuilder.limit(SHOW_LIMIT);
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -55,7 +55,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     public TimeRecord queryForIssueAndDate(Issue issue, Date date) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where()
@@ -63,7 +63,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
                     .and()
                     .eq("date", date);
 
-            return this.queryForFirst(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -71,13 +71,13 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     public TimeRecord queryLastOfIssue(Issue issue) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
 
-            return this.queryForFirst(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -85,12 +85,12 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     public TimeRecord queryForTrackorKey(String trackorKey) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("trackorKey", trackorKey);
 
-            return this.queryForFirst(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -99,7 +99,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
     @Override
     public List<TimeRecord> queryOldOfIssue(Issue issue) {
         Calendar calendar = Calendar.getInstance();
-        QueryBuilder<TimeRecord, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
             calendar.add(Calendar.DATE, -(SHOW_LIMIT + 1));
@@ -109,7 +109,7 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
                     .and()
                     .lt("date", calendar.getTime());
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

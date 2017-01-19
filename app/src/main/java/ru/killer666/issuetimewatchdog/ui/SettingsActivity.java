@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 import ru.killer666.issuetimewatchdog.R;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
@@ -41,6 +42,9 @@ public class SettingsActivity extends RoboAppCompatActivity
     @Inject
     private SelectorDialog selectorDialog;
 
+    @Inject
+    private DialogHelper dialogHelper;
+
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
 
@@ -60,33 +64,33 @@ public class SettingsActivity extends RoboAppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        this.buttonSelectIssueFilter.setOnClickListener(this);
-        this.buttonChangeLoginCredentials.setOnClickListener(this);
+        buttonSelectIssueFilter.setOnClickListener(this);
+        buttonChangeLoginCredentials.setOnClickListener(this);
 
-        this.switchCreateTimeRecords.setChecked(this.createTimeRecordsPrefs.isEnabled());
-        this.switchCreateTimeRecords.setOnCheckedChangeListener(this);
+        switchCreateTimeRecords.setChecked(createTimeRecordsPrefs.isEnabled());
+        switchCreateTimeRecords.setOnCheckedChangeListener(this);
 
-        this.updateLoginCredentials();
-        this.updateFilters();
+        updateLoginCredentials();
+        updateFilters();
     }
 
     private void updateLoginCredentials() {
-        if (this.apiAuthPrefs.isValid()) {
-            this.textViewLoginCredentials.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-            this.textViewLoginCredentials.setText(this.apiAuthPrefs.getLogin());
+        if (apiAuthPrefs.isValid()) {
+            textViewLoginCredentials.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+            textViewLoginCredentials.setText(apiAuthPrefs.getLogin());
         }
     }
 
     private void updateFilters() {
-        String issueFilter = this.filtersPrefs.getFilter(Issue.class);
+        String issueFilter = filtersPrefs.getFilter(Issue.class);
 
-        this.textViewIssueFilter.setTypeface(null, Typeface.NORMAL);
+        textViewIssueFilter.setTypeface(null, Typeface.NORMAL);
         if (issueFilter == null) {
-            this.textViewIssueFilter.setTypeface(this.textViewIssueFilter.getTypeface(), Typeface.BOLD);
+            textViewIssueFilter.setTypeface(textViewIssueFilter.getTypeface(), Typeface.BOLD);
         }
-        this.textViewIssueFilter.setText(issueFilter != null ? issueFilter : "None");
+        textViewIssueFilter.setText(issueFilter != null ? issueFilter : "None");
     }
 
     @Override
@@ -105,15 +109,15 @@ public class SettingsActivity extends RoboAppCompatActivity
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonSelectIssueFilter: {
-                this.selectorDialog.showFilterSelect("Issue", this.filtersPrefs.getFilter(Issue.class)).subscribe((filter) -> {
-                    SettingsActivity.this.filtersPrefs.setFilter(Issue.class, filter);
-                    SettingsActivity.this.updateFilters();
+                selectorDialog.showFilterSelect("Issue", filtersPrefs.getFilter(Issue.class)).subscribe((filter) -> {
+                    filtersPrefs.setFilter(Issue.class, filter);
+                    updateFilters();
                 });
 
                 break;
             }
             case R.id.buttonChangeLoginCredentials: {
-                this.askLoginCredentialsDialog();
+                askLoginCredentialsDialog();
                 break;
             }
         }
@@ -121,7 +125,7 @@ public class SettingsActivity extends RoboAppCompatActivity
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        this.createTimeRecordsPrefs.setEnabled(isChecked);
+        createTimeRecordsPrefs.setEnabled(isChecked);
     }
 
     private void askLoginCredentialsDialog() {
@@ -132,7 +136,7 @@ public class SettingsActivity extends RoboAppCompatActivity
 
         final EditText input1 = new EditText(this);
         input1.setHint("Login");
-        input1.setText(this.apiAuthPrefs.getLogin());
+        input1.setText(apiAuthPrefs.getLogin());
         layout.addView(input1);
 
         final EditText input2 = new EditText(this);
@@ -145,17 +149,12 @@ public class SettingsActivity extends RoboAppCompatActivity
                 .setView(layout)
                 .setPositiveButton("Change", (dialog, which) -> {
                     if (TextUtils.isEmpty(input1.getText()) || TextUtils.isEmpty(input2.getText())) {
-                        (new AlertDialog.Builder(this))
-                                .setTitle("Error")
-                                .setMessage("One of fields are empty!")
-                                .show();
-
+                        dialogHelper.warning("One of fields are empty!");
                         return;
                     }
 
-                    SettingsActivity.this.apiAuthPrefs
-                            .setCredentials(input1.getText().toString(), input2.getText().toString());
-                    SettingsActivity.this.updateLoginCredentials();
+                    apiAuthPrefs.setCredentials(input1.getText().toString(), input2.getText().toString());
+                    updateLoginCredentials();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                 .show();

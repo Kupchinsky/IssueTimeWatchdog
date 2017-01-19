@@ -26,7 +26,7 @@ public interface ApiClient {
 
     // Access to Filters
     @GET("/api/v2/{moduleName}/filters")
-    Call<List<String>> loadFilters(@Path("moduleName") String moduleName);
+    Call<List<String>> loadFilters(@Path("moduleName") String moduleName, @Query("trackor_type") String trackorType);
     //
 
     // Access to Trackors

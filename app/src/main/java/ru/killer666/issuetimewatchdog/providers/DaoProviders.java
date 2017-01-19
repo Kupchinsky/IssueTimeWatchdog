@@ -27,7 +27,7 @@ public class DaoProviders {
         @Override
         public IssueDaoImpl get() {
             try {
-                Dao<Issue, Integer> dao = this.databaseHelper.getDao(Issue.class);
+                Dao<Issue, Integer> dao = databaseHelper.getDao(Issue.class);
                 dao.setObjectCache(true);
 
                 IssueDaoImpl result = new IssueDaoImpl(dao);
@@ -48,7 +48,7 @@ public class DaoProviders {
         @Override
         public TimeRecordDaoImpl get() {
             try {
-                Dao<TimeRecord, Integer> dao = this.databaseHelper.getDao(TimeRecord.class);
+                Dao<TimeRecord, Integer> dao = databaseHelper.getDao(TimeRecord.class);
                 dao.setObjectCache(true);
 
                 return new TimeRecordDaoImpl(dao);
@@ -67,7 +67,7 @@ public class DaoProviders {
         @Override
         public TimeRecordStartStopDaoImpl get() {
             try {
-                Dao<TimeRecordStartStop, Integer> dao = this.databaseHelper.getDao(TimeRecordStartStop.class);
+                Dao<TimeRecordStartStop, Integer> dao = databaseHelper.getDao(TimeRecordStartStop.class);
                 dao.setObjectCache(true);
 
                 return new TimeRecordStartStopDaoImpl(dao);

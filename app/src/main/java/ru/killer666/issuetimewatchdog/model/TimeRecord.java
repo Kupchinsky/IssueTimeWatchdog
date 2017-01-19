@@ -33,7 +33,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
 
     @SerializedName("VQS_IT_WORK_DATE")
     @ReadableName("Work date")
-    @DatabaseField(canBeNull = false)
+    @DatabaseField
     private Date date;
 
     @SerializedName("VQS_IT_SPENT_HOURS")
@@ -45,8 +45,8 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField(index = true)
     private String trackorKey;
 
-    @SerializedName("") // TODO: get field name
-    @DatabaseField(index = true)
+    @SerializedName("VQS_IT_COMMENTS_TR")
+    @DatabaseField
     private String comments;
 
     @DatabaseField(canBeNull = false)
@@ -57,16 +57,17 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
 
     public TimeRecord(Issue issue) {
         this.issue = issue;
-        this.date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
+        date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
+    // TODO: use or remove
     public void increaseWorkedTime(float value) {
-        this.workedTime += value;
+        workedTime += value;
     }
 
     @Override
     public int compareTo(@NonNull TimeRecord another) {
-        return another.getDate().compareTo(this.getDate());
+        return another.getDate().compareTo(getDate());
     }
 
     public static String getTrackorTypeName() {

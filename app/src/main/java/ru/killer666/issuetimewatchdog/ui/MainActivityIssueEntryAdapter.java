@@ -1,14 +1,12 @@
 package ru.killer666.issuetimewatchdog.ui;
 
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,48 +15,52 @@ import android.widget.TextView;
 
 import com.google.inject.Inject;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import roboguice.RoboGuice;
 import roboguice.inject.ContextSingleton;
-import ru.killer666.issuetimewatchdog.IssueSelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
+import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
-import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
-import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
-import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
+import ru.killer666.issuetimewatchdog.event.IssueStateChangedEvent;
+import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadedEvent;
+import ru.killer666.issuetimewatchdog.helper.IssueHelper;
+import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
-import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
+import ru.killer666.issuetimewatchdog.services.NotificationService;
 
 @ContextSingleton
-class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder> implements PopupMenu.OnMenuItemClickListener, View.OnClickListener {
+class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder>
+        implements PopupMenu.OnMenuItemClickListener, View.OnClickListener {
 
-    @Inject
-    private TimeRecordDao timeRecordDao;
-
-    @Inject
-    private TimeRecordStartStopDao timeRecordStartStopDao;
+    private static final String EXTRA_ISSUE_POSITION = "issuePosition";
 
     @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
     @Inject
+    private TimeRecordHelper timeRecordHelper;
+
+    @Inject
+    private TimeRecordDao timeRecordDao;
+
+    @Inject
+    private IssueHelper issueHelper;
+
+    @Inject
     private IssueDao issueDao;
+
+    @Inject
+    private DialogHelper dialogHelper;
 
     @Inject
     private Context context;
@@ -66,14 +68,27 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private final RecyclerView recyclerView;
     private final List<Issue> items;
 
-    private final NumberFormat numberFormat = new DecimalFormat();
-    private final DateFormat dateFormatter = DateFormat.getDateInstance();
-    private final DateFormat timeFormatter = DateFormat.getTimeInstance();
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onIssueTimeRecordsUpdated(IssueTimeRecordsUploadedEvent event) {
+        Issue issue = event.getIssue();
 
-    private static final String EXTRA_ISSUE_POSITION = "issuePosition";
+        if (issue.isRemoveAfterUpload()) {
+            int position = items.indexOf(issue);
+            items.remove(position);
 
-    {
-        this.numberFormat.setMaximumFractionDigits(2);
+            notifyItemRemoved(position);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onIssueStateChanged(IssueStateChangedEvent event) {
+        Issue issue = issueDao.queryForSameId(event.getIssue());
+        if (IssueState.Working.equals(event.getOldState()) &&
+                TimeRecordStartStopType.TypeStop.equals(event.getTimeRecordStartStopType())) {
+            timeRecordHelper.showLastForIssue(event.getIssue());
+        }
+
+        notifyItemChanged(items.indexOf(issue));
     }
 
     MainActivityIssueEntryAdapter(Context context, RecyclerView recyclerView, List<Issue> items) {
@@ -83,38 +98,9 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         RoboGuice.injectMembers(context, this);
     }
 
-    void showTimeRecord(Issue issue) {
-        String message = "";
-
-        for (TimeRecord timeRecord : this.timeRecordDao.queryLastOfIssueList(issue)) {
-            message += Html.fromHtml(this.formatTimeRecordHistory(timeRecord, true)) + "\n";
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this.context)
-                .setTitle("Time records of " + issue.getReadableName())
-                .setMessage(message + "\n(Time records of last " + TimeRecordDaoImpl.SHOW_LIMIT + " days)")
-                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-
-        if (issue.getState() == IssueState.Working) {
-            builder.setNeutralButton("Stop working", ((dialog, which) -> {
-                dialog.dismiss();
-
-                this.context.stopService(new Intent(this.context, WatchdogService.class));
-                issue.setState(IssueState.Idle);
-
-                TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(issue);
-                this.timeRecordStartStopDao.createWithType(timeRecord, TimeRecordStartStopType.TypeStop);
-
-                this.notifyItemChanged(this.items.indexOf(issue));
-            }));
-        }
-
-        builder.show();
-    }
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(this.context).inflate(android.R.layout.simple_list_item_2, parent, false);
+        View view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false);
 
         view.setClickable(true);
         view.setOnClickListener(this);
@@ -122,265 +108,85 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         return new ViewHolder(view);
     }
 
-    private String formatState(IssueState state) {
-        boolean escape = state == IssueState.Working;
-        return (escape ? "<b>" : "") + state.getValue() + (escape ? "</b>" : "");
-    }
-
-    private String formatTimeRecordHistory(TimeRecord timeRecord, boolean isLong) {
-        String message = (DateUtils.isToday(timeRecord.getDate().getTime()) ? "<b>Today</b>" :
-                this.dateFormatter.format(timeRecord.getDate())) + ": " +
-                this.numberFormat.format(timeRecord.getWorkedTime());
-
-        boolean isFullWrite = timeRecord.getWorkedTime() == timeRecord.getWroteTime();
-
-        if (isLong) {
-            message += " h. (wrote" + (isFullWrite ? "[full]" : "") + " " +
-                    this.numberFormat.format(timeRecord.getWroteTime()) + " h.)";
-        } else {
-            message += "/" + this.numberFormat.format(timeRecord.getWroteTime()) + " (w" +
-                    (isFullWrite ? "[f]" : "") + ") hrs.";
-        }
-
-        return message;
-    }
-
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Issue issue = this.items.get(position);
+        Issue issue = items.get(position);
 
         holder.text1.setText(Html.fromHtml("<b>" + issue.getTrackorKey() + "</b> " + issue.getSummary()));
-        holder.text2.setText(Html.fromHtml("Work status: " + this.formatState(issue.getState())));
+        holder.text2.setText(Html.fromHtml("Work status: " + timeRecordHelper.formatState(issue.getState())));
 
-        TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(issue);
+        TimeRecord timeRecord = timeRecordDao.queryLastOfIssue(issue);
 
         if (timeRecord != null) {
-            holder.text2.append(" " + Html.fromHtml(this.formatTimeRecordHistory(timeRecord, false)));
+            holder.text2.append(" " + Html.fromHtml(timeRecordHelper.formatHistory(timeRecord, false)));
         }
     }
 
     @Override
     public int getItemCount() {
-        return this.items.size();
+        return items.size();
     }
 
+    // TODO: use this
     private DatePickerDialog createDatePickerForNow(DatePickerDialog.OnDateSetListener onDateSetListener) {
         Calendar calendar = Calendar.getInstance();
-        return this.createDatePicker(onDateSetListener, calendar.get(Calendar.YEAR),
+        return createDatePicker(onDateSetListener, calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
     }
 
     private DatePickerDialog createDatePicker(DatePickerDialog.OnDateSetListener onDateSetListener,
                                               int year, int monthOfYear, int dayOfMonth) {
-        return new DatePickerDialog(this.context, onDateSetListener, year, monthOfYear, dayOfMonth);
-    }
-
-    private class TimeRecordStartStopLogDialog {
-        private final Issue issue;
-
-        private DatePickerDialog datePickerDialog;
-        private boolean isDateSet;
-
-        private final Calendar calendar = Calendar.getInstance();
-        private final DatePickerDialog.OnDateSetListener onDateSetListener = (view, year, monthOfYear, dayOfMonth) -> {
-            this.calendar.set(Calendar.YEAR, year);
-            this.calendar.set(Calendar.MONTH, monthOfYear);
-            this.calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-            this.calendar.set(Calendar.HOUR, 0);
-            this.calendar.set(Calendar.MINUTE, 0);
-            this.calendar.set(Calendar.SECOND, 0);
-            this.calendar.set(Calendar.MILLISECOND, 0);
-
-            this.isDateSet = true;
-        };
-
-        TimeRecordStartStopLogDialog(Issue issue) {
-            this.issue = issue;
-        }
-
-        private void showTimeRecordStartStopLog(TimeRecord timeRecord) {
-            String message = "";
-
-            for (TimeRecordStartStop timeRecordStartStop :
-                    MainActivityIssueEntryAdapter.this.timeRecordStartStopDao.queryOfTimeRecordList(timeRecord)) {
-                String time = MainActivityIssueEntryAdapter.this.timeFormatter.format(timeRecordStartStop.getDate());
-                message += time + ": " + timeRecordStartStop.getType().getValue() + "\n";
-            }
-
-            String date = DateUtils.isToday(timeRecord.getDate().getTime()) ? "Today" :
-                    MainActivityIssueEntryAdapter.this.dateFormatter.format(timeRecord.getDate());
-
-            new AlertDialog.Builder(MainActivityIssueEntryAdapter.this.context)
-                    .setTitle("Start/stop log of " + this.issue.getTrackorKey() +
-                            " (" + date + ")")
-                    .setMessage(message)
-                    .show();
-        }
-
-        private void showAlert(Date date) {
-            Dialog.OnDismissListener onDismissListener = dialog -> {
-                dialog.dismiss();
-                this.show();
-            };
-
-            new AlertDialog.Builder(MainActivityIssueEntryAdapter.this.context)
-                    .setTitle("Warning")
-                    .setMessage("Time record not found for date " + MainActivityIssueEntryAdapter.this.dateFormatter.format(date))
-                    .setPositiveButton("OK", (dialog, which) -> onDismissListener.onDismiss(dialog))
-                    .setOnDismissListener(onDismissListener)
-                    .show();
-        }
-
-        void show() {
-            if (this.datePickerDialog == null) {
-                this.datePickerDialog = MainActivityIssueEntryAdapter.this.createDatePickerForNow(this.onDateSetListener);
-
-                this.datePickerDialog.setOnCancelListener(dialog -> this.isDateSet = false);
-                this.datePickerDialog.setOnDismissListener(dialog -> {
-                    if (!this.isDateSet) {
-                        return;
-                    }
-
-                    TimeRecord timeRecord = MainActivityIssueEntryAdapter.this.timeRecordDao.queryForIssueAndDate(this.issue, this.calendar.getTime());
-
-                    if (timeRecord == null) {
-                        this.showAlert(this.calendar.getTime());
-                        return;
-                    }
-
-                    this.showTimeRecordStartStopLog(timeRecord);
-                });
-            }
-
-            this.datePickerDialog.show();
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    private void onTimeRecordsUpdated(UploadTimeRecordsService.OnTimeRecordsUpdatedEvent event) {
-        Issue issue = event.getIssue();
-
-        if (issue.isAutoRemove()) {
-            int position = this.items.indexOf(issue);
-            this.items.remove(position);
-
-            this.notifyItemRemoved(position);
-        }
-    }
-
-    private void removeIssue(Issue issue, boolean update) {
-        if (issue.getState() == IssueState.Working) {
-            this.context.stopService(new Intent(this.context, WatchdogService.class));
-        }
-
-        issue.setAutoRemove(true);
-        this.issueDao.update(issue);
-
-        if (update) {
-            this.context.startActivity(new Intent(this.context, UploadTimeRecordsService.class)
-                    .setAction(UploadTimeRecordsService.ACTION_UPDATE_SINGLE)
-                    .putExtra(UploadTimeRecordsService.EXTRA_ISSUE_ID, issue.getId()));
-        } else {
-            this.issueDao.deleteWithAllChilds(issue);
-            EventBus.getDefault().post(new UploadTimeRecordsService.OnTimeRecordsUpdatedEvent(issue));
-        }
+        return new DatePickerDialog(context, onDateSetListener, year, monthOfYear, dayOfMonth);
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        Issue issue = this.items.get(item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1));
+        Issue issue = items.get(item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1));
 
         switch (item.getItemId()) {
             case R.id.action_timerecord: {
-                this.showTimeRecord(issue);
+                timeRecordHelper.showLastForIssue(issue);
                 break;
             }
             case R.id.action_startstoplog: {
-                new TimeRecordStartStopLogDialog(issue).show();
+                // TODO
+                //new TimeRecordStartStopLogDialog(issue).show();
                 break;
             }
             case R.id.action_switchstate: {
-                if (issue.getState() == IssueState.Working) {
-                    this.context.stopService(new Intent(this.context, WatchdogService.class));
-
-                    issue.setState(IssueState.Idle);
-
-                    TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(issue);
-                    this.timeRecordStartStopDao.createWithType(timeRecord, TimeRecordStartStopType.TypeStop);
-
-                    this.showTimeRecord(issue);
+                if (IssueState.Working.equals(issue.getState())) {
+                    issueHelper.changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeStop);
                 } else {
-                    for (Issue checkIssue : this.items) {
-                        if (checkIssue.getState() == IssueState.Working) {
-                            this.context.stopService(new Intent(this.context, WatchdogService.class));
-                            checkIssue.setState(IssueState.Idle);
+                    TimeRecord timeRecord = timeRecordHelper.getOrCreateLastTimeRecordForIssue(issue);
+                    issueHelper.changeState(issue, IssueState.Working, TimeRecordStartStopType.TypeStart);
 
-                            TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(checkIssue);
-                            this.timeRecordStartStopDao.createWithType(timeRecord, TimeRecordStartStopType.TypeStopForOtherTask);
+                    int position = items.indexOf(issue);
 
-                            this.notifyItemChanged(this.items.indexOf(checkIssue));
-                            break;
-                        }
-                    }
+                    items.remove(position);
+                    items.add(0, issue);
 
-                    // Создаём TimeRecord, если необходимо
-                    TimeRecord timeRecord = this.timeRecordDao.queryLastOfIssue(issue);
+                    notifyItemMoved(position, 0);
 
-                    if (timeRecord == null || !DateUtils.isToday(timeRecord.getDate().getTime())) {
-                        timeRecord = new TimeRecord(issue);
-                        this.timeRecordDao.create(timeRecord);
-                    }
-
-                    issue.setState(IssueState.Working);
-
-                    int position = this.items.indexOf(issue);
-
-                    this.items.remove(position);
-                    this.items.add(0, issue);
-
-                    this.notifyItemMoved(position, 0);
-
-                    this.context.startService(new Intent(this.context, WatchdogService.class)
-                            .putExtra(WatchdogService.EXTRA_TIME_RECORD_ID, timeRecord.getId()));
+                    context.startService(new Intent(context, NotificationService.class)
+                            .putExtra(NotificationService.EXTRA_TIME_RECORD_ID, timeRecord.getId()));
                 }
 
-                this.notifyItemChanged(this.items.indexOf(issue));
                 break;
             }
             case R.id.action_show_info: {
-                (new AlertDialog.Builder(this.context))
-                        .setTitle("Information")
-                        .setMessage(this.issueSelectorDialogSettings.getDetailsMessage(issue))
-                        .show();
+                dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
                 break;
             }
             case R.id.action_change_status: {
-                // TODO: fetch vtable statuses
-                /*(new AlertDialog.Builder(this.context))
-                        .setTitle("Select new status")
-                        .setSingleChoiceItems(Issue.getStatuses(),
-                                Arrays.asList(Issue.getStatuses()).indexOf(issue.getStatus()),
-                                (dialog, itemIndex) -> {
-                                    dialog.dismiss();
-
-                                    String newStatus = Issue.getStatuses()[itemIndex];
-
-                                    if (newStatus.equals(issue.getStatus())) {
-                                        return;
-                                    }
-
-                                    // TODO: update trackor with new status
-                                })
-                        .show();
-*/
+                // TODO: implement
+                dialogHelper.warning("Not implemented now!");
                 break;
             }
             case R.id.action_add_unwatched_time: {
                 Calendar calendar = Calendar.getInstance();
                 // TODO: rewrite
-                DatePickerDialog datePickerDialog = new DatePickerDialog(
-                        this.context,
+/*                DatePickerDialog datePickerDialog = new DatePickerDialog(
+                        context,
                         (view, year, monthOfYear, dayOfMonth) -> {
                             calendar.set(Calendar.YEAR, year);
                             calendar.set(Calendar.MONTH, monthOfYear);
@@ -390,7 +196,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                                 // Warning
                             }
 
-                            this.timeRecordDao.queryForIssueAndDate(issue, calendar.getTime());
+                            timeRecordDao.queryForIssueAndDate(issue, calendar.getTime());
 
                             // TODO: if contains time records:
                             // TODO: Ask confirm
@@ -402,30 +208,27 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                         calendar.get(Calendar.DAY_OF_MONTH)
                 );
                 datePickerDialog.show();
-
+*/
                 break;
             }
             case R.id.action_remove_watched_time: {
                 // TODO
                 break;
             }
-            case R.id.action_update_timerecords: {
+            case R.id.action_upload_timerecords: {
                 // TODO: start service with specific intent
                 break;
             }
             case R.id.action_remove: {
-                (new AlertDialog.Builder(this.context))
+                CharSequence[] items = new CharSequence[]{"Create time records and remove", "Remove", "Cancel"};
+
+                (new AlertDialog.Builder(context))
                         .setTitle("Confirm remove issue")
-                        .setMessage("Are you sure you want to remove issue " + issue.getReadableName() + " from local database?\n\n" +
-                                "Note: you can also remove issue with time records that not uploaded to Trackor")
-                        .setNeutralButton("Upload and remove", (dialog, which) -> this.removeIssue(issue, true))
-                        .setPositiveButton("Remove without upload", (dialog, which) ->
-                                (new AlertDialog.Builder(this.context))
-                                        .setTitle("Confirm remove issue without upload")
-                                        .setMessage("Confirm this action?")
-                                        .setPositiveButton("Remove without upload", (dialog1, which1) -> this.removeIssue(issue, false))
-                                        .setNegativeButton("Cancel", (dialog1, which1) -> dialog.cancel())
-                                        .show())
+                        .setSingleChoiceItems(items, -1, (dialog, action) -> {
+                            dialog.dismiss();
+
+                            // TODO
+                        })
                         .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                         .show();
                 break;
@@ -437,15 +240,15 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
     @Override
     public void onClick(View v) {
-        PopupMenu popup = new PopupMenu(this.context, v);
+        PopupMenu popup = new PopupMenu(context, v);
 
         popup.setOnMenuItemClickListener(this);
         popup.getMenuInflater().inflate(R.menu.menu_issue, popup.getMenu());
 
-        int position = this.recyclerView.getChildViewHolder(v).getAdapterPosition();
+        int position = recyclerView.getChildViewHolder(v).getAdapterPosition();
 
         for (int i = 0; i < popup.getMenu().size(); i++) {
-            popup.getMenu().getItem(i).setIntent(new Intent(this.context, MainActivity.class)
+            popup.getMenu().getItem(i).setIntent(new Intent(context, MainActivity.class)
                     .putExtra(EXTRA_ISSUE_POSITION, position));
         }
 
@@ -453,14 +256,17 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
+
         private TextView text1;
         private TextView text2;
 
         ViewHolder(View itemView) {
             super(itemView);
 
-            this.text1 = (TextView) itemView.findViewById(android.R.id.text1);
-            this.text2 = (TextView) itemView.findViewById(android.R.id.text2);
+            text1 = (TextView) itemView.findViewById(android.R.id.text1);
+            text2 = (TextView) itemView.findViewById(android.R.id.text2);
         }
+
     }
+
 }

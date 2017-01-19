@@ -13,7 +13,7 @@ public class ApiClientProvider implements Provider<ApiClient> {
 
     @Override
     public ApiClient get() {
-        return this.retrofit.create(ApiClient.class);
+        return retrofit.create(ApiClient.class);
     }
 
 }

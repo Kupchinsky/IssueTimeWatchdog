@@ -15,18 +15,18 @@ public class FiltersPrefs {
 
     @Inject
     private FiltersPrefs(android.app.Application application) {
-        this.preferences = application.getSharedPreferences("filters_prefs", Context.MODE_PRIVATE);
+        preferences = application.getSharedPreferences("filters_prefs", Context.MODE_PRIVATE);
     }
 
     public void setFilter(Class<? extends TrackorType> trackorType, String value) {
-        SharedPreferences.Editor editor = this.preferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
 
         editor.putString(trackorType.getName(), value);
         editor.apply();
     }
 
     public String getFilter(Class<? extends TrackorType> trackorType) {
-        return this.preferences.getString(trackorType.getName(), null);
+        return preferences.getString(trackorType.getName(), null);
     }
 
 }

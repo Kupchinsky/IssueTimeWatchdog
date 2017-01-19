@@ -23,43 +23,42 @@ public class ApiAuthPrefs {
 
     @Inject
     private ApiAuthPrefs(Application application) {
-        this.preferences = application.getSharedPreferences("apiauth_prefs", Context.MODE_PRIVATE);
-
-        this.updateCredentials();
+        preferences = application.getSharedPreferences("apiauth_prefs", Context.MODE_PRIVATE);
+        updateCredentials();
     }
 
     private void updateCredentials() {
-        String login = this.getLogin();
-        String password = this.getPassword();
+        String login = getLogin();
+        String password = getPassword();
 
         if (login == null || password == null) {
-            this.credentials = null;
+            credentials = null;
             return;
         }
 
-        this.credentials = Credentials.basic(login, password);
+        credentials = Credentials.basic(login, password);
     }
 
     public void setCredentials(String login, String password) {
-        SharedPreferences.Editor editor = this.preferences.edit();
+        SharedPreferences.Editor editor = preferences.edit();
 
         editor.putString(PREFS_LOGIN, login);
         editor.putString(PREFS_PASSWORD, password);
         editor.apply();
 
-        this.updateCredentials();
+        updateCredentials();
     }
 
     public String getLogin() {
-        return this.preferences.getString(PREFS_LOGIN, null);
+        return preferences.getString(PREFS_LOGIN, null);
     }
 
     private String getPassword() {
-        return this.preferences.getString(PREFS_PASSWORD, null);
+        return preferences.getString(PREFS_PASSWORD, null);
     }
 
     public boolean isValid() {
-        return this.credentials != null;
+        return credentials != null;
     }
 
 }

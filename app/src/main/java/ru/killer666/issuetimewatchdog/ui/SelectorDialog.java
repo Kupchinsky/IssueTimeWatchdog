@@ -5,19 +5,20 @@ import android.content.Context;
 import android.support.v7.app.AlertDialog;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 
 import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
 import roboguice.util.Strings;
 import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
+import ru.killer666.issuetimewatchdog.helper.ApiCallback;
 import ru.killer666.issuetimewatchdog.helper.SelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.model.TrackorType;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
@@ -66,11 +67,16 @@ public class SelectorDialog {
             showProgressDialog();
 
             return Observable.create(subscriber -> {
-                Call<List<String>> call = this.apiClient.loadFilters(trackorType);
-                call.enqueue(new Callback<List<String>>() {
+                Call<List<String>> call = apiClient.loadFilters("TRACKOR_BROWSER", trackorType);
+                call.enqueue(new ApiCallback<List<String>>(context) {
+
                     @Override
-                    public void onResponse(Call<List<String>> call, Response<List<String>> response) {
+                    public void onComplete() {
                         dismissProgressDialog();
+                    }
+
+                    @Override
+                    public void onSuccess(Response<List<String>> response) {
                         List<String> list = response.body();
 
                         final CharSequence[] items = list.toArray(new CharSequence[list.size()]);
@@ -86,35 +92,30 @@ public class SelectorDialog {
                         builder.create().show();
                     }
 
-                    @Override
-                    public void onFailure(Call<List<String>> call, Throwable t) {
-                        dismissProgressDialog();
-
-                        (new AlertDialog.Builder(context))
-                                .setTitle("Error")
-                                .setMessage(t.getMessage())
-                                .show();
-                    }
                 });
             });
         });
     }
 
-    <T extends TrackorType> Observable<T> showTrackorReadSelect(Class<T> trackorTypeClass,
-                                                                String filter, SelectorDialogSettings<T> dialogSettings) {
+    <T extends TrackorType> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
+                                                                        String filter, SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
-            this.showProgressDialog();
+            showProgressDialog();
 
             return Observable.create(subscriber -> {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
-                String fields = Strings.join(", ", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
+                String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                Call<List<JsonObject>> call = this.apiClient.loadTrackors(trackorName, fields, filter, null);
-                call.enqueue(new Callback<List<JsonObject>>() {
+                Call<List<JsonObject>> call = apiClient.loadTrackors(trackorName, fields, filter, Maps.newHashMap());
+                call.enqueue(new ApiCallback<List<JsonObject>>(context) {
+
                     @Override
-                    public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
+                    public void onComplete() {
                         dismissProgressDialog();
+                    }
 
+                    @Override
+                    public void onSuccess(Response<List<JsonObject>> response) {
                         List<JsonObject> list = response.body();
                         List<T> instanceList = Lists.newArrayList();
                         List<String> itemsList = Lists.newArrayList();
@@ -153,15 +154,6 @@ public class SelectorDialog {
                         builder.create().show();
                     }
 
-                    @Override
-                    public void onFailure(Call<List<JsonObject>> call, Throwable t) {
-                        dismissProgressDialog();
-
-                        (new AlertDialog.Builder(context))
-                                .setTitle("Error")
-                                .setMessage(t.getMessage())
-                                .show();
-                    }
                 });
             });
         });

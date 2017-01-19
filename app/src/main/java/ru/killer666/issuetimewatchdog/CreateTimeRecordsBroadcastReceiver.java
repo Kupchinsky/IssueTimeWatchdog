@@ -16,7 +16,7 @@ public class CreateTimeRecordsBroadcastReceiver extends RoboBroadcastReceiver {
     public void handleReceive(Context context, Intent intent) {
 
         logger.debug("Alarm received");
-        context.startService(new Intent(context, UploadTimeRecordsService.class).setAction(UploadTimeRecordsService.ACTION_UPDATE_ALL));
+        context.startService(new Intent(context, UploadTimeRecordsService.class).setAction(UploadTimeRecordsService.ACTION_UPLOAD_ALL));
 
     }
 

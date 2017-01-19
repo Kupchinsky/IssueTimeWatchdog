@@ -6,11 +6,10 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
 
 import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
@@ -29,35 +28,25 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
 
     @Override
     public List<Issue> queryNotAutoRemove() {
-        QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
 
         try {
-            queryBuilder.where().eq("autoRemove", false);
+            queryBuilder.where().eq("removeAfterUpload", false);
 
-            return this.query(queryBuilder.prepare());
+            return query(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Issue> queryWithLoadLimit() {
-        Calendar calendar = Calendar.getInstance();
-        QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
+    public Issue queryWorkingState() {
+        QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
 
         try {
-            calendar.add(Calendar.DATE, 1);
-            Date highDate = calendar.getTime();
+            queryBuilder.where().eq("state", IssueState.Working.ordinal());
 
-            calendar.set(Calendar.DAY_OF_MONTH, -(LOAD_LIMIT_DAYS_DEFAULT + 1));
-            Date lowDate = calendar.getTime();
-
-            queryBuilder
-                    .where()
-                    .between("date", lowDate, highDate);
-            queryBuilder.orderBy("date", false);
-
-            return this.query(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -65,12 +54,12 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
 
     @Override
     public Issue queryForTrackorKey(String trackorKey) {
-        QueryBuilder<Issue, Integer> queryBuilder = this.queryBuilder();
+        QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
 
         try {
             queryBuilder.where().eq("trackorKey", trackorKey);
 
-            return this.queryForFirst(queryBuilder.prepare());
+            return queryForFirst(queryBuilder.prepare());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -80,12 +69,12 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
     public void deleteWithAllChilds(Issue issue) {
         for (TimeRecord timeRecord : issue.getTimeRecordForeignCollection()) {
             for (TimeRecordStartStop timeRecordStartStop : timeRecord.getTimeRecordStartStopForeignCollection()) {
-                this.timeRecordStartStopDao.delete(timeRecordStartStop);
+                timeRecordStartStopDao.delete(timeRecordStartStop);
             }
         }
 
         issue.getTimeRecordForeignCollection().clear();
-        this.delete(issue);
+        delete(issue);
     }
 
 }
