@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 import ru.killer666.issuetimewatchdog.helper.ReadableName;
 
@@ -45,12 +46,16 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField(index = true)
     private String trackorKey;
 
+    // TODO: implement write this before upload
     @SerializedName("VQS_IT_COMMENTS_TR")
     @DatabaseField
     private String comments;
 
     @DatabaseField(canBeNull = false)
     private float wroteTime;
+
+    @DatabaseField
+    private Long remoteTrackorId;
 
     @ForeignCollectionField
     private ForeignCollection<TimeRecordStartStop> timeRecordStartStopForeignCollection;
@@ -67,6 +72,10 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @Override
     public int compareTo(@NonNull TimeRecord another) {
         return another.getDate().compareTo(getDate());
+    }
+
+    public String getReadableName(ConfigFieldFormatter configFieldFormatter) {
+        return issue.getTrackorKey() + " of date " + configFieldFormatter.getDateFormatter().format(date);
     }
 
     public static String getTrackorTypeName() {

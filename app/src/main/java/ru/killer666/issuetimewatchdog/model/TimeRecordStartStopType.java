@@ -7,10 +7,12 @@ import lombok.Getter;
 @Getter
 public enum TimeRecordStartStopType {
 
-    TypeStart("Started"),
-    TypeStop("Stopped"),
-    TypeStopForOtherTask("Stopped (other task working)"),
-    TypeStopForDayEnd("Stopped (day ends)");
+    TypeWorking("Working"),
+    TypeIdle("Stop working"),
+    TypeIdleForOtherTask("Stop working (other task raised)"),
+    TypeIdleByKillApp("Stop working (no service, will be restarted)"),
+    // TODO: use this or remove
+    TypeStopForDayEnd("Stop working (day ends)");
 
     private final String value;
 

@@ -26,35 +26,39 @@ public interface ApiClient {
 
     // Access to Filters
     @GET("/api/v2/{moduleName}/filters")
-    Call<List<String>> loadFilters(@Path("moduleName") String moduleName, @Query("trackor_type") String trackorType);
+    Call<List<String>> v2LoadFilters(@Path("moduleName") String moduleName, @Query("trackor_type") String trackorType);
     //
 
     // Access to Trackors
     @GET("/api/v2/trackor_type/{trackorType}")
-    Call<List<JsonObject>> loadTrackors(@Path("trackorType") String trackorType, @Query("fields") String fields,
-                      @Query("filter") String filter, @QueryMap Map<String, String> filterParams);
+    Call<List<JsonObject>> v2LoadTrackors(@Path("trackorType") String trackorType, @Query("fields") String fields,
+                                          @Query("filter") String filter, @QueryMap Map<String, String> filterParams);
 
     @POST("/api/v2/trackor_type/{trackorType}")
-    Call<TrackorCreateResponse> createTrackor(@Path("trackorType") String trackorType,
-                                              @Body TrackorCreateRequest request);
+    Call<V2TrackorCreateResponse> v2CreateTrackor(@Path("trackorType") String trackorType,
+                                                  @Body V2TrackorCreateRequest request);
 
     @PUT("/api/v2/trackor_type/{trackorType}")
-    Call<TrackorCreateResponse> updateTrackors(@Path("trackorType") String trackorType,
-                                               @QueryMap Map<String, String> filterParams,
-                                               @Body TrackorCreateRequest request);
+    Call<V2TrackorCreateResponse> v2UpdateTrackors(@Path("trackorType") String trackorType,
+                                                   @QueryMap Map<String, String> filterParams,
+                                                   @Body V2TrackorCreateRequest request);
     //
 
     // Access to Config Fields
     @PUT("/api/v2/admin/configfields")
-    Call<ConfigFieldResponse> readConfigField(@Query("id") String configFieldId);
+    Call<V2ConfigFieldResponse> v2ReadConfigField(@Query("id") String configFieldId);
     //
 
-    // Access to VTables
-    // TODO: vtables need for read Issue statuses
+    // Access to VTables (V3)
+    // TODO: vtables need for read Issue statuses (mapping broken at last ver)
+    //
+
+    // Access to user settings (V3)
+    // TODO: user settings need for ConfigFieldFormatter
     //
 
     @Data
-    class TrackorCreateRequest {
+    class V2TrackorCreateRequest {
 
         private Map<String, String> fields;
 
@@ -63,7 +67,7 @@ public interface ApiClient {
     @Getter
     @ToString
     @EqualsAndHashCode
-    class TrackorCreateResponse {
+    class V2TrackorCreateResponse {
 
         private long trackorId;
         private String trackorKey;
@@ -71,7 +75,7 @@ public interface ApiClient {
     }
 
     @Data
-    class ConfigFieldResponse {
+    class V2ConfigFieldResponse {
 
         private Map<String, String> fields;
 

@@ -12,6 +12,8 @@ import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverterImpl;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
+import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
+import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatterImpl;
 import ru.killer666.issuetimewatchdog.helper.logger.LoggerTypeListener;
 import ru.killer666.issuetimewatchdog.providers.ApiClientProvider;
 import ru.killer666.issuetimewatchdog.providers.DaoProviders;
@@ -35,6 +37,7 @@ public class RoboGuiceModule implements Module {
         binder.bind(Retrofit.class).toProvider(RetrofitProvider.class);
         binder.bind(Gson.class).toProvider(GsonProvider.class);
         binder.bind(TrackorTypeConverter.class).to(TrackorTypeConverterImpl.class);
+        binder.bind(ConfigFieldFormatter.class).to(ConfigFieldFormatterImpl.class);
     }
 
 }

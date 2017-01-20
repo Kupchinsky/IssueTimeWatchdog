@@ -9,11 +9,12 @@ import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 
 public interface TimeRecordStartStopDao extends RuntimeExceptionDao<TimeRecordStartStop, Integer> {
 
+    int SHOW_LIMIT = 7;
+
     int createWithType(TimeRecord timeRecord, TimeRecordStartStopType type);
 
     TimeRecordStartStop queryLastStartForTimeRecord(TimeRecord timeRecord);
 
-    // TODO: use or remove
     List<TimeRecordStartStop> queryOfTimeRecordList(TimeRecord timeRecord);
 
     // TODO: use or remove

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.support.DatabaseConnection;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -15,12 +16,8 @@ import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 
 public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
 
-    private static final int LOAD_LIMIT_DAYS_DEFAULT = 7;
-
     @Inject
     private TimeRecordStartStopDao timeRecordStartStopDao;
-    @Inject
-    private TimeRecordDao timeRecordDao;
 
     public IssueDaoImpl(Dao<Issue, Integer> dao) {
         super(dao);
@@ -54,13 +51,13 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
 
     @Override
     public boolean trackorKeyExists(String trackorKey) {
-        // TODO: replace to count query
-        QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
-
         try {
-            queryBuilder.where().eq("trackorKey", trackorKey);
+            QueryBuilder<Issue, Integer> queryBuilder = queryBuilder();
+            queryBuilder.selectRaw("COUNT(*)").where().eq("trackorKey", trackorKey);
+            String query = queryBuilder.prepareStatementString();
 
-            return queryForFirst(queryBuilder.prepare()) != null;
+            DatabaseConnection connection = getConnectionSource().getReadOnlyConnection();
+            return connection.queryForLong(query) != 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

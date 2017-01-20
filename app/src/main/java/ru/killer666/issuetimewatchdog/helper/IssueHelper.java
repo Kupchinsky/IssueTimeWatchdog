@@ -20,7 +20,6 @@ import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.services.NotificationService;
-import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
 
 @ContextSingleton
 public class IssueHelper {
@@ -35,19 +34,24 @@ public class IssueHelper {
     private TimeRecordStartStopDao timeRecordStartStopDao;
 
     @Inject
+    private TimeRecordHelper timeRecordHelper;
+
+    @Inject
     private Context context;
 
     public void changeState(Issue issue, IssueState newState, TimeRecordStartStopType timeRecordStartStopType) {
         IssueState oldState = issue.getState();
         issue.setState(newState);
 
+        boolean daoUpdateState = true;
         TimeRecord timeRecord = timeRecordDao.queryLastOfIssue(issue);
 
         if (IssueState.Working.equals(newState)) {
             // Check other issue for working
             Issue workingIssue = issueDao.queryWorkingState();
             if (workingIssue != null) {
-                changeState(workingIssue, IssueState.Idle, TimeRecordStartStopType.TypeStopForOtherTask);
+                daoUpdateState = workingIssue.getId() != issue.getId();
+                changeState(workingIssue, IssueState.Idle, TimeRecordStartStopType.TypeIdleForOtherTask);
             }
 
             context.startService(new Intent(context, NotificationService.class)
@@ -62,21 +66,22 @@ public class IssueHelper {
             timeRecord.increaseWorkedTime(workedTime);
         }
 
+        if (daoUpdateState) {
+            issueDao.update(issue);
+        }
+
         timeRecordStartStopDao.createWithType(timeRecord, timeRecordStartStopType);
         EventBus.getDefault().post(new IssueStateChangedEvent(issue, oldState, timeRecordStartStopType));
     }
 
-    // TODO: use or remove
     public void remove(Issue issue, boolean uploadTimeRecords) {
         if (issue.getState() == IssueState.Working) {
-            changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeStop);
+            changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeIdle);
         }
 
         if (uploadTimeRecords) {
             issue.setRemoveAfterUpload(true);
-            context.startActivity(new Intent(context, UploadTimeRecordsService.class)
-                    .setAction(UploadTimeRecordsService.ACTION_UPLOAD_SINGLE)
-                    .putExtra(UploadTimeRecordsService.EXTRA_ISSUE_ID, issue.getId()));
+            timeRecordHelper.startUploadSingle(issue);
         } else {
             issueDao.deleteWithAllChilds(issue);
         }

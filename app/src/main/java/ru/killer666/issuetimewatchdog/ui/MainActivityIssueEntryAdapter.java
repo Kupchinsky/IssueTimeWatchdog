@@ -19,24 +19,30 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import roboguice.RoboGuice;
 import roboguice.inject.ContextSingleton;
-import ru.killer666.issuetimewatchdog.helper.DialogHelper;
-import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.event.IssueStateChangedEvent;
-import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadedEvent;
+import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
+import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueHelper;
+import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
+import ru.killer666.issuetimewatchdog.helper.TimeRecordStartStopHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.services.NotificationService;
+import rx.Observable;
 
 @ContextSingleton
 class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder>
@@ -51,6 +57,9 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private TimeRecordHelper timeRecordHelper;
 
     @Inject
+    private TimeRecordStartStopHelper timeRecordStartStopHelper;
+
+    @Inject
     private TimeRecordDao timeRecordDao;
 
     @Inject
@@ -63,13 +72,20 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private DialogHelper dialogHelper;
 
     @Inject
+    private ConfigFieldFormatter configFieldFormatter;
+
+    @Inject
     private Context context;
 
     private final RecyclerView recyclerView;
     private final List<Issue> items;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onIssueTimeRecordsUpdated(IssueTimeRecordsUploadedEvent event) {
+    public void onIssueTimeRecordsUploadComplete(IssueTimeRecordsUploadCompleteEvent event) {
+        if (event.isErrored()) {
+            return;
+        }
+
         Issue issue = event.getIssue();
 
         if (issue.isRemoveAfterUpload()) {
@@ -84,7 +100,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     public void onIssueStateChanged(IssueStateChangedEvent event) {
         Issue issue = issueDao.queryForSameId(event.getIssue());
         if (IssueState.Working.equals(event.getOldState()) &&
-                TimeRecordStartStopType.TypeStop.equals(event.getTimeRecordStartStopType())) {
+                TimeRecordStartStopType.TypeIdle.equals(event.getTimeRecordStartStopType())) {
             timeRecordHelper.showLastForIssue(event.getIssue());
         }
 
@@ -127,7 +143,6 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         return items.size();
     }
 
-    // TODO: use this
     private DatePickerDialog createDatePickerForNow(DatePickerDialog.OnDateSetListener onDateSetListener) {
         Calendar calendar = Calendar.getInstance();
         return createDatePicker(onDateSetListener, calendar.get(Calendar.YEAR),
@@ -137,6 +152,32 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private DatePickerDialog createDatePicker(DatePickerDialog.OnDateSetListener onDateSetListener,
                                               int year, int monthOfYear, int dayOfMonth) {
         return new DatePickerDialog(context, onDateSetListener, year, monthOfYear, dayOfMonth);
+    }
+
+    private Observable<TimeRecord> selectTimeRecordByDate(Issue issue) {
+        return Observable.defer(() -> Observable.create(subscriber -> {
+            DatePickerDialog datePickerDialog = createDatePickerForNow((view, year, monthOfYear, dayOfMonth) -> {
+                Date date = new GregorianCalendar(year, monthOfYear, dayOfMonth).getTime();
+
+                if (!MyDateUtils.isCurrentMonth(date)) {
+                    dialogHelper.warning("Selected time record isn't in current month!");
+                    subscriber.onCompleted();
+                    return;
+                }
+
+                TimeRecord timeRecord = timeRecordDao.queryForIssueAndDate(issue, date);
+
+                if (timeRecord == null) {
+                    dialogHelper.warning("No time records found at " +
+                            configFieldFormatter.getDateFormatter().format(date));
+                } else {
+                    subscriber.onNext(timeRecord);
+                }
+
+                subscriber.onCompleted();
+            });
+            datePickerDialog.show();
+        }));
     }
 
     @Override
@@ -149,16 +190,15 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_startstoplog: {
-                // TODO
-                //new TimeRecordStartStopLogDialog(issue).show();
+                selectTimeRecordByDate(issue).subscribe(timeRecord -> timeRecordStartStopHelper.showForTimeRecord(timeRecord));
                 break;
             }
             case R.id.action_switchstate: {
                 if (IssueState.Working.equals(issue.getState())) {
-                    issueHelper.changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeStop);
+                    issueHelper.changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeIdle);
                 } else {
                     TimeRecord timeRecord = timeRecordHelper.getOrCreateLastTimeRecordForIssue(issue);
-                    issueHelper.changeState(issue, IssueState.Working, TimeRecordStartStopType.TypeStart);
+                    issueHelper.changeState(issue, IssueState.Working, TimeRecordStartStopType.TypeWorking);
 
                     int position = items.indexOf(issue);
 
@@ -174,51 +214,31 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_show_info: {
-                // TODO: implement (required v3 api for read config field labels)
-                dialogHelper.warning("Not implemented now!");
-                //dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
+                dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
                 break;
             }
             case R.id.action_change_status: {
                 // TODO: implement (required v3 api for read all vtable values)
-                dialogHelper.warning("Not implemented now!");
+                dialogHelper.warnNotImplemented();
                 break;
             }
             case R.id.action_add_unwatched_time: {
-                Calendar calendar = Calendar.getInstance();
-                // TODO: rewrite
-/*                DatePickerDialog datePickerDialog = new DatePickerDialog(
-                        context,
-                        (view, year, monthOfYear, dayOfMonth) -> {
-                            calendar.set(Calendar.YEAR, year);
-                            calendar.set(Calendar.MONTH, monthOfYear);
-                            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                            if (!MyDateUtils.isCurrentMonth(calendar.getTime())) {
-                                // Warning
-                            }
-
-                            timeRecordDao.queryForIssueAndDate(issue, calendar.getTime());
-
-                            // TODO: if contains time records:
-                            // TODO: Ask confirm
-                            // TODO: Else: Ask confirm to create new time record for this date
-                            // TODO: Сделать активность и сущности просмотра логов заливки
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                );
-                datePickerDialog.show();
-*/
+                selectTimeRecordByDate(issue).subscribe(timeRecord -> {
+                });
                 break;
             }
             case R.id.action_remove_watched_time: {
-                // TODO
+                selectTimeRecordByDate(issue).subscribe(timeRecord -> {
+                });
                 break;
             }
             case R.id.action_upload_timerecords: {
-                // TODO: start service with specific intent
+                timeRecordHelper.startUploadSingle(issue);
+                break;
+            }
+            case R.id.action_timerecords_remote: {
+                // TODO: implement (required v3 api for read all config field labels)
+                dialogHelper.warnNotImplemented();
                 break;
             }
             case R.id.action_remove: {
@@ -227,11 +247,14 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 (new AlertDialog.Builder(context))
                         .setTitle("Confirm remove issue")
                         .setSingleChoiceItems(items, -1, (dialog, action) -> {
-                            dialog.dismiss();
+                            if (action == 2) {
+                                dialog.cancel();
+                                return;
+                            }
 
-                            // TODO
+                            dialog.dismiss();
+                            issueHelper.remove(issue, action == 0);
                         })
-                        .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                         .show();
                 break;
             }

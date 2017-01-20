@@ -8,6 +8,8 @@ import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public interface TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> {
 
+    int SHOW_LIMIT = 7;
+
     List<TimeRecord> queryNotUploadedOfIssue(Issue issue);
 
     List<TimeRecord> queryLastOfIssueList(Issue issue);

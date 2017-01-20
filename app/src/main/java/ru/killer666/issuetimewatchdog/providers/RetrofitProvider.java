@@ -19,6 +19,8 @@ public class RetrofitProvider implements Provider<Retrofit> {
 
     @Override
     public Retrofit get() {
+        // TODO: create converter factory for TrackorCreateRequestV2, TrackorCreateResponseV2 and ConfigFieldResponseV2
+
         return new Retrofit.Builder()
                 .baseUrl(ApiClient.TRACKOR_BASEURL)
                 .client(httpClient)

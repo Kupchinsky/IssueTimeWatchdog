@@ -1,6 +1,5 @@
 package ru.killer666.issuetimewatchdog.ui;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.v7.app.AlertDialog;
 
@@ -19,6 +18,7 @@ import roboguice.inject.ContextSingleton;
 import roboguice.util.Strings;
 import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.killer666.issuetimewatchdog.helper.ApiCallback;
+import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.SelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.model.TrackorType;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
@@ -40,39 +40,25 @@ public class SelectorDialog {
     @Inject
     private FiltersPrefs filtersPrefs;
 
-    private ProgressDialog progressDialog;
+    @Inject
+    private DialogHelper dialogHelper;
 
     @Inject
     public SelectorDialog(EventManager eventManager) {
-        eventManager.registerObserver(OnDestroyEvent.class, event -> dismissProgressDialog());
-    }
-
-    private void showProgressDialog() {
-        progressDialog = ProgressDialog.show(context, "Please wait", "Loading please wait..", true);
-        progressDialog.setCancelable(false);
-    }
-
-    private void dismissProgressDialog() {
-        if (progressDialog != null) {
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
-
-            progressDialog = null;
-        }
+        eventManager.registerObserver(OnDestroyEvent.class, event -> dialogHelper.dismissProgressDialog());
     }
 
     Observable<String> showFilterSelect(String trackorType, String currentFilter) {
         return Observable.defer(() -> {
-            showProgressDialog();
+            dialogHelper.showProgressDialog();
 
             return Observable.create(subscriber -> {
-                Call<List<String>> call = apiClient.loadFilters("TRACKOR_BROWSER", trackorType);
+                Call<List<String>> call = apiClient.v2LoadFilters("TRACKOR_BROWSER", trackorType);
                 call.enqueue(new ApiCallback<List<String>>(context) {
 
                     @Override
                     public void onComplete() {
-                        dismissProgressDialog();
+                        dialogHelper.dismissProgressDialog();
                     }
 
                     @Override
@@ -100,18 +86,18 @@ public class SelectorDialog {
     <T extends TrackorType> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
                                                                         String filter, SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
-            showProgressDialog();
+            dialogHelper.showProgressDialog();
 
             return Observable.create(subscriber -> {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
                 String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                Call<List<JsonObject>> call = apiClient.loadTrackors(trackorName, fields, filter, Maps.newHashMap());
+                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap());
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override
                     public void onComplete() {
-                        dismissProgressDialog();
+                        dialogHelper.dismissProgressDialog();
                     }
 
                     @Override

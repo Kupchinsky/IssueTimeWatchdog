@@ -17,7 +17,8 @@ public abstract class SelectorDialogSettings<T extends TrackorType> {
     }
 
     public String getDetailsMessage(T instance) {
-        return trackorTypeConverter.instanceToString(instance);
+        // TODO: implement (required v3 api for read config field labels)
+        return "Not implemented now!";
     }
 
     public boolean isConfirmable() {

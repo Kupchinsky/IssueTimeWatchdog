@@ -6,8 +6,13 @@ import ru.killer666.issuetimewatchdog.model.Issue;
 
 @AllArgsConstructor
 @Getter
-public class IssueTimeRecordsUploadedEvent {
+public class IssueTimeRecordsUploadCompleteEvent {
 
     private Issue issue;
+    private Throwable throwable;
+
+    public boolean isErrored() {
+        return throwable != null;
+    }
 
 }

@@ -23,10 +23,15 @@ import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueComparator;
+import ru.killer666.issuetimewatchdog.helper.IssueHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
+import ru.killer666.issuetimewatchdog.helper.ServiceHelper;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
+import ru.killer666.issuetimewatchdog.model.IssueState;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
+import ru.killer666.issuetimewatchdog.services.NotificationService;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
 
@@ -55,7 +60,13 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     private TimeRecordHelper timeRecordHelper;
 
     @Inject
+    private IssueHelper issueHelper;
+
+    @Inject
     private DialogHelper dialogHelper;
+
+    @Inject
+    private ServiceHelper serviceHelper;
 
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
@@ -90,6 +101,13 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             if (issue != null) {
                 timeRecordHelper.showLastForIssue(issue);
             }
+        }
+
+        // Start notification service if working issue found and no service running
+        Issue workingIssue = issueDao.queryWorkingState();
+        if (workingIssue != null && !serviceHelper.isRunning(NotificationService.class)) {
+            issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordStartStopType.TypeIdleByKillApp);
+            issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordStartStopType.TypeWorking);
         }
     }
 

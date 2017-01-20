@@ -3,6 +3,7 @@ package ru.killer666.issuetimewatchdog.dao;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.Where;
 
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -14,22 +15,21 @@ import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> implements TimeRecordDao {
 
-    public static final int SHOW_LIMIT = 7;
-
     public TimeRecordDaoImpl(Dao<TimeRecord, Integer> dao) {
         super(dao);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
-            queryBuilder.where()
+            Where<TimeRecord, Integer> where = queryBuilder.where();
+            where
                     .eq("issue_id", issue)
                     .and()
-                    .not()
-                    .raw("workedTime = wroteTime");
+                    .or(where.eq("remoteTrackorId", null), where.raw("NOT workedTime = wroteTime"));
             queryBuilder.orderBy("date", false);
 
             return query(queryBuilder.prepare());
