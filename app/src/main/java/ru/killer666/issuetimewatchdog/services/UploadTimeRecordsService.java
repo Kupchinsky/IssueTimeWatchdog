@@ -64,7 +64,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
                 List<TimeRecord> oldTimeRecords = timeRecordDao.queryOldOfIssue(issue);
 
                 for (TimeRecord timeRecord : oldTimeRecords) {
-                    timeRecord.getTimeRecordStartStopForeignCollection().clear();
+                    timeRecord.getTimeRecordLogForeignCollection().clear();
                     timeRecordDao.delete(timeRecord);
                 }
 

@@ -29,7 +29,7 @@ import ru.killer666.issuetimewatchdog.helper.ServiceHelper;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.killer666.issuetimewatchdog.services.NotificationService;
 
@@ -106,8 +106,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
         // Start notification service if working issue found and no service running
         Issue workingIssue = issueDao.queryWorkingState();
         if (workingIssue != null && !serviceHelper.isRunning(NotificationService.class)) {
-            issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordStartStopType.TypeIdleByKillApp);
-            issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordStartStopType.TypeWorking);
+            issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordLogType.TypeIdleByKillApp);
+            issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordLogType.TypeWorking);
         }
     }
 

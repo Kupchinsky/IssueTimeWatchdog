@@ -12,12 +12,12 @@ import java.util.List;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLog;
 
 public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
 
     @Inject
-    private TimeRecordStartStopDao timeRecordStartStopDao;
+    private TimeRecordLogDao timeRecordLogDao;
 
     public IssueDaoImpl(Dao<Issue, Integer> dao) {
         super(dao);
@@ -66,8 +66,8 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
     @Override
     public void deleteWithAllChilds(Issue issue) {
         for (TimeRecord timeRecord : issue.getTimeRecordForeignCollection()) {
-            for (TimeRecordStartStop timeRecordStartStop : timeRecord.getTimeRecordStartStopForeignCollection()) {
-                timeRecordStartStopDao.delete(timeRecordStartStop);
+            for (TimeRecordLog timeRecordLog : timeRecord.getTimeRecordLogForeignCollection()) {
+                timeRecordLogDao.delete(timeRecordLog);
             }
         }
 

@@ -16,7 +16,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
+public class TimeRecordLog implements Comparable<TimeRecordLog> {
 
     @DatabaseField(generatedId = true)
     private int id;
@@ -28,10 +28,10 @@ public class TimeRecordStartStop implements Comparable<TimeRecordStartStop> {
     private Date date;
 
     @DatabaseField(canBeNull = false, dataType = DataType.ENUM_INTEGER)
-    private TimeRecordStartStopType type;
+    private TimeRecordLogType type;
 
     @Override
-    public int compareTo(TimeRecordStartStop another) {
+    public int compareTo(TimeRecordLog another) {
         return another.getDate().compareTo(getDate());
     }
 

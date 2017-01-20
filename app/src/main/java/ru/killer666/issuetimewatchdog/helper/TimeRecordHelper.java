@@ -18,7 +18,7 @@ import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
 import ru.killer666.issuetimewatchdog.services.UploadTimeRecordsService;
 
 @ContextSingleton
@@ -39,6 +39,12 @@ public class TimeRecordHelper {
     @Inject
     private Context context;
 
+    public void increaseTime(TimeRecord timeRecord, float amount) {
+    }
+
+    public void decreaseTime(TimeRecord timeRecord, float amount) {
+    }
+
     public void showLastForIssue(Issue issue) {
         String message = "";
 
@@ -55,7 +61,7 @@ public class TimeRecordHelper {
             builder.setNeutralButton("Stop working", ((dialog, which) -> {
                 dialog.dismiss();
 
-                issueHelper.changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeIdle);
+                issueHelper.changeState(issue, IssueState.Idle, TimeRecordLogType.TypeIdle);
             }));
         }
 

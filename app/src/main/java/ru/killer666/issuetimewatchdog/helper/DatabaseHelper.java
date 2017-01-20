@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLog;
 
 @Singleton
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
@@ -34,7 +34,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.createTable(connectionSource, Issue.class);
             TableUtils.createTable(connectionSource, TimeRecord.class);
-            TableUtils.createTable(connectionSource, TimeRecordStartStop.class);
+            TableUtils.createTable(connectionSource, TimeRecordLog.class);
 
             logger.info("Database created successfully");
         } catch (SQLException e) {

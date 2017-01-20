@@ -55,7 +55,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     private Long remoteTrackorId;
 
     @ForeignCollectionField
-    private ForeignCollection<TimeRecordStartStop> timeRecordStartStopForeignCollection;
+    private ForeignCollection<TimeRecordLog> timeRecordLogForeignCollection;
 
     public TimeRecord(Issue issue) {
         this.issue = issue;

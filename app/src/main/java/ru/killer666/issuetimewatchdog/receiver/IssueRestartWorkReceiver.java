@@ -12,7 +12,7 @@ import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.helper.IssueHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
 
 public class IssueRestartWorkReceiver extends RoboBroadcastReceiver {
 
@@ -29,8 +29,8 @@ public class IssueRestartWorkReceiver extends RoboBroadcastReceiver {
         logger.debug("Alarm received");
         Issue workingIssue = issueDao.queryWorkingState();
         if (workingIssue != null) {
-            issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordStartStopType.TypeIdleForDayEnd);
-            issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordStartStopType.TypeWorking);
+            issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordLogType.TypeIdleForDayEnd);
+            issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordLogType.TypeWorking);
             logger.debug("Issue {} restarted", workingIssue);
         }
     }

@@ -37,11 +37,11 @@ import ru.killer666.issuetimewatchdog.helper.IssueHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
-import ru.killer666.issuetimewatchdog.helper.TimeRecordStartStopHelper;
+import ru.killer666.issuetimewatchdog.helper.TimeRecordLogHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
 import ru.killer666.issuetimewatchdog.services.NotificationService;
 import rx.Observable;
 
@@ -58,7 +58,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private TimeRecordHelper timeRecordHelper;
 
     @Inject
-    private TimeRecordStartStopHelper timeRecordStartStopHelper;
+    private TimeRecordLogHelper timeRecordLogHelper;
 
     @Inject
     private TimeRecordDao timeRecordDao;
@@ -101,7 +101,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     public void onIssueStateChanged(IssueStateChangedEvent event) {
         Issue issue = issueDao.queryForSameId(event.getIssue());
         if (IssueState.Working.equals(event.getOldState()) &&
-                TimeRecordStartStopType.TypeIdle.equals(event.getTimeRecordStartStopType())) {
+                TimeRecordLogType.TypeIdle.equals(event.getTimeRecordLogType())) {
             timeRecordHelper.showLastForIssue(event.getIssue());
         }
 
@@ -194,15 +194,15 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_startstoplog: {
-                selectTimeRecordByDate(issue).subscribe(timeRecord -> timeRecordStartStopHelper.showForTimeRecord(timeRecord));
+                selectTimeRecordByDate(issue).subscribe(timeRecord -> timeRecordLogHelper.showForTimeRecord(timeRecord));
                 break;
             }
             case R.id.action_switchstate: {
                 if (IssueState.Working.equals(issue.getState())) {
-                    issueHelper.changeState(issue, IssueState.Idle, TimeRecordStartStopType.TypeIdle);
+                    issueHelper.changeState(issue, IssueState.Idle, TimeRecordLogType.TypeIdle);
                 } else {
                     TimeRecord timeRecord = timeRecordHelper.getOrCreateLastTimeRecordForIssue(issue);
-                    issueHelper.changeState(issue, IssueState.Working, TimeRecordStartStopType.TypeWorking);
+                    issueHelper.changeState(issue, IssueState.Working, TimeRecordLogType.TypeWorking);
 
                     int position = items.indexOf(issue);
 

@@ -10,10 +10,10 @@ import java.sql.SQLException;
 import ru.killer666.issuetimewatchdog.helper.DatabaseHelper;
 import ru.killer666.issuetimewatchdog.dao.IssueDaoImpl;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDaoImpl;
-import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDaoImpl;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordLogDaoImpl;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordLog;
 
 public class DaoProviders {
 
@@ -59,18 +59,18 @@ public class DaoProviders {
 
     }
 
-    public static class TimeRecordStartStopProvider implements Provider<TimeRecordStartStopDaoImpl> {
+    public static class TimeRecordStartStopProvider implements Provider<TimeRecordLogDaoImpl> {
 
         @Inject
         private DatabaseHelper databaseHelper;
 
         @Override
-        public TimeRecordStartStopDaoImpl get() {
+        public TimeRecordLogDaoImpl get() {
             try {
-                Dao<TimeRecordStartStop, Integer> dao = databaseHelper.getDao(TimeRecordStartStop.class);
+                Dao<TimeRecordLog, Integer> dao = databaseHelper.getDao(TimeRecordLog.class);
                 dao.setObjectCache(true);
 
-                return new TimeRecordStartStopDaoImpl(dao);
+                return new TimeRecordLogDaoImpl(dao);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
