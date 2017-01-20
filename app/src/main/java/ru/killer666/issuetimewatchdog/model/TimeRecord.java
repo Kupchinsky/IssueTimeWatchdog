@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
 
 @Getter
@@ -75,8 +75,8 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
         return another.getDate().compareTo(getDate());
     }
 
-    public String getReadableName(ConfigFieldFormatter configFieldFormatter) {
-        return issue.getTrackorKey() + " of date " + configFieldFormatter.getDateFormatter().format(date);
+    public String getReadableName(RemoteUserSettings remoteUserSettings) {
+        return issue.getTrackorKey() + " of date " + remoteUserSettings.getDateFormatter().format(date);
     }
 
     public static String getTrackorTypeName() {

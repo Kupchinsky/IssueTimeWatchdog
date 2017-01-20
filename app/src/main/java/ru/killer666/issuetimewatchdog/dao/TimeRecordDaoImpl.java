@@ -94,13 +94,18 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
     public Pair<Long, Long> queryForMaxMinDateOfIssue(Issue issue) {
         try {
             QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
-            queryBuilder.selectRaw("MAX(date)", "MIN(date)").where().eq("issue_id", issue);
+            queryBuilder.selectRaw("COUNT(*)", "MAX(date)", "MIN(date)").where().eq("issue_id", issue);
             String query = queryBuilder.prepareStatementString();
             GenericRawResults<String[]> rawResults = queryRaw(query);
 
             String[] result = rawResults.getFirstResult();
-            Date maxDate = dateTimeSqlFormat.parse(result[0]);
-            Date minDate = dateTimeSqlFormat.parse(result[1]);
+
+            if (Integer.parseInt(result[0]) == 0) {
+                return null;
+            }
+
+            Date maxDate = dateTimeSqlFormat.parse(result[1]);
+            Date minDate = dateTimeSqlFormat.parse(result[2]);
 
             return Pair.create(maxDate.getTime(), minDate.getTime());
         } catch (Exception e) {

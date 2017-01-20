@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 
 import rx.Observable;
 
-public interface ConfigFieldFormatter {
+public interface RemoteUserSettings {
 
     DateFormat getDateFormatter();
 
@@ -13,7 +13,8 @@ public interface ConfigFieldFormatter {
 
     NumberFormat getNumberFormatter();
 
-    // TODO: use
-    Observable requestUserSettings();
+    Observable<Void> requestRemoteUserSettings();
+
+    boolean isRemoteSettingsLoaded();
 
 }

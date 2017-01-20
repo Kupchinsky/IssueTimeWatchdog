@@ -17,51 +17,13 @@
         android:id="@+id/buttonSelectIssueFilter"
         style="@android:style/Widget.Button.Small"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/textViewTimeRecordFilter" />
-
-    <Button
-        android:text="Select Time record filter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/buttonSelectTimeRecordFilter"
-        style="@android:style/Widget.Button.Small"
-        android:layout_marginTop="11dp"
-        android:layout_below="@+id/buttonSelectIssueFilter"
         android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewIssueFilter"
-        android:layout_alignParentEnd="true"
-        android:layout_toEndOf="@+id/buttonSelectIssueFilter"
-        android:layout_above="@+id/buttonSelectTimeRecordFilter"
-        android:layout_alignParentTop="true"
-        android:layout_centerVertical="false"
-        android:textAllCaps="false"
-        android:gravity="center_vertical|center_horizontal"
-        android:textStyle="normal|bold"
-        android:text="None" />
-
-    <TextView
-        android:text="None"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewTimeRecordFilter"
-        android:textAllCaps="false"
-        android:gravity="center_vertical|center_horizontal"
-        android:layout_alignTop="@+id/buttonSelectTimeRecordFilter"
-        android:layout_alignParentEnd="true"
-        android:textStyle="normal|bold"
-        android:layout_toEndOf="@+id/buttonSelectTimeRecordFilter"
-        android:layout_alignBottom="@+id/buttonSelectTimeRecordFilter" />
 
     <Switch
         android:text="Automatic create Time Records after day end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonSelectTimeRecordFilter"
+        android:layout_below="@+id/buttonSelectIssueFilter"
         android:layout_alignParentStart="true"
         android:layout_marginTop="19dp"
         android:id="@+id/switchCreateTimeRecords"
@@ -89,5 +51,28 @@
         android:layout_alignTop="@+id/buttonChangeLoginCredentials"
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/buttonChangeLoginCredentials" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewIssueFilter"
+        android:textAllCaps="false"
+        android:gravity="center_vertical|center_horizontal"
+        android:textStyle="normal|bold"
+        android:text="None"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/buttonSelectIssueFilter"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/switchCreateTimeRecords" />
+
+    <Button
+        android:text="Reload user settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonReloadUserSettings"
+        style="@android:style/Widget.Button.Small"
+        android:layout_below="@+id/buttonChangeLoginCredentials"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="22dp" />
 
 </RelativeLayout>

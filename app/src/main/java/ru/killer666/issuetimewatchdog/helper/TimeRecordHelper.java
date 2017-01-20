@@ -15,6 +15,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import roboguice.inject.ContextSingleton;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordLogDao;
+import ru.killer666.issuetimewatchdog.event.IssueTimeRecordChangedEvent;
 import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
@@ -38,7 +39,7 @@ public class TimeRecordHelper {
     private DialogHelper dialogHelper;
 
     @Inject
-    private ConfigFieldFormatter configFieldFormatter;
+    private RemoteUserSettings remoteUserSettings;
 
     @Inject
     private Context context;
@@ -47,6 +48,7 @@ public class TimeRecordHelper {
         timeRecord.increaseWorkedTime(amount);
         timeRecordDao.update(timeRecord);
         timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeHandIncreaseTime);
+        EventBus.getDefault().post(new IssueTimeRecordChangedEvent(timeRecord.getIssue(), TimeRecordLogType.TypeHandIncreaseTime));
     }
 
     public boolean decreaseTime(TimeRecord timeRecord, double amount) {
@@ -58,6 +60,7 @@ public class TimeRecordHelper {
         timeRecord.decreaseWorkedTime(amount);
         timeRecordDao.update(timeRecord);
         timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeHandDecreaseTime);
+        EventBus.getDefault().post(new IssueTimeRecordChangedEvent(timeRecord.getIssue(), TimeRecordLogType.TypeHandIncreaseTime));
         return true;
     }
 
@@ -97,16 +100,16 @@ public class TimeRecordHelper {
 
     public String formatHistory(TimeRecord timeRecord, boolean isLong) {
         String message = (DateUtils.isToday(timeRecord.getDate().getTime()) ? "<b>Today</b>" :
-                configFieldFormatter.getDateFormatter().format(timeRecord.getDate())) + ": " +
-                configFieldFormatter.getNumberFormatter().format(timeRecord.getWorkedTime());
+                remoteUserSettings.getDateFormatter().format(timeRecord.getDate())) + ": " +
+                remoteUserSettings.getNumberFormatter().format(timeRecord.getWorkedTime());
 
         boolean isFullWrite = timeRecord.getWorkedTime() == timeRecord.getWroteTime();
 
         if (isLong) {
             message += " h. (wrote" + (isFullWrite ? "[full]" : "") + " " +
-                    configFieldFormatter.getNumberFormatter().format(timeRecord.getWroteTime()) + " h.)";
+                    remoteUserSettings.getNumberFormatter().format(timeRecord.getWroteTime()) + " h.)";
         } else {
-            message += "/" + configFieldFormatter.getNumberFormatter().format(timeRecord.getWroteTime()) + " (w" +
+            message += "/" + remoteUserSettings.getNumberFormatter().format(timeRecord.getWroteTime()) + " (w" +
                     (isFullWrite ? "[f]" : "") + ") hrs.";
         }
 

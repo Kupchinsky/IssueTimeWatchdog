@@ -30,12 +30,13 @@ import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
 import ru.killer666.issuetimewatchdog.event.IssueStateChangedEvent;
+import ru.killer666.issuetimewatchdog.event.IssueTimeRecordChangedEvent;
 import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
-import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
 import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueHelper;
 import ru.killer666.issuetimewatchdog.helper.IssueSelectorDialogSettings;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.killer666.issuetimewatchdog.helper.TimeRecordLogHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
@@ -73,7 +74,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
     private DialogHelper dialogHelper;
 
     @Inject
-    private ConfigFieldFormatter configFieldFormatter;
+    private RemoteUserSettings remoteUserSettings;
 
     @Inject
     private Context context;
@@ -105,6 +106,12 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
             timeRecordHelper.showLastForIssue(event.getIssue());
         }
 
+        notifyItemChanged(items.indexOf(issue));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onIssueTimeRecordChangedEvent(IssueTimeRecordChangedEvent event) {
+        Issue issue = issueDao.queryForSameId(event.getIssue());
         notifyItemChanged(items.indexOf(issue));
     }
 
@@ -170,7 +177,7 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
                 if (timeRecord == null) {
                     dialogHelper.warning("No time records found at " +
-                            configFieldFormatter.getDateFormatter().format(date));
+                            remoteUserSettings.getDateFormatter().format(date));
                 } else {
                     subscriber.onNext(timeRecord);
                 }
@@ -178,6 +185,11 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 subscriber.onCompleted();
             });
             Pair<Long, Long> maxMinDates = timeRecordDao.queryForMaxMinDateOfIssue(issue);
+            if (maxMinDates == null) {
+                dialogHelper.warning("No time records found!");
+                return;
+            }
+
             datePickerDialog.getDatePicker().setMaxDate(maxMinDates.first);
             datePickerDialog.getDatePicker().setMinDate(maxMinDates.second);
             datePickerDialog.show();
@@ -232,8 +244,8 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                         timeRecordHelper.increaseTime(timeRecord, value);
 
                         dialogHelper.info("Successfully added hours for issue " + issue.getReadableName() +
-                                " and date " + configFieldFormatter.getDateFormatter().format(timeRecord.getDate()) +
-                                ": " + configFieldFormatter.getNumberFormatter().format(value));
+                                " and date " + remoteUserSettings.getDateFormatter().format(timeRecord.getDate()) +
+                                ": " + remoteUserSettings.getNumberFormatter().format(value) + " h.");
                     });
                 });
                 break;
@@ -243,8 +255,8 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                     dialogHelper.showInputNumberDialog("Enter hours for remove:").subscribe(value -> {
                         if (timeRecordHelper.decreaseTime(timeRecord, value)) {
                             dialogHelper.info("Successfully removed hours for issue " + issue.getReadableName() +
-                                    " and date " + configFieldFormatter.getDateFormatter().format(timeRecord.getDate()) +
-                                    ": " + configFieldFormatter.getNumberFormatter().format(value));
+                                    " and date " + remoteUserSettings.getDateFormatter().format(timeRecord.getDate()) +
+                                    ": " + remoteUserSettings.getNumberFormatter().format(value) + " h.");
                         }
                     });
                 });

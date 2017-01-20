@@ -20,11 +20,13 @@ import com.google.inject.Inject;
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 import ru.killer666.issuetimewatchdog.R;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
+import rx.Subscriber;
 
 @ContentView(R.layout.activity_settings)
 public class SettingsActivity extends RoboAppCompatActivity
@@ -45,6 +47,9 @@ public class SettingsActivity extends RoboAppCompatActivity
     @Inject
     private DialogHelper dialogHelper;
 
+    @Inject
+    private RemoteUserSettings remoteUserSettings;
+
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
 
@@ -60,6 +65,9 @@ public class SettingsActivity extends RoboAppCompatActivity
     @InjectView(R.id.textViewLoginCredentials)
     private TextView textViewLoginCredentials;
 
+    @InjectView(R.id.buttonReloadUserSettings)
+    private Button buttonReloadUserSettings;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +76,7 @@ public class SettingsActivity extends RoboAppCompatActivity
 
         buttonSelectIssueFilter.setOnClickListener(this);
         buttonChangeLoginCredentials.setOnClickListener(this);
+        buttonReloadUserSettings.setOnClickListener(this);
 
         switchCreateTimeRecords.setChecked(createTimeRecordsPrefs.isEnabled());
         switchCreateTimeRecords.setOnCheckedChangeListener(this);
@@ -118,6 +127,32 @@ public class SettingsActivity extends RoboAppCompatActivity
             }
             case R.id.buttonChangeLoginCredentials: {
                 askLoginCredentialsDialog();
+                break;
+            }
+            case R.id.buttonReloadUserSettings: {
+                remoteUserSettings.requestRemoteUserSettings().subscribe(new Subscriber<Void>() {
+
+                    @Override
+                    public void onStart() {
+                        dialogHelper.showProgressDialog();
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        dialogHelper.dismissProgressDialog();
+                        dialogHelper.info("Reloaded successfully!");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        dialogHelper.error(e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(Void result) {
+                    }
+
+                });
                 break;
             }
         }

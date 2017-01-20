@@ -26,7 +26,7 @@ public class TimeRecordLogHelper {
     private TimeRecordLogDao timeRecordLogDao;
 
     @Inject
-    private ConfigFieldFormatter configFieldFormatter;
+    private RemoteUserSettings remoteUserSettings;
 
     @Inject
     private Context context;
@@ -44,7 +44,7 @@ public class TimeRecordLogHelper {
 
         Collections.reverse(messageList);
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setTitle("Start/stop log of " + timeRecord.getReadableName(configFieldFormatter))
+                .setTitle("Start/stop log of " + timeRecord.getReadableName(remoteUserSettings))
                 .setMessage(Strings.join("\n", messageList) + "\n(Log of last " + TimeRecordLogDao.SHOW_LIMIT + " days)")
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
 
@@ -53,8 +53,8 @@ public class TimeRecordLogHelper {
 
     private String formatHistory(TimeRecordLog timeRecordLog, TimeRecordLog timeRecordLogNext) {
         String message = (DateUtils.isToday(timeRecordLog.getDate().getTime()) ? "Today" :
-                configFieldFormatter.getDateFormatter().format(timeRecordLog.getDate())) + " " +
-                configFieldFormatter.getTimeFormatter().format(timeRecordLog.getDate()) + ": " +
+                remoteUserSettings.getDateFormatter().format(timeRecordLog.getDate())) + " " +
+                remoteUserSettings.getTimeFormatter().format(timeRecordLog.getDate()) + ": " +
                 timeRecordLog.getType().getValue();
 
         if (timeRecordLogNext != null &&

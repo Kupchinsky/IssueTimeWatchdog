@@ -64,7 +64,7 @@ public class DialogHelper {
     public Observable<Double> showInputNumberDialog(String title) {
         return Observable.defer(() -> Observable.create(subscriber -> {
             EditText editText = new EditText(context);
-            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             editText.setRawInputType(Configuration.KEYBOARD_12KEY);
 
             AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)

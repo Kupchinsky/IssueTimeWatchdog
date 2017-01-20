@@ -14,7 +14,7 @@ import ru.killer666.issuetimewatchdog.services.ApiClient;
 import rx.Observable;
 
 @ContextSingleton
-public class ConfigFieldFormatterImpl implements ConfigFieldFormatter {
+public class RemoteUserSettingsImpl implements RemoteUserSettings {
 
     @Inject
     private ApiClient apiClient;
@@ -31,14 +31,14 @@ public class ConfigFieldFormatterImpl implements ConfigFieldFormatter {
     @Getter
     private NumberFormat numberFormatter = new DecimalFormat("#.##");
 
-    @Override
-    public Observable requestUserSettings() {
-        return Observable.defer(() -> Observable.create(subscriber -> {
-            dialogHelper.showProgressDialog();
-            dialogHelper.dismissProgressDialog();
-            // TODO: implement(required v3 api for read user settings)
+    @Getter
+    private boolean isRemoteSettingsLoaded;
 
-            dialogHelper.warnNotImplemented();
+    @Override
+    public Observable<Void> requestRemoteUserSettings() {
+        return Observable.defer(() -> Observable.create(subscriber -> {
+
+            // TODO: implement(required v3 api for read user settings)
             subscriber.onCompleted();
         }));
     }

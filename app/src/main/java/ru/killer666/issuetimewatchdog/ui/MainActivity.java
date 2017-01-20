@@ -109,6 +109,8 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             issueHelper.changeState(workingIssue, IssueState.Idle, TimeRecordLogType.TypeIdleByKillApp);
             issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordLogType.TypeWorking);
         }
+
+        // TODO: RemoteUserSettings reload if not loaded
     }
 
     @Override
