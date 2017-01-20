@@ -15,4 +15,11 @@ public enum TimeRecordStartStopType {
 
     private final String value;
 
+    public static boolean isIdle(TimeRecordStartStopType timeRecordStartStopType) {
+        return TypeIdle.equals(timeRecordStartStopType) ||
+                TypeIdleForOtherTask.equals(timeRecordStartStopType) ||
+                TypeIdleByKillApp.equals(timeRecordStartStopType) ||
+                TypeIdleForDayEnd.equals(timeRecordStartStopType);
+    }
+
 }

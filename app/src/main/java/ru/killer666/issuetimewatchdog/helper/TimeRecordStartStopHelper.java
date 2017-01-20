@@ -7,10 +7,15 @@ import android.text.format.DateUtils;
 
 import com.google.inject.Inject;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import roboguice.inject.ContextSingleton;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordStartStopDao;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordStartStop;
+import ru.killer666.issuetimewatchdog.model.TimeRecordStartStopType;
 
 @ContextSingleton
 public class TimeRecordStartStopHelper {
@@ -24,11 +29,15 @@ public class TimeRecordStartStopHelper {
     @Inject
     private Context context;
 
+    private List<TimeUnit> historyFormatTimeUnits = Arrays.asList(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES);
+
     public void showForTimeRecord(TimeRecord timeRecord) {
         String message = "";
 
+        TimeRecordStartStop timeRecordStartStopPrev = null;
         for (TimeRecordStartStop timeRecordStartStop : timeRecordStartStopDao.queryOfTimeRecordList(timeRecord)) {
-            message += Html.fromHtml(formatHistory(timeRecordStartStop)) + "\n";
+            message += Html.fromHtml(formatHistory(timeRecordStartStop, timeRecordStartStopPrev)) + "\n";
+            timeRecordStartStopPrev = timeRecordStartStop;
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
@@ -39,11 +48,19 @@ public class TimeRecordStartStopHelper {
         builder.show();
     }
 
-    private String formatHistory(TimeRecordStartStop timeRecordStartStop) {
-        return (DateUtils.isToday(timeRecordStartStop.getDate().getTime()) ? "<b>Today</b>" :
+    private String formatHistory(TimeRecordStartStop timeRecordStartStop, TimeRecordStartStop timeRecordStartStopPrev) {
+        String message = (DateUtils.isToday(timeRecordStartStop.getDate().getTime()) ? "<b>Today</b>" :
                 configFieldFormatter.getDateFormatter().format(timeRecordStartStop.getDate())) + " " +
                 configFieldFormatter.getTimeFormatter().format(timeRecordStartStop.getDate()) + ": " +
                 timeRecordStartStop.getType().getValue();
+
+        if (timeRecordStartStopPrev != null && TimeRecordStartStopType.isIdle(timeRecordStartStop.getType()) &&
+                TimeRecordStartStopType.TypeWorking.equals(timeRecordStartStopPrev.getType())) {
+            message += "(+" + MyDateUtils.getTimeDifference(timeRecordStartStopPrev.getDate(),
+                    timeRecordStartStop.getDate(), historyFormatTimeUnits);
+        }
+
+        return message;
     }
 
 }
