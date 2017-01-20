@@ -6,7 +6,6 @@ import com.j256.ormlite.stmt.QueryBuilder;
 
 import java.sql.SQLException;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
@@ -50,7 +49,7 @@ public class TimeRecordStartStopDaoImpl extends RuntimeExceptionDao<TimeRecordSt
 
         try {
             queryBuilder.where().eq("timeRecord_id", timeRecord);
-            queryBuilder.orderBy("date", false);
+            queryBuilder.orderBy("date", true);
 
             return query(queryBuilder.prepare());
         } catch (SQLException e) {

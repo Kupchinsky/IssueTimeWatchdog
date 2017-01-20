@@ -87,7 +87,7 @@ public class MyDateUtils {
             }
         }
 
-        return result;
+        return result.trim();
     }
 
 }

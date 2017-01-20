@@ -64,6 +64,7 @@ public class IssueHelper {
 
             float workedTime = (Calendar.getInstance().getTime().getTime() - timeRecordStartStop.getDate().getTime()) / 1000 / 60 / 60;
             timeRecord.increaseWorkedTime(workedTime);
+            timeRecordDao.update(timeRecord);
         }
 
         if (daoUpdateState) {
