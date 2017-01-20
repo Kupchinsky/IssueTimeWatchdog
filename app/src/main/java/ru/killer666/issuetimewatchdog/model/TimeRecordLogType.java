@@ -13,7 +13,10 @@ public enum TimeRecordLogType {
     TypeIdleByKillApp("Stop working (no service, will be restarted)"),
     TypeIdleForDayEnd("Stop working (day ends)"),
     TypeHandDecreaseTime("Hand decrease time"),
-    TypeHandIncreaseTime("Hand increase time");
+    TypeHandIncreaseTime("Hand increase time"),
+    // TODO: use this
+    TypeRemoteCreate("Remote trackor created"),
+    TypeRemoteUpdate("Remote trackor updated");
 
     private final String value;
 

@@ -14,6 +14,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import roboguice.inject.ContextSingleton;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
+import ru.killer666.issuetimewatchdog.dao.TimeRecordLogDao;
 import ru.killer666.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
@@ -28,6 +29,9 @@ public class TimeRecordHelper {
     private TimeRecordDao timeRecordDao;
 
     @Inject
+    private TimeRecordLogDao timeRecordLogDao;
+
+    @Inject
     private IssueHelper issueHelper;
 
     @Inject
@@ -39,10 +43,22 @@ public class TimeRecordHelper {
     @Inject
     private Context context;
 
-    public void increaseTime(TimeRecord timeRecord, float amount) {
+    public void increaseTime(TimeRecord timeRecord, double amount) {
+        timeRecord.increaseWorkedTime(amount);
+        timeRecordDao.update(timeRecord);
+        timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeHandIncreaseTime);
     }
 
-    public void decreaseTime(TimeRecord timeRecord, float amount) {
+    public boolean decreaseTime(TimeRecord timeRecord, double amount) {
+        if (timeRecord.getWorkedTime() < amount) {
+            dialogHelper.warning("Input amount of time is greater then worked time");
+            return false;
+        }
+
+        timeRecord.decreaseWorkedTime(amount);
+        timeRecordDao.update(timeRecord);
+        timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeHandDecreaseTime);
+        return true;
     }
 
     public void showLastForIssue(Issue issue) {

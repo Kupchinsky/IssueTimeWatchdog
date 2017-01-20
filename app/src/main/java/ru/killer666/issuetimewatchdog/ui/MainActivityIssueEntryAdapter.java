@@ -228,11 +228,25 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
             }
             case R.id.action_add_unwatched_time: {
                 selectTimeRecordByDate(issue).subscribe(timeRecord -> {
+                    dialogHelper.showInputNumberDialog("Enter hours for add:").subscribe(value -> {
+                        timeRecordHelper.increaseTime(timeRecord, value);
+
+                        dialogHelper.info("Successfully added hours for issue " + issue.getReadableName() +
+                                " and date " + configFieldFormatter.getDateFormatter().format(timeRecord.getDate()) +
+                                ": " + configFieldFormatter.getNumberFormatter().format(value));
+                    });
                 });
                 break;
             }
             case R.id.action_remove_watched_time: {
                 selectTimeRecordByDate(issue).subscribe(timeRecord -> {
+                    dialogHelper.showInputNumberDialog("Enter hours for remove:").subscribe(value -> {
+                        if (timeRecordHelper.decreaseTime(timeRecord, value)) {
+                            dialogHelper.info("Successfully removed hours for issue " + issue.getReadableName() +
+                                    " and date " + configFieldFormatter.getDateFormatter().format(timeRecord.getDate()) +
+                                    ": " + configFieldFormatter.getNumberFormatter().format(value));
+                        }
+                    });
                 });
                 break;
             }

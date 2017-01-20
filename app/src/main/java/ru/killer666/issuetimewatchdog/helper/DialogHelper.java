@@ -2,11 +2,15 @@ package ru.killer666.issuetimewatchdog.helper;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
+import android.widget.EditText;
 
 import com.google.inject.Inject;
 
 import roboguice.inject.ContextSingleton;
+import rx.Observable;
 
 @ContextSingleton
 public class DialogHelper {
@@ -36,6 +40,7 @@ public class DialogHelper {
         (new AlertDialog.Builder(context))
                 .setTitle(title)
                 .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -56,8 +61,28 @@ public class DialogHelper {
         }
     }
 
-    public boolean isProgressDialogShowing() {
-        return progressDialog != null && progressDialog.isShowing();
+    public Observable<Double> showInputNumberDialog(String title) {
+        return Observable.defer(() -> Observable.create(subscriber -> {
+            EditText editText = new EditText(context);
+            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            editText.setRawInputType(Configuration.KEYBOARD_12KEY);
+
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+                    .setTitle(title)
+                    .setView(editText)
+                    .setPositiveButton("OK", (dialog, whichButton) -> {
+                        if (editText.getText() != null) {
+                            dialog.dismiss();
+                            subscriber.onNext(Double.valueOf(editText.getText().toString()));
+                            subscriber.onCompleted();
+                        }
+                    })
+                    .setNegativeButton("Cancel", (dialog, whichButton) -> {
+                        dialog.cancel();
+                        subscriber.onCompleted();
+                    });
+            alertDialog.show();
+        }));
     }
 
 }

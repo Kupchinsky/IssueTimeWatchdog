@@ -37,7 +37,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
 
     @SerializedName("VQS_IT_SPENT_HOURS")
     @DatabaseField(canBeNull = false)
-    private float workedTime;
+    private double workedTime;
 
     @SerializedName("TRACKOR_KEY")
     @DatabaseField(index = true)
@@ -49,7 +49,7 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     private String comments;
 
     @DatabaseField(canBeNull = false)
-    private float wroteTime;
+    private double wroteTime;
 
     @DatabaseField
     private Long remoteTrackorId;
@@ -62,10 +62,14 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
         date = MyDateUtils.getStartOfDay(Calendar.getInstance().getTime());
     }
 
-    public void increaseWorkedTime(float value) {
+    public void increaseWorkedTime(double value) {
         workedTime += value;
     }
-    
+
+    public void decreaseWorkedTime(double value) {
+        workedTime -= value;
+    }
+
     @Override
     public int compareTo(@NonNull TimeRecord another) {
         return another.getDate().compareTo(getDate());
