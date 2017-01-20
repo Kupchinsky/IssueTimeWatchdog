@@ -1,5 +1,7 @@
 package ru.killer666.issuetimewatchdog.dao;
 
+import android.util.Pair;
+
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public interface TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     TimeRecord queryLastOfIssue(Issue issue);
 
-    TimeRecord queryForTrackorKey(String trackorKey);
+    Pair<Long, Long> queryForMaxMinDateOfIssue(Issue issue);
 
     List<TimeRecord> queryOldOfIssue(Issue issue);
 

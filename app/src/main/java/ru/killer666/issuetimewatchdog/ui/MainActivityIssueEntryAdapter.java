@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -176,6 +177,9 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
                 subscriber.onCompleted();
             });
+            Pair<Long, Long> maxMinDates = timeRecordDao.queryForMaxMinDateOfIssue(issue);
+            datePickerDialog.getDatePicker().setMaxDate(maxMinDates.first);
+            datePickerDialog.getDatePicker().setMinDate(maxMinDates.second);
             datePickerDialog.show();
         }));
     }

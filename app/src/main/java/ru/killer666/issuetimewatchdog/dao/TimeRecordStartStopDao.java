@@ -1,6 +1,5 @@
 package ru.killer666.issuetimewatchdog.dao;
 
-import java.util.Date;
 import java.util.List;
 
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
@@ -16,8 +15,5 @@ public interface TimeRecordStartStopDao extends RuntimeExceptionDao<TimeRecordSt
     TimeRecordStartStop queryLastStartForTimeRecord(TimeRecord timeRecord);
 
     List<TimeRecordStartStop> queryOfTimeRecordList(TimeRecord timeRecord);
-
-    // TODO: use or remove
-    List<TimeRecordStartStop> queryForTimeRecordAndDate(TimeRecord timeRecord, Date date);
 
 }

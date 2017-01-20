@@ -1,11 +1,16 @@
 package ru.killer666.issuetimewatchdog.dao;
 
+import android.util.Pair;
+
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +19,8 @@ import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 
 public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> implements TimeRecordDao {
+
+    private DateFormat dateTimeSqlFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 
     public TimeRecordDaoImpl(Dao<TimeRecord, Integer> dao) {
         super(dao);
@@ -84,14 +91,19 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
     }
 
     @Override
-    public TimeRecord queryForTrackorKey(String trackorKey) {
-        QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
-
+    public Pair<Long, Long> queryForMaxMinDateOfIssue(Issue issue) {
         try {
-            queryBuilder.where().eq("trackorKey", trackorKey);
+            QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
+            queryBuilder.selectRaw("MAX(date)", "MIN(date)").where().eq("issue_id", issue);
+            String query = queryBuilder.prepareStatementString();
+            GenericRawResults<String[]> rawResults = queryRaw(query);
 
-            return queryForFirst(queryBuilder.prepare());
-        } catch (SQLException e) {
+            String[] result = rawResults.getFirstResult();
+            Date maxDate = dateTimeSqlFormat.parse(result[0]);
+            Date minDate = dateTimeSqlFormat.parse(result[1]);
+
+            return Pair.create(maxDate.getTime(), minDate.getTime());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

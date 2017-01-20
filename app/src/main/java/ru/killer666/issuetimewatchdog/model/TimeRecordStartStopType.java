@@ -11,8 +11,7 @@ public enum TimeRecordStartStopType {
     TypeIdle("Stop working"),
     TypeIdleForOtherTask("Stop working (other task raised)"),
     TypeIdleByKillApp("Stop working (no service, will be restarted)"),
-    // TODO: use this or remove
-    TypeStopForDayEnd("Stop working (day ends)");
+    TypeIdleForDayEnd("Stop working (day ends)");
 
     private final String value;
 

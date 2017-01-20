@@ -17,7 +17,6 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.killer666.issuetimewatchdog.helper.ConfigFieldFormatter;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
-import ru.killer666.issuetimewatchdog.helper.ReadableName;
 
 @Getter
 @Setter
@@ -33,12 +32,10 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     private Issue issue;
 
     @SerializedName("VQS_IT_WORK_DATE")
-    @ReadableName("Work date")
     @DatabaseField
     private Date date;
 
     @SerializedName("VQS_IT_SPENT_HOURS")
-    @ReadableName("Spent hours")
     @DatabaseField(canBeNull = false)
     private float workedTime;
 

@@ -1,6 +1,7 @@
 package ru.killer666.issuetimewatchdog.prefs;
 
 import android.app.AlarmManager;
+import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +15,7 @@ import java.text.DateFormat;
 import java.util.Calendar;
 
 import roboguice.RoboGuice;
-import ru.killer666.issuetimewatchdog.CreateTimeRecordsBroadcastReceiver;
+import ru.killer666.issuetimewatchdog.receiver.CreateTimeRecordsReceiver;
 
 @Singleton
 public class CreateTimeRecordsPrefs {
@@ -28,7 +29,7 @@ public class CreateTimeRecordsPrefs {
     private AlarmManager alarmManager;
 
     @Inject
-    private CreateTimeRecordsPrefs(android.app.Application application) {
+    private CreateTimeRecordsPrefs(Application application) {
         context = application;
         preferences = context.getSharedPreferences("create_time_records_prefs", Context.MODE_PRIVATE);
 
@@ -59,7 +60,7 @@ public class CreateTimeRecordsPrefs {
     }
 
     private void scheduleCreateTimeRecords(boolean showToast) {
-        Intent intent = new Intent(context, CreateTimeRecordsBroadcastReceiver.class);
+        Intent intent = new Intent(context, CreateTimeRecordsReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         Calendar calendar = Calendar.getInstance();
@@ -80,7 +81,7 @@ public class CreateTimeRecordsPrefs {
     }
 
     private void disableCreateTimeRecords() {
-        Intent intent = new Intent(context, CreateTimeRecordsBroadcastReceiver.class);
+        Intent intent = new Intent(context, CreateTimeRecordsReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         alarmManager.cancel(pendingIntent);

@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.helper.ReadableName;
 
 @Getter
 @Setter
@@ -24,12 +23,10 @@ public class Issue implements TrackorType {
     private int id;
 
     @SerializedName(value = "TRACKOR_KEY")
-    @ReadableName("Issue ID")
     @DatabaseField(canBeNull = false, index = true, unique = true)
     private String trackorKey;
 
     @SerializedName(value = "VQS_IT_XITOR_NAME")
-    @ReadableName("Summary")
     @DatabaseField(canBeNull = false)
     private String summary;
 

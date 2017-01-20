@@ -27,7 +27,6 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import ru.killer666.issuetimewatchdog.helper.ReadableName;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TrackorType;
@@ -182,8 +181,8 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     private String getFieldName(Field field) {
-        ReadableName readableName = field.getAnnotation(ReadableName.class);
-        return readableName != null ? readableName.value() : field.getName();
+        // TODO: implement
+        return "Not implemented now!";
     }
 
     @Getter
