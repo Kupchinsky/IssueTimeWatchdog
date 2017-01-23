@@ -14,7 +14,6 @@ public enum TimeRecordLogType {
     TypeIdleForDayEnd("Stop working (day ends)"),
     TypeHandDecreaseTime("Hand decrease time"),
     TypeHandIncreaseTime("Hand increase time"),
-    // TODO: use this
     TypeRemoteCreate("Remote trackor created"),
     TypeRemoteUpdate("Remote trackor updated");
 
@@ -27,6 +26,7 @@ public enum TimeRecordLogType {
                 TypeIdleForDayEnd.equals(timeRecordLogType);
     }
 
+    // TODO: use or remove
     public static boolean isHandModify(TimeRecordLogType timeRecordLogType) {
         return TypeHandDecreaseTime.equals(timeRecordLogType) ||
                 TypeHandIncreaseTime.equals(timeRecordLogType);
