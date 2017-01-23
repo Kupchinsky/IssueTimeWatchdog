@@ -12,6 +12,4 @@ public interface IssueDao extends RuntimeExceptionDao<Issue, Integer> {
 
     boolean trackorKeyExists(String trackorKey);
 
-    void deleteWithAllChilds(Issue issue);
-
 }

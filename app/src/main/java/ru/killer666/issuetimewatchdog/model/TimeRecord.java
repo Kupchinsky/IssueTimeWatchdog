@@ -2,6 +2,7 @@ package ru.killer666.issuetimewatchdog.model;
 
 import android.support.annotation.NonNull;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
@@ -15,19 +16,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.helper.MyDateUtils;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
+public class TimeRecord implements Comparable<TimeRecord>, Trackor {
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(generatedId = true)
     private int id;
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false, foreign = true, foreignAutoRefresh = true)
     private Issue issue;
 
@@ -48,13 +51,17 @@ public class TimeRecord implements Comparable<TimeRecord>, TrackorType {
     @DatabaseField
     private String comments;
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false)
     private double wroteTime;
 
+    @Expose(serialize = false)
+    @SerializedName("TRACKOR_ID")
     @DatabaseField
     private Long remoteTrackorId;
 
-    @ForeignCollectionField
+    @Expose(serialize = false, deserialize = false)
+    @ForeignCollectionField(orderColumnName = "date", orderAscending = false)
     private ForeignCollection<TimeRecordLog> timeRecordLogForeignCollection;
 
     public TimeRecord(Issue issue) {

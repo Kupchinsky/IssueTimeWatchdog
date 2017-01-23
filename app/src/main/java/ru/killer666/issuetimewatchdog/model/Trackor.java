@@ -1,6 +1,6 @@
 package ru.killer666.issuetimewatchdog.model;
 
-public interface TrackorType {
+public interface Trackor {
 
     String getTrackorKey();
 

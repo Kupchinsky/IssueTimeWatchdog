@@ -11,13 +11,14 @@ import java.util.List;
 
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
-import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TimeRecordLog;
 
 public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements IssueDao {
 
     @Inject
     private TimeRecordLogDao timeRecordLogDao;
+
+    @Inject
+    private TimeRecordDao timeRecordDao;
 
     public IssueDaoImpl(Dao<Issue, Integer> dao) {
         super(dao);
@@ -61,18 +62,6 @@ public class IssueDaoImpl extends RuntimeExceptionDao<Issue, Integer> implements
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void deleteWithAllChilds(Issue issue) {
-        for (TimeRecord timeRecord : issue.getTimeRecordForeignCollection()) {
-            for (TimeRecordLog timeRecordLog : timeRecord.getTimeRecordLogForeignCollection()) {
-                timeRecordLogDao.delete(timeRecordLog);
-            }
-        }
-
-        issue.getTimeRecordForeignCollection().clear();
-        delete(issue);
     }
 
 }

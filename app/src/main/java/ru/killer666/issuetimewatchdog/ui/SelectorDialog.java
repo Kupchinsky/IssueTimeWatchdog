@@ -20,7 +20,7 @@ import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.killer666.issuetimewatchdog.helper.ApiCallback;
 import ru.killer666.issuetimewatchdog.helper.DialogHelper;
 import ru.killer666.issuetimewatchdog.helper.SelectorDialogSettings;
-import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.model.Trackor;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.killer666.issuetimewatchdog.services.ApiClient;
 import rx.Observable;
@@ -83,8 +83,8 @@ public class SelectorDialog {
         });
     }
 
-    <T extends TrackorType> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
-                                                                        String filter, SelectorDialogSettings<T> dialogSettings) {
+    <T extends Trackor> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
+                                                                    String filter, SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
             dialogHelper.showProgressDialog();
 
@@ -92,7 +92,7 @@ public class SelectorDialog {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
                 String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap());
+                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap(), null);
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override

@@ -4,16 +4,19 @@ import com.google.gson.JsonObject;
 
 import java.util.List;
 
-import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.model.Trackor;
+import ru.killer666.issuetimewatchdog.services.ApiClient;
 
 public interface TrackorTypeConverter {
 
-    String instanceToString(TrackorType trackorType);
+    String instanceToString(Trackor trackor);
 
-    <T extends TrackorType> T fromJson(Class<T> typeClass, JsonObject jsonObject);
+    <T extends Trackor> T fromJson(Class<T> typeClass, JsonObject jsonObject);
 
-    <T extends TrackorType> String getTrackorTypeName(Class<T> typeClass);
+    <T extends Trackor> String getTrackorTypeName(Class<T> typeClass);
 
-    <T extends TrackorType> List<String> formatTrackorTypeFields(Class<T> typeClass);
+    <T extends Trackor> List<String> formatTrackorTypeFields(Class<T> typeClass);
+
+    void fillTrackorCreateRequest(ApiClient.V2TrackorCreateRequest trackorCreateRequest, Trackor trackor);
 
 }

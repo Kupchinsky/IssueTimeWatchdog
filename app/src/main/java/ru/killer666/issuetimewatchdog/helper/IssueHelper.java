@@ -84,7 +84,7 @@ public class IssueHelper {
             issue.setRemoveAfterUpload(true);
             timeRecordHelper.startUploadSingle(issue);
         } else {
-            issueDao.deleteWithAllChilds(issue);
+            issueDao.delete(issue);
         }
     }
 

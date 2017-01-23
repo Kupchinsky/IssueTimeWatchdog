@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.model.Trackor;
 
 @Singleton
 public class FiltersPrefs {
@@ -18,14 +18,14 @@ public class FiltersPrefs {
         preferences = application.getSharedPreferences("filters_prefs", Context.MODE_PRIVATE);
     }
 
-    public void setFilter(Class<? extends TrackorType> trackorType, String value) {
+    public void setFilter(Class<? extends Trackor> trackorType, String value) {
         SharedPreferences.Editor editor = preferences.edit();
 
         editor.putString(trackorType.getName(), value);
         editor.apply();
     }
 
-    public String getFilter(Class<? extends TrackorType> trackorType) {
+    public String getFilter(Class<? extends Trackor> trackorType) {
         return preferences.getString(trackorType.getName(), null);
     }
 

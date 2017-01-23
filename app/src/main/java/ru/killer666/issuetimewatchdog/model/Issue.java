@@ -1,5 +1,6 @@
 package ru.killer666.issuetimewatchdog.model;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DataType;
@@ -17,8 +18,9 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
-public class Issue implements TrackorType {
+public class Issue implements Trackor {
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(generatedId = true)
     private int id;
 
@@ -30,12 +32,15 @@ public class Issue implements TrackorType {
     @DatabaseField(canBeNull = false)
     private String summary;
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false, dataType = DataType.ENUM_INTEGER)
     private IssueState state = IssueState.Idle;
 
+    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false)
     private boolean removeAfterUpload;
 
+    @Expose(serialize = false, deserialize = false)
     @ForeignCollectionField
     private ForeignCollection<TimeRecord> timeRecordForeignCollection;
 

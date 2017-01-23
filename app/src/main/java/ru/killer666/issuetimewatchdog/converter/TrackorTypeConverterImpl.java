@@ -5,10 +5,12 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.SerializedName;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import java.lang.reflect.Field;
@@ -29,16 +31,20 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
-import ru.killer666.issuetimewatchdog.model.TrackorType;
+import ru.killer666.issuetimewatchdog.model.Trackor;
+import ru.killer666.issuetimewatchdog.services.ApiClient;
 
 @Singleton
 public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
-    private static final List<Class<? extends TrackorType>> TRACKOR_TYPE_CLASSES = Collections.unmodifiableList(
+    private static final List<Class<? extends Trackor>> TRACKOR_TYPE_CLASSES = Collections.unmodifiableList(
             Arrays.asList(Issue.class, TimeRecord.class));
 
-    private ListMultimap<Class<? extends TrackorType>, FieldParser> fieldParserListMultimap =
+    private ListMultimap<Class<? extends Trackor>, FieldParser> fieldParserListMultimap =
             Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
+
+    @Inject
+    private Gson gson;
 
     private final Function<FieldWithValue, Object> primitiveConverterFunc = new Function<FieldWithValue, Object>() {
 
@@ -86,7 +92,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
                 Integer.class, Integer.TYPE,
                 Date.class);
 
-        for (Class<? extends TrackorType> typeClass : TRACKOR_TYPE_CLASSES) {
+        for (Class<? extends Trackor> typeClass : TRACKOR_TYPE_CLASSES) {
             for (Field field : typeClass.getDeclaredFields()) {
                 if (!field.isAnnotationPresent(SerializedName.class)) {
                     continue;
@@ -100,10 +106,10 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public String instanceToString(TrackorType trackorType) {
+    public String instanceToString(Trackor trackor) {
         String result = "";
 
-        for (Field field : trackorType.getClass().getDeclaredFields()) {
+        for (Field field : trackor.getClass().getDeclaredFields()) {
             if (!field.isAnnotationPresent(SerializedName.class)) {
                 continue;
             }
@@ -112,7 +118,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
             field.setAccessible(true);
 
             try {
-                Object value = field.get(trackorType);
+                Object value = field.get(trackor);
                 result += fieldName + ": " + (value != null ? value.toString() : "[empty]") + "\n";
             } catch (IllegalAccessException ignored) {
             }
@@ -122,7 +128,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public <T extends TrackorType> T fromJson(Class<T> typeClass, JsonObject jsonObject) {
+    public <T extends Trackor> T fromJson(Class<T> typeClass, JsonObject jsonObject) {
         T trackorType;
 
         try {
@@ -154,7 +160,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public <T extends TrackorType> String getTrackorTypeName(Class<T> typeClass) {
+    public <T extends Trackor> String getTrackorTypeName(Class<T> typeClass) {
         Method method;
         try {
             method = typeClass.getDeclaredMethod("getTrackorTypeName");
@@ -165,7 +171,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public <T extends TrackorType> List<String> formatTrackorTypeFields(Class<T> typeClass) {
+    public <T extends Trackor> List<String> formatTrackorTypeFields(Class<T> typeClass) {
         List<String> result = Lists.newArrayList();
 
         for (Field field : typeClass.getDeclaredFields()) {
@@ -183,6 +189,19 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     private String getFieldName(Field field) {
         // TODO: implement
         return "Not implemented now!";
+    }
+
+    @Override
+    public void fillTrackorCreateRequest(ApiClient.V2TrackorCreateRequest trackorCreateRequest, Trackor trackor) {
+        JsonObject jsonObject = gson.toJsonTree(trackor).getAsJsonObject();
+
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            if (entry.getValue().isJsonPrimitive()) {
+                trackorCreateRequest.getFields().put(entry.getKey(), entry.getValue().getAsString());
+            } else if (entry.getValue().isJsonNull()) {
+                trackorCreateRequest.getFields().put(entry.getKey(), "null");
+            }
+        }
     }
 
     @Getter
