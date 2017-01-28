@@ -17,15 +17,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,51 +42,53 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     private ListMultimap<Class<? extends Trackor>, FieldParser> fieldParserListMultimap =
             Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
 
+    private static final Set<String> FORMAT_FIELDS_EXCLUDE = Collections.unmodifiableSet(new HashSet<>(
+            Arrays.asList("TRACKOR_ID")));
+
     @Inject
     private Gson gson;
 
     private final Function<FieldWithValue, Object> primitiveConverterFunc = new Function<FieldWithValue, Object>() {
 
-        private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-
-        {
-            dateFormat.setLenient(false);
-        }
-
         @Override
         public Object apply(FieldWithValue fieldWithValue) {
+            Field field = fieldWithValue.getField();
+
             if (fieldWithValue.getJsonElement().isJsonNull()) {
+                if (field.getType().isPrimitive()) {
+                    throw new IllegalArgumentException("Null can be assigned to primitive [field=\"" + field.getName() + "\"]");
+                }
+
                 return null;
             }
 
-            Field field = fieldWithValue.getField();
             JsonPrimitive jsonPrimitive = fieldWithValue.getJsonElement().getAsJsonPrimitive();
 
-            if (field.getType().equals(String.class)) {
+            if (String.class.equals(field.getType())) {
                 return jsonPrimitive.getAsString();
-            } else if (field.getType().equals(Long.class)) {
+            } else if (Long.class.equals(field.getType()) || Long.TYPE.equals(field.getType())) {
                 return jsonPrimitive.getAsLong();
-            } else if (field.getType().equals(Float.class)) {
+            } else if (Float.class.equals(field.getType()) || Float.TYPE.equals(field.getType())) {
                 return jsonPrimitive.getAsFloat();
-            } else if (field.getType().equals(Integer.class)) {
+            } else if (Integer.class.equals(field.getType()) || Integer.TYPE.equals(field.getType())) {
                 return jsonPrimitive.getAsInt();
-            } else if (field.getType().equals(Date.class)) {
+            } else if (Date.class.equals(field.getType())) {
                 try {
-                    return dateFormat.parse(jsonPrimitive.getAsString());
+                    return ApiClient.Helper.getDateFormatter().parse(jsonPrimitive.getAsString());
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
             } else {
-                throw new IllegalStateException("Unknown type");
+                throw new IllegalArgumentException("Unknown type [field=\"" + field.getName() + "\"]");
             }
         }
 
     };
 
     public TrackorTypeConverterImpl() {
-        List<Type> validTypesForPrimitiveConverter = Arrays.asList(String.class,
+        List<Type> validTypesForPrimitiveConverter = Arrays.asList(
+                String.class,
                 Long.class, Long.TYPE,
-                Double.class, Double.TYPE,
                 Float.class, Float.TYPE,
                 Integer.class, Integer.TYPE,
                 Date.class);
@@ -180,7 +181,9 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
             }
 
             SerializedName serializedName = field.getAnnotation(SerializedName.class);
-            result.add(serializedName.value());
+            if (!FORMAT_FIELDS_EXCLUDE.contains(serializedName.value())) {
+                result.add(serializedName.value());
+            }
         }
 
         return result;
