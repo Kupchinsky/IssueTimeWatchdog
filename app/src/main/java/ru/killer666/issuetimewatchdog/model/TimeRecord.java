@@ -12,6 +12,7 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Calendar;
 import java.util.Date;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,7 @@ import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
+@EqualsAndHashCode(of = "id")
 public class TimeRecord implements Comparable<TimeRecord>, Trackor {
 
     @DatabaseField(generatedId = true)

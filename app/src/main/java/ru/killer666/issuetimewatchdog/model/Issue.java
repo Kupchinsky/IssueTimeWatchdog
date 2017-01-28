@@ -8,6 +8,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,6 +19,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @DatabaseTable
+@EqualsAndHashCode(of = "id")
 public class Issue implements Trackor {
 
     @Expose(serialize = false, deserialize = false)

@@ -198,7 +198,8 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        Issue issue = items.get(item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1));
+        int position = item.getIntent().getIntExtra(EXTRA_ISSUE_POSITION, -1);
+        Issue issue = items.get(position);
 
         switch (item.getItemId()) {
             case R.id.action_timerecord: {
@@ -215,8 +216,6 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 } else {
                     TimeRecord timeRecord = timeRecordHelper.getOrCreateLastTimeRecordForIssue(issue);
                     issueHelper.changeState(issue, IssueState.Working, TimeRecordLogType.TypeWorking);
-
-                    int position = items.indexOf(issue);
 
                     items.remove(position);
                     items.add(0, issue);
@@ -272,11 +271,11 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_remove: {
-                CharSequence[] items = new CharSequence[]{"Create time records and remove", "Remove", "Cancel"};
+                CharSequence[] dialogItems = new CharSequence[]{"Create time records and remove", "Remove", "Cancel"};
 
                 (new AlertDialog.Builder(context))
                         .setTitle("Confirm remove issue")
-                        .setSingleChoiceItems(items, -1, (dialog, action) -> {
+                        .setSingleChoiceItems(dialogItems, -1, (dialog, action) -> {
                             if (action == 2) {
                                 dialog.cancel();
                                 return;
@@ -284,6 +283,8 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
                             dialog.dismiss();
                             issueHelper.remove(issue, action == 0);
+                            items.remove(position);
+                            notifyItemRemoved(position);
                         })
                         .show();
                 break;
