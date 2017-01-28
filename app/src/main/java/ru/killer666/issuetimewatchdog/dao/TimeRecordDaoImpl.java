@@ -6,7 +6,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
-import com.j256.ormlite.stmt.Where;
 
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -32,11 +31,10 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
         QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
-            Where<TimeRecord, Integer> where = queryBuilder.where();
-            where
+            queryBuilder.where()
                     .eq("issue_id", issue)
                     .and()
-                    .or(where.eq("remoteTrackorId", null), where.raw("NOT workedTime = wroteTime"));
+                    .raw("NOT workedTime = wroteTime");
             queryBuilder.orderBy("date", false);
 
             return query(queryBuilder.prepare());
