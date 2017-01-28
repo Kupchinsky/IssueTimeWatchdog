@@ -284,9 +284,14 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                             }
 
                             dialog.dismiss();
-                            issueHelper.remove(issue, action == 0);
-                            items.remove(position);
-                            notifyItemRemoved(position);
+
+                            boolean isUpload = action == 0;
+                            issueHelper.remove(issue, isUpload);
+
+                            if (!isUpload) {
+                                items.remove(position);
+                                notifyItemRemoved(position);
+                            }
                         })
                         .show();
                 break;
