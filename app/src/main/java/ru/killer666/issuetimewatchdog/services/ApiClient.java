@@ -1,5 +1,6 @@
 package ru.killer666.issuetimewatchdog.services;
 
+import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 
 import java.util.List;
@@ -61,7 +62,7 @@ public interface ApiClient {
     @Data
     class V2TrackorCreateRequest {
 
-        private Map<String, String> fields;
+        private Map<String, String> fields = Maps.newHashMap();
 
     }
 
@@ -78,7 +79,7 @@ public interface ApiClient {
     @Data
     class V2ConfigFieldResponse {
 
-        private Map<String, String> fields;
+        private Map<String, String> fields = Maps.newHashMap();
 
     }
 

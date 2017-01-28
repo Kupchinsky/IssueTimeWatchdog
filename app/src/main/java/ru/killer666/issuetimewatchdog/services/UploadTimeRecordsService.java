@@ -68,90 +68,93 @@ public class UploadTimeRecordsService extends RoboIntentService {
             timeRecordList.remove(0);
         }
 
+        Throwable error = null;
+
         for (TimeRecord timeRecord : timeRecordList) {
             Response<ApiClient.V2TrackorCreateResponse> response;
             ApiClient.V2TrackorCreateRequest trackorCreateRequest = new ApiClient.V2TrackorCreateRequest();
             trackorTypeConverter.fillTrackorCreateRequest(trackorCreateRequest, timeRecord);
-            short retriesLeft = 5;
 
-            while (--retriesLeft > 0) {
-                logger.info("Uploading {} (retry {} of 5)", timeRecord, retriesLeft);
+            logger.info("Uploading {}", timeRecord);
 
-                try {
-                    if (timeRecord.getRemoteTrackorId() == null) {
-                        trackorCreateRequest.getFields().put(Issue.getTrackorTypeName() + ".TRACKOR_KEY", issue.getTrackorKey());
+            try {
+                if (timeRecord.getRemoteTrackorId() == null) {
+                    trackorCreateRequest.getFields().put(Issue.getTrackorTypeName() + ".TRACKOR_KEY", issue.getTrackorKey());
 
-                        response = apiClient.v2CreateTrackor(TimeRecord.getTrackorTypeName(), trackorCreateRequest).execute();
+                    response = apiClient.v2CreateTrackor(TimeRecord.getTrackorTypeName(), trackorCreateRequest).execute();
 
-                        if (HttpURLConnection.HTTP_OK == response.code()) {
-                            timeRecord.setWroteTime(timeRecord.getWorkedTime());
-                            timeRecord.setRemoteTrackorId(response.body().getTrackorId());
-                            timeRecord.setTrackorKey(response.body().getTrackorKey());
+                    if (HttpURLConnection.HTTP_OK == response.code()) {
+                        timeRecord.setWroteTime(timeRecord.getWorkedTime());
+                        timeRecord.setRemoteTrackorId(response.body().getTrackorId());
+                        timeRecord.setTrackorKey(response.body().getTrackorKey());
+                        timeRecordDao.update(timeRecord);
+                        timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeRemoteCreate);
+                    } else {
+                        throw new RuntimeException("Create failed");
+                    }
+                } else {
+                    Map<String, String> filterParams = Maps.newHashMap();
+                    filterParams.put("TRACKOR_ID", String.valueOf(timeRecord.getRemoteTrackorId()));
+
+                    // Check time changed
+                    String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(TimeRecord.class));
+                    Response<List<JsonObject>> loadResponse = apiClient.v2LoadTrackors(TimeRecord.getTrackorTypeName(), fields, null,
+                            Maps.newHashMap(), timeRecord.getRemoteTrackorId()).execute();
+
+                    if (HttpURLConnection.HTTP_OK == loadResponse.code()) {
+                        TimeRecord remoteInstance = trackorTypeConverter.fromJson(TimeRecord.class, loadResponse.body().get(0));
+                        Double newWorkedTime = null;
+
+                        if (remoteInstance.getWorkedTime() != timeRecord.getWroteTime()) {
+                            newWorkedTime = remoteInstance.getWorkedTime() + (timeRecord.getWorkedTime() - timeRecord.getWroteTime());
+                            trackorCreateRequest.getFields().put("VQS_IT_SPENT_HOURS", String.valueOf(newWorkedTime));
+                        }
+
+                        response = apiClient.v2UpdateTrackors(TimeRecord.getTrackorTypeName(),
+                                filterParams, trackorCreateRequest).execute();
+
+                        if (HttpURLConnection.HTTP_OK == response.code() && timeRecord.getRemoteTrackorId().equals(response.body().getTrackorId())) {
+                            timeRecord.setWroteTime(newWorkedTime != null ? newWorkedTime : timeRecord.getWorkedTime());
                             timeRecordDao.update(timeRecord);
-                            timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeRemoteCreate);
+                            timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeRemoteUpdate);
                         } else {
-                            throw new RuntimeException("Create failed");
+                            throw new RuntimeException("Update failed");
                         }
                     } else {
-                        Map<String, String> filterParams = Maps.newHashMap();
-                        filterParams.put("TRACKOR_ID", String.valueOf(timeRecord.getRemoteTrackorId()));
-
-                        // Check time changed
-                        String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(TimeRecord.class));
-                        Response<List<JsonObject>> loadResponse = apiClient.v2LoadTrackors(TimeRecord.getTrackorTypeName(), fields, null,
-                                Maps.newHashMap(), timeRecord.getRemoteTrackorId()).execute();
-
-                        if (HttpURLConnection.HTTP_OK == loadResponse.code()) {
-                            TimeRecord remoteInstance = trackorTypeConverter.fromJson(TimeRecord.class, loadResponse.body().get(0));
-                            Double newWorkedTime = null;
-
-                            if (remoteInstance.getWorkedTime() != timeRecord.getWroteTime()) {
-                                newWorkedTime = remoteInstance.getWorkedTime() + (timeRecord.getWorkedTime() - timeRecord.getWroteTime());
-                                trackorCreateRequest.getFields().put("VQS_IT_SPENT_HOURS", String.valueOf(newWorkedTime));
-                            }
-
-                            response = apiClient.v2UpdateTrackors(TimeRecord.getTrackorTypeName(),
-                                    filterParams, trackorCreateRequest).execute();
-
-                            if (HttpURLConnection.HTTP_OK == response.code() && timeRecord.getRemoteTrackorId().equals(response.body().getTrackorId())) {
-                                timeRecord.setWroteTime(newWorkedTime != null ? newWorkedTime : timeRecord.getWorkedTime());
-                                timeRecordDao.update(timeRecord);
-                                timeRecordLogDao.createWithType(timeRecord, TimeRecordLogType.TypeRemoteUpdate);
-                            } else {
-                                throw new RuntimeException("Update failed");
-                            }
-                        } else {
-                            throw new RuntimeException("Remote trackor read failed");
-                        }
+                        throw new RuntimeException("Remote trackor read failed");
                     }
-
-                    break;
-                } catch (Exception e) {
-                    logger.error("Time record upload error: {}", e);
                 }
+
+                break;
+            } catch (Exception e) {
+                logger.error("Time record upload error: {}", e);
+                error = e;
+                break;
             }
         }
 
         boolean isPostEvent = !timeRecordList.isEmpty();
 
-        if (issue.isRemoveAfterUpload()) {
-            issueDao.delete(issue);
-            logger.info("Deleted {}", issue);
-        } else {
-            // Clear old time records
-            List<TimeRecord> oldTimeRecords = timeRecordDao.queryOldOfIssue(issue);
+        if (error == null) {
+            if (issue.isRemoveAfterUpload()) {
+                issueDao.delete(issue);
+                logger.info("Deleted {}", issue);
+            } else {
+                // Clear old time records
+                List<TimeRecord> oldTimeRecords = timeRecordDao.queryOldOfIssue(issue);
 
-            for (TimeRecord timeRecord : oldTimeRecords) {
-                timeRecord.getTimeRecordLogForeignCollection().clear();
-                timeRecordDao.delete(timeRecord);
-                logger.info("Deleted old time record: {}", timeRecord);
+                for (TimeRecord timeRecord : oldTimeRecords) {
+                    timeRecord.getTimeRecordLogForeignCollection().clear();
+                    timeRecordDao.delete(timeRecord);
+                    logger.info("Deleted old time record: {}", timeRecord);
+                }
+
+                isPostEvent = isPostEvent || !oldTimeRecords.isEmpty();
             }
-
-            isPostEvent = isPostEvent || !oldTimeRecords.isEmpty();
         }
 
         if (isPostEvent) {
-            EventBus.getDefault().post(new IssueTimeRecordsUploadCompleteEvent(issue, null));
+            EventBus.getDefault().post(new IssueTimeRecordsUploadCompleteEvent(issue, error));
         }
     }
 
