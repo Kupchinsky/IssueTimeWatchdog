@@ -79,11 +79,13 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
             try {
                 if (timeRecord.getRemoteTrackorId() == null) {
-                    trackorCreateRequest.getFields().put(Issue.getTrackorTypeName() + ".TRACKOR_KEY", issue.getTrackorKey());
+                    trackorCreateRequest.getParents().add(ApiClient.V2TrackorCreateRequestParents.create()
+                            .setTrackorType(Issue.getTrackorTypeName())
+                            .addFilter("TRACKOR_KEY", issue.getTrackorKey()));
 
                     response = apiClient.v2CreateTrackor(TimeRecord.getTrackorTypeName(), trackorCreateRequest).execute();
 
-                    if (HttpURLConnection.HTTP_OK == response.code()) {
+                    if (HttpURLConnection.HTTP_CREATED == response.code()) {
                         timeRecord.setWroteTime(timeRecord.getWorkedTime());
                         timeRecord.setRemoteTrackorId(response.body().getTrackorId());
                         timeRecord.setTrackorKey(response.body().getTrackorKey());
@@ -133,8 +135,6 @@ public class UploadTimeRecordsService extends RoboIntentService {
             }
         }
 
-        boolean isPostEvent = !timeRecordList.isEmpty();
-
         if (error == null) {
             if (issue.isRemoveAfterUpload()) {
                 issueDao.delete(issue);
@@ -148,14 +148,10 @@ public class UploadTimeRecordsService extends RoboIntentService {
                     timeRecordDao.delete(timeRecord);
                     logger.info("Deleted old time record: {}", timeRecord);
                 }
-
-                isPostEvent = isPostEvent || !oldTimeRecords.isEmpty();
             }
         }
 
-        if (isPostEvent) {
-            EventBus.getDefault().post(new IssueTimeRecordsUploadCompleteEvent(issue, error));
-        }
+        EventBus.getDefault().post(new IssueTimeRecordsUploadCompleteEvent(issue, error));
     }
 
     @Override
