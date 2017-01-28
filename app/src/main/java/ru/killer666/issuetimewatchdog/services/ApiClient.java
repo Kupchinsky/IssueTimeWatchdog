@@ -1,9 +1,15 @@
 package ru.killer666.issuetimewatchdog.services;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import lombok.Data;
@@ -62,7 +68,37 @@ public interface ApiClient {
     @Data
     class V2TrackorCreateRequest {
 
+        @Expose
         private Map<String, String> fields = Maps.newHashMap();
+
+        @Expose
+        private List<V2TrackorCreateRequestParents> parents = Lists.newArrayList();
+
+    }
+
+    @Getter
+    class V2TrackorCreateRequestParents {
+
+        @Expose
+        @SerializedName("trackor_type")
+        private String trackorType;
+
+        @Expose
+        private Map<String, String> filter = Maps.newHashMap();
+
+        public V2TrackorCreateRequestParents addFilter(String configField, String value) {
+            filter.put(configField, value);
+            return this;
+        }
+
+        public V2TrackorCreateRequestParents setTrackorType(String trackorType) {
+            this.trackorType = trackorType;
+            return this;
+        }
+
+        public static V2TrackorCreateRequestParents create() {
+            return new V2TrackorCreateRequestParents();
+        }
 
     }
 
@@ -71,7 +107,12 @@ public interface ApiClient {
     @EqualsAndHashCode
     class V2TrackorCreateResponse {
 
+        @Expose
+        @SerializedName("TRACKOR_ID")
         private long trackorId;
+
+        @Expose
+        @SerializedName("TRACKOR_KEY")
         private String trackorKey;
 
     }
@@ -80,6 +121,13 @@ public interface ApiClient {
     class V2ConfigFieldResponse {
 
         private Map<String, String> fields = Maps.newHashMap();
+
+    }
+
+    class Helper {
+
+        @Getter
+        private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
     }
 
