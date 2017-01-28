@@ -89,12 +89,14 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
         }
 
         Issue issue = event.getIssue();
+        int position = items.indexOf(issue);
 
         if (issue.isRemoveAfterUpload()) {
-            int position = items.indexOf(issue);
             items.remove(position);
 
             notifyItemRemoved(position);
+        } else {
+            notifyItemChanged(position);
         }
     }
 
