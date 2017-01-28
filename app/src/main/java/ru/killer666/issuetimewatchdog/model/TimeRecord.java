@@ -26,32 +26,33 @@ import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 @DatabaseTable
 public class TimeRecord implements Comparable<TimeRecord>, Trackor {
 
-    @Expose(serialize = false, deserialize = false)
     @DatabaseField(generatedId = true)
     private int id;
 
-    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false, foreign = true, foreignAutoRefresh = true)
     private Issue issue;
 
+    @Expose
     @SerializedName("VQS_IT_WORK_DATE")
     @DatabaseField
     private Date date;
 
+    @Expose
     @SerializedName("VQS_IT_SPENT_HOURS")
     @DatabaseField(canBeNull = false)
     private double workedTime;
 
+    @Expose
     @SerializedName("TRACKOR_KEY")
     @DatabaseField(index = true)
     private String trackorKey;
 
     // TODO: implement write this before upload
+    @Expose
     @SerializedName("VQS_IT_COMMENTS_TR")
     @DatabaseField
     private String comments;
 
-    @Expose(serialize = false, deserialize = false)
     @DatabaseField(canBeNull = false)
     private double wroteTime;
 
@@ -60,7 +61,6 @@ public class TimeRecord implements Comparable<TimeRecord>, Trackor {
     @DatabaseField
     private Long remoteTrackorId;
 
-    @Expose(serialize = false, deserialize = false)
     @ForeignCollectionField(orderColumnName = "date", orderAscending = false)
     private ForeignCollection<TimeRecordLog> timeRecordLogForeignCollection;
 
