@@ -39,8 +39,7 @@ public interface ApiClient {
     // Access to Trackors
     @GET("/api/v2/trackor_type/{trackorType}")
     Call<List<JsonObject>> v2LoadTrackors(@Path("trackorType") String trackorType, @Query("fields") String fields,
-                                          @Query("filter") String filter, @QueryMap Map<String, String> filterParams,
-                                          @Query("trackor_id") Long trackorId);
+                                          @Query("filter") String filter, @QueryMap Map<String, String> filterParams);
 
     @POST("/api/v2/trackor_type/{trackorType}")
     Call<V2TrackorCreateResponse> v2CreateTrackor(@Path("trackorType") String trackorType,
@@ -128,6 +127,10 @@ public interface ApiClient {
 
         @Getter
         private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+
+        static {
+            dateFormatter.setLenient(false);
+        }
 
     }
 

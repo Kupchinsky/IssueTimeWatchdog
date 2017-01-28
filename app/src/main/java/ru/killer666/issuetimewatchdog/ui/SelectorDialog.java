@@ -92,7 +92,7 @@ public class SelectorDialog {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
                 String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap(), null);
+                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap());
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override
