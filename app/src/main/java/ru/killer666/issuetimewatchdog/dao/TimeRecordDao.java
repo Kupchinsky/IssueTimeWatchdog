@@ -12,7 +12,7 @@ public interface TimeRecordDao extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     int SHOW_LIMIT = 7;
 
-    List<TimeRecord> queryNotUploadedOfIssue(Issue issue);
+    List<TimeRecord> queryOfIssue(Issue issue);
 
     List<TimeRecord> queryLastOfIssueList(Issue issue);
 

@@ -42,7 +42,7 @@ public class TimeRecord implements Comparable<TimeRecord>, Trackor {
     @Expose
     @SerializedName("VQS_IT_SPENT_HOURS")
     @DatabaseField(canBeNull = false)
-    private double workedTime;
+    private float workedTime;
 
     @Expose
     @SerializedName("TRACKOR_KEY")
@@ -56,7 +56,7 @@ public class TimeRecord implements Comparable<TimeRecord>, Trackor {
     private String comments;
 
     @DatabaseField(canBeNull = false)
-    private double wroteTime;
+    private float wroteTime;
 
     @Expose(serialize = false)
     @SerializedName("TRACKOR_ID")

@@ -27,14 +27,11 @@ public class TimeRecordDaoImpl extends RuntimeExceptionDao<TimeRecord, Integer> 
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<TimeRecord> queryNotUploadedOfIssue(Issue issue) {
+    public List<TimeRecord> queryOfIssue(Issue issue) {
         QueryBuilder<TimeRecord, Integer> queryBuilder = queryBuilder();
 
         try {
-            queryBuilder.where()
-                    .eq("issue_id", issue)
-                    .and()
-                    .raw("NOT workedTime = wroteTime");
+            queryBuilder.where().eq("issue_id", issue);
             queryBuilder.orderBy("date", false);
 
             return query(queryBuilder.prepare());
