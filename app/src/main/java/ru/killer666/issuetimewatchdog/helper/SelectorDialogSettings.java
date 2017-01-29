@@ -17,7 +17,7 @@ public abstract class SelectorDialogSettings<T extends Trackor> {
     }
 
     public String getDetailsMessage(T instance) {
-        // TODO: implement (required v3 api for read config field labels)
+        // TODO: implement (required v3 api for read config field labels) and select view
         return "Not implemented now!";
     }
 

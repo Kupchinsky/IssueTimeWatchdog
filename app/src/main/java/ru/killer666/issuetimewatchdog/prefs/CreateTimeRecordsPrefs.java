@@ -59,6 +59,20 @@ public class CreateTimeRecordsPrefs {
         return preferences.getBoolean(PREFS_ENABLED, false);
     }
 
+    public void scheduleRetryCreateTimeRecordsOnce() {
+        Intent intent = new Intent(context, CreateTimeRecordsReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) + 2);
+        calendar.set(Calendar.MINUTE, 10);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
     private void scheduleCreateTimeRecords(boolean showToast) {
         Intent intent = new Intent(context, CreateTimeRecordsReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);

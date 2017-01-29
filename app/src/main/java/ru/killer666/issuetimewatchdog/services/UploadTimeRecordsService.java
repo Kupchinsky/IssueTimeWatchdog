@@ -1,8 +1,15 @@
 package ru.killer666.issuetimewatchdog.services;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
@@ -12,13 +19,13 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import retrofit2.Response;
 import roboguice.service.RoboIntentService;
 import roboguice.util.Strings;
+import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.dao.TimeRecordDao;
@@ -28,6 +35,8 @@ import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
+import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
+import ru.killer666.issuetimewatchdog.ui.MainActivity;
 
 public class UploadTimeRecordsService extends RoboIntentService {
 
@@ -55,6 +64,12 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
     @Inject
     private PowerManager powerManager;
+
+    @Inject
+    private CreateTimeRecordsPrefs createTimeRecordsPrefs;
+
+    @Inject
+    private NotificationManager notificationManager;
 
     public UploadTimeRecordsService() {
         super(UploadTimeRecordsService.class.getSimpleName());
@@ -132,12 +147,12 @@ public class UploadTimeRecordsService extends RoboIntentService {
         }
     }
 
-    private void uploadSingleIssue(Issue issue) {
+    private Throwable uploadSingleIssue(Issue issue) {
         List<TimeRecord> timeRecordList = timeRecordDao.queryOfIssue(issue);
 
         // If issue is in working state: skip first time record
         if (IssueState.Working.equals(issue.getState())) {
-            timeRecordList = new ArrayList<>(timeRecordList);
+            timeRecordList = Lists.newArrayList(timeRecordList);
             timeRecordList.remove(0);
         }
 
@@ -172,6 +187,25 @@ public class UploadTimeRecordsService extends RoboIntentService {
             issueDao.delete(issue);
             logger.info("Deleted {}", issue);
         }
+
+        return error;
+    }
+
+    private void showWarningNotify(Throwable error) {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setAction(MainActivity.ACTION_SHOW_UPLOAD_ERROR);
+        notificationIntent.putExtra(MainActivity.EXTRA_ERROR, error);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Notification notification = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText("Time record upload failed! Click for details")
+                .setContentIntent(pendingIntent)
+                .setSound(soundUri).build();
+        notificationManager.notify(0, notification);
     }
 
     @Override
@@ -183,15 +217,18 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
         if (ACTION_UPLOAD_ALL.equals(intent.getAction())) {
             for (Issue issue : issueDao.queryForAll()) {
-                uploadSingleIssue(issue);
+                Throwable error = uploadSingleIssue(issue);
+                if (error != null) {
+                    showWarningNotify(error);
+                    createTimeRecordsPrefs.scheduleRetryCreateTimeRecordsOnce();
+                    break;
+                }
             }
         } else if (ACTION_UPLOAD_SINGLE.equals(intent.getAction())) {
             int issueId = intent.getIntExtra(EXTRA_ISSUE_ID, 0);
             Issue issue = issueDao.queryForId(issueId);
             uploadSingleIssue(issue);
         }
-
-        // TODO: show notify (with vibration and ringtone) if time records not writed to 10:00AM in next day, так-же напоминать периодически, чтобы не попасть на деньги
 
         wl.release();
 

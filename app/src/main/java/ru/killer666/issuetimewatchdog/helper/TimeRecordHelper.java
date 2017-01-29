@@ -121,7 +121,7 @@ public class TimeRecordHelper {
         return (escape ? "<b>" : "") + state.getValue() + (escape ? "</b>" : "");
     }
 
-    public void startUploadAll() {
+    public void startUploadAllNonInteractive() {
         context.startService(new Intent(context, UploadTimeRecordsService.class)
                 .setAction(UploadTimeRecordsService.ACTION_UPLOAD_ALL));
     }

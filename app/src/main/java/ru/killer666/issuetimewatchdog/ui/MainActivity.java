@@ -36,7 +36,9 @@ import ru.killer666.issuetimewatchdog.services.NotificationService;
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
 
     public static final String ACTION_SHOW_TIMERECORD = "showTimeRecord";
+    public static final String ACTION_SHOW_UPLOAD_ERROR = "showUploadError";
     public static final String EXTRA_ISSUE_ID = "issueId";
+    public static final String EXTRA_ERROR = "error";
 
     private final List<Issue> items = Lists.newArrayList();
     private MainActivityIssueEntryAdapter listAdapter;
@@ -101,6 +103,9 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             if (issue != null) {
                 timeRecordHelper.showLastForIssue(issue);
             }
+        } else if (getIntent().getAction().equals(ACTION_SHOW_UPLOAD_ERROR) && getIntent().hasExtra(EXTRA_ERROR)) {
+            Throwable error = (Throwable) getIntent().getSerializableExtra(EXTRA_ERROR);
+            dialogHelper.error("Upload error: " + error.getMessage());
         }
 
         // Start notification service if working issue found and no service running

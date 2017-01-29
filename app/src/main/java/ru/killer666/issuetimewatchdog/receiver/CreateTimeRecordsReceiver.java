@@ -20,7 +20,7 @@ public class CreateTimeRecordsReceiver extends RoboBroadcastReceiver {
     @Override
     public void handleReceive(Context context, Intent intent) {
         logger.debug("Alarm received");
-        timeRecordHelper.startUploadAll();
+        timeRecordHelper.startUploadAllNonInteractive();
     }
 
 }
