@@ -1,12 +1,12 @@
 package ru.killer666.issuetimewatchdog.helper;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
+import roboguice.inject.ContextSingleton;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
 import ru.killer666.issuetimewatchdog.model.Issue;
 
-@Singleton
+@ContextSingleton
 public class IssueSelectorDialogSettings extends SelectorDialogSettings<Issue> {
 
     @Inject

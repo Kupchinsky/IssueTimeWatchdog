@@ -11,7 +11,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,12 +27,14 @@ import java.util.Set;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import roboguice.inject.ContextSingleton;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.Trackor;
-import ru.killer666.issuetimewatchdog.services.ApiClient;
+import ru.killer666.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
 
-@Singleton
+@ContextSingleton
 public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
     private static final List<Class<? extends Trackor>> TRACKOR_TYPE_CLASSES = Collections.unmodifiableList(
@@ -47,6 +48,9 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
     @Inject
     private Gson gson;
+
+    @Inject
+    private RemoteUserSettings remoteUserSettings;
 
     private final Function<FieldWithValue, Object> primitiveConverterFunc = new Function<FieldWithValue, Object>() {
 
@@ -74,7 +78,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
                 return jsonPrimitive.getAsInt();
             } else if (Date.class.equals(field.getType())) {
                 try {
-                    return ApiClient.Helper.getDateFormatter().parse(jsonPrimitive.getAsString());
+                    return remoteUserSettings.getDateFormatter().parse(jsonPrimitive.getAsString());
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
@@ -195,7 +199,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public void fillTrackorCreateRequest(ApiClient.V2TrackorCreateRequest trackorCreateRequest, Trackor trackor) {
+    public void fillTrackorCreateRequest(V3TrackorCreateRequest trackorCreateRequest, Trackor trackor) {
         JsonObject jsonObject = gson.toJsonTree(trackor).getAsJsonObject();
 
         for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {

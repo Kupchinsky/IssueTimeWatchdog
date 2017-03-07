@@ -6,10 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import lombok.Data;
@@ -31,52 +28,52 @@ public interface ApiClient {
     String TRACKOR_HOSTNAME = "trackor.onevizion.com";
     String TRACKOR_BASEURL = TRACKOR_PROTOCOL + TRACKOR_HOSTNAME;
 
-    // Access to Filters
-    @GET("/api/v2/{moduleName}/filters")
-    Call<List<String>> v2LoadFilters(@Path("moduleName") String moduleName, @Query("trackor_type") String trackorType);
-    //
+    @GET("/api/v2/authorize")
+    Call<String> v2Authorize();
 
-    // Access to Trackors
-    @GET("/api/v2/trackor_type/{trackorType}")
-    Call<List<JsonObject>> v2LoadTrackors(@Path("trackorType") String trackorType, @Query("fields") String fields,
-                                          @Query("filter") String filter, @QueryMap Map<String, String> filterParams);
+    @GET("/api/v3/trackor_types/{trackor_type}/filters")
+    Call<List<String>> v3Filters(@Path("trackor_type") String trackorType);
 
-    @POST("/api/v2/trackor_type/{trackorType}")
-    Call<V2TrackorCreateResponse> v2CreateTrackor(@Path("trackorType") String trackorType,
-                                                  @Body V2TrackorCreateRequest request);
+    @GET("/api/v3/trackor_types/{trackor_type}/views")
+    Call<List<String>> v3Views(@Path("trackor_type") String trackorType);
 
-    @PUT("/api/v2/trackor_type/{trackorType}")
-    Call<V2TrackorCreateResponse> v2UpdateTrackors(@Path("trackorType") String trackorType,
-                                                   @QueryMap Map<String, String> filterParams,
-                                                   @Body V2TrackorCreateRequest request);
-    //
+    @GET("/api/v3/trackor_types/{trackor_type}")
+    Call<List<String>> v3TrackorTypeSpecs(@Path("trackor_type") String trackorType,
+                                          @Query("view") String view,
+                                          @Query("fields") List<String> fields);
 
-    // Access to Config Fields
-    @PUT("/api/v2/admin/configfields")
-    Call<V2ConfigFieldResponse> v2ReadConfigField(@Query("id") String configFieldId);
-    //
+    @GET("/api/v3/trackor_types/{trackor_type}/trackors")
+    Call<List<JsonObject>> v3Trackors(@Path("trackor_type") String trackorType,
+                                      @Query("view") String view,
+                                      @Query("fields") List<String> fields,
+                                      @Query("filter") String filter,
+                                      @QueryMap Map<String, String> filterParams);
 
-    // Access to VTables (V3)
-    // TODO: vtables need for read Issue statuses (mapping broken at last ver)
-    //
+    @POST("/api/v3/trackor_types/{trackor_type}/trackors")
+    Call<V3TrackorCreateResponse> v3CreateTrackor(@Path("trackor_type") String trackorType,
+                                                  @Body V3TrackorCreateRequest request);
 
-    // Access to user settings (V3)
-    // TODO: user settings need for ConfigFieldFormatter
-    //
+    @PUT("/api/v3/trackor_types/{trackor_type}/trackors")
+    Call<V3TrackorCreateResponse> v3UpdateTrackor(@Path("trackor_type") String trackorType,
+                                                  @QueryMap Map<String, String> filterParams,
+                                                  @Body V3TrackorCreateRequest request);
+
+    @GET("/v3/user_settings")
+    Call<V3UserSettingsResponse> v3UserSettings();
 
     @Data
-    class V2TrackorCreateRequest {
+    class V3TrackorCreateRequest {
 
         @Expose
         private Map<String, String> fields = Maps.newHashMap();
 
         @Expose
-        private List<V2TrackorCreateRequestParents> parents = Lists.newArrayList();
+        private List<V3TrackorCreateRequestParents> parents = Lists.newArrayList();
 
     }
 
     @Getter
-    class V2TrackorCreateRequestParents {
+    class V3TrackorCreateRequestParents {
 
         @Expose
         @SerializedName("trackor_type")
@@ -85,18 +82,18 @@ public interface ApiClient {
         @Expose
         private Map<String, String> filter = Maps.newHashMap();
 
-        public V2TrackorCreateRequestParents addFilter(String configField, String value) {
+        public V3TrackorCreateRequestParents addFilter(String configField, String value) {
             filter.put(configField, value);
             return this;
         }
 
-        public V2TrackorCreateRequestParents setTrackorType(String trackorType) {
+        public V3TrackorCreateRequestParents setTrackorType(String trackorType) {
             this.trackorType = trackorType;
             return this;
         }
 
-        public static V2TrackorCreateRequestParents create() {
-            return new V2TrackorCreateRequestParents();
+        public static V3TrackorCreateRequestParents create() {
+            return new V3TrackorCreateRequestParents();
         }
 
     }
@@ -104,7 +101,7 @@ public interface ApiClient {
     @Getter
     @ToString
     @EqualsAndHashCode
-    class V2TrackorCreateResponse {
+    class V3TrackorCreateResponse {
 
         @Expose
         @SerializedName("TRACKOR_ID")
@@ -116,21 +113,22 @@ public interface ApiClient {
 
     }
 
-    @Data
-    class V2ConfigFieldResponse {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    class V3UserSettingsResponse {
 
-        private Map<String, String> fields = Maps.newHashMap();
+        @Expose
+        @SerializedName("date_format")
+        private String dateFormat;
 
-    }
+        @Expose
+        @SerializedName("time_format")
+        private String timeFormat;
 
-    class Helper {
-
-        @Getter
-        private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-
-        static {
-            dateFormatter.setLenient(false);
-        }
+        @Expose
+        @SerializedName("date_time_format")
+        private String dateTimeFormat;
 
     }
 

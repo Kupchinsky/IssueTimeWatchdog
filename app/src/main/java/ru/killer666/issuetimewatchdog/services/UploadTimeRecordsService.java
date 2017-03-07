@@ -24,7 +24,6 @@ import java.util.Map;
 
 import retrofit2.Response;
 import roboguice.service.RoboIntentService;
-import roboguice.util.Strings;
 import ru.killer666.issuetimewatchdog.R;
 import ru.killer666.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.killer666.issuetimewatchdog.dao.IssueDao;
@@ -36,7 +35,11 @@ import ru.killer666.issuetimewatchdog.model.IssueState;
 import ru.killer666.issuetimewatchdog.model.TimeRecord;
 import ru.killer666.issuetimewatchdog.model.TimeRecordLogType;
 import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
+import ru.killer666.issuetimewatchdog.services.ApiClient.V3TrackorCreateResponse;
 import ru.killer666.issuetimewatchdog.ui.MainActivity;
+
+import static ru.killer666.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
+import static ru.killer666.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequestParents;
 
 public class UploadTimeRecordsService extends RoboIntentService {
 
@@ -76,16 +79,16 @@ public class UploadTimeRecordsService extends RoboIntentService {
     }
 
     private void uploadSingleTimeRecord(TimeRecord timeRecord) throws IOException, IllegalStateException {
-        Response<ApiClient.V2TrackorCreateResponse> response;
-        ApiClient.V2TrackorCreateRequest trackorCreateRequest = new ApiClient.V2TrackorCreateRequest();
+        Response<V3TrackorCreateResponse> response;
+        V3TrackorCreateRequest trackorCreateRequest = new V3TrackorCreateRequest();
         trackorTypeConverter.fillTrackorCreateRequest(trackorCreateRequest, timeRecord);
 
         if (timeRecord.getRemoteTrackorId() == null) {
-            trackorCreateRequest.getParents().add(ApiClient.V2TrackorCreateRequestParents.create()
+            trackorCreateRequest.getParents().add(V3TrackorCreateRequestParents.create()
                     .setTrackorType(Issue.getTrackorTypeName())
                     .addFilter("TRACKOR_KEY", timeRecord.getIssue().getTrackorKey()));
 
-            response = apiClient.v2CreateTrackor(TimeRecord.getTrackorTypeName(), trackorCreateRequest).execute();
+            response = apiClient.v3CreateTrackor(TimeRecord.getTrackorTypeName(), trackorCreateRequest).execute();
 
             if (HttpURLConnection.HTTP_CREATED == response.code()) {
                 timeRecord.setWroteTime(timeRecord.getWorkedTime());
@@ -101,9 +104,9 @@ public class UploadTimeRecordsService extends RoboIntentService {
             filterParams.put("TRACKOR_ID", String.valueOf(timeRecord.getRemoteTrackorId()));
 
             // Check time changed
-            String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(TimeRecord.class));
-            Response<List<JsonObject>> loadResponse = apiClient.v2LoadTrackors(TimeRecord.getTrackorTypeName(),
-                    fields, null, filterParams).execute();
+            List<String> fields = trackorTypeConverter.formatTrackorTypeFields(TimeRecord.class);
+            Response<List<JsonObject>> loadResponse = apiClient.v3Trackors(TimeRecord.getTrackorTypeName(),
+                    null, fields, null, filterParams).execute();
 
             if (HttpURLConnection.HTTP_OK == loadResponse.code() && loadResponse.body().size() != 0) {
                 // If remote time record exists and nothing changed at local -> no update
@@ -123,7 +126,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
                     trackorCreateRequest.getFields().put("VQS_IT_SPENT_HOURS", String.valueOf(newWorkedTime));
                 }
 
-                response = apiClient.v2UpdateTrackors(TimeRecord.getTrackorTypeName(),
+                response = apiClient.v3UpdateTrackor(TimeRecord.getTrackorTypeName(),
                         filterParams, trackorCreateRequest).execute();
 
                 if (HttpURLConnection.HTTP_OK == response.code()) {

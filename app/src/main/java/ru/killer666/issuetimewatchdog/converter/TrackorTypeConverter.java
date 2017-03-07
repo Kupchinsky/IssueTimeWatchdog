@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import java.util.List;
 
 import ru.killer666.issuetimewatchdog.model.Trackor;
-import ru.killer666.issuetimewatchdog.services.ApiClient;
+import ru.killer666.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
 
 public interface TrackorTypeConverter {
 
@@ -18,6 +18,6 @@ public interface TrackorTypeConverter {
 
     <T extends Trackor> List<String> formatTrackorTypeFields(Class<T> typeClass);
 
-    void fillTrackorCreateRequest(ApiClient.V2TrackorCreateRequest trackorCreateRequest, Trackor trackor);
+    void fillTrackorCreateRequest(V3TrackorCreateRequest trackorCreateRequest, Trackor trackor);
 
 }

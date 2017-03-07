@@ -53,7 +53,7 @@ public class SelectorDialog {
             dialogHelper.showProgressDialog();
 
             return Observable.create(subscriber -> {
-                Call<List<String>> call = apiClient.v2LoadFilters("TRACKOR_BROWSER", trackorType);
+                Call<List<String>> call = apiClient.v3Filters(trackorType);
                 call.enqueue(new ApiCallback<List<String>>(context) {
 
                     @Override
@@ -92,7 +92,7 @@ public class SelectorDialog {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
                 String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
 
-                Call<List<JsonObject>> call = apiClient.v2LoadTrackors(trackorName, fields, filter, Maps.newHashMap());
+                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, fields, filter, Maps.newHashMap());
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override
