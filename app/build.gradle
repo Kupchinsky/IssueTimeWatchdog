@@ -60,6 +60,7 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-android:4.45'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'org.slf4j:slf4j-android:1.7.24'
 }
 
 retrolambda {
