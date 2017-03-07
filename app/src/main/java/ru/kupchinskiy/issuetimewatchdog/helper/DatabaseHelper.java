@@ -8,18 +8,16 @@ import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 
-import org.slf4j.Logger;
-
 import java.sql.SQLException;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecord;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecordLog;
 
 @Singleton
+@Slf4j
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
-
-    private static Logger logger;
 
     private static final String DATABASE_NAME = "application.db";
     private static final int DATABASE_VERSION = 1;
@@ -36,9 +34,9 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.createTable(connectionSource, TimeRecord.class);
             TableUtils.createTable(connectionSource, TimeRecordLog.class);
 
-            logger.info("Database created successfully");
+            log.info("Database created successfully");
         } catch (SQLException e) {
-            logger.error("Can't create database", e);
+            log.error("Can't create database", e);
             throw new RuntimeException(e);
         }
     }

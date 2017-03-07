@@ -3,7 +3,6 @@ package ru.kupchinskiy.issuetimewatchdog;
 import com.google.gson.Gson;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.google.inject.matcher.Matchers;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -14,7 +13,6 @@ import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordDao;
 import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordLogDao;
 import ru.kupchinskiy.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.kupchinskiy.issuetimewatchdog.helper.RemoteUserSettingsImpl;
-import ru.kupchinskiy.issuetimewatchdog.helper.logger.LoggerTypeListener;
 import ru.kupchinskiy.issuetimewatchdog.providers.ApiClientProvider;
 import ru.kupchinskiy.issuetimewatchdog.providers.DaoProviders;
 import ru.kupchinskiy.issuetimewatchdog.providers.GsonProvider;
@@ -26,8 +24,6 @@ public class RoboGuiceModule implements Module {
 
     @Override
     public void configure(Binder binder) {
-        binder.bindListener(Matchers.any(), new LoggerTypeListener());
-
         binder.bind(IssueDao.class).toProvider(DaoProviders.IssueProvider.class);
         binder.bind(TimeRecordDao.class).toProvider(DaoProviders.TimeRecordProvider.class);
         binder.bind(TimeRecordLogDao.class).toProvider(DaoProviders.TimeRecordStartStopProvider.class);

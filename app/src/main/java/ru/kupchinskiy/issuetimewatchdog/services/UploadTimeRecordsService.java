@@ -15,13 +15,13 @@ import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 
 import org.greenrobot.eventbus.EventBus;
-import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
 import roboguice.service.RoboIntentService;
 import ru.kupchinskiy.issuetimewatchdog.R;
@@ -41,9 +41,8 @@ import ru.kupchinskiy.issuetimewatchdog.ui.MainActivity;
 import static ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
 import static ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequestParents;
 
+@Slf4j
 public class UploadTimeRecordsService extends RoboIntentService {
-
-    private static Logger logger;
 
     public static final String ACTION_UPLOAD_ALL = "uploadAll";
     public static final String ACTION_UPLOAD_SINGLE = "uploadSingleIssue";
@@ -111,7 +110,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
             if (HttpURLConnection.HTTP_OK == loadResponse.code() && loadResponse.body().size() != 0) {
                 // If remote time record exists and nothing changed at local -> no update
                 if (timeRecord.getWorkedTime() == timeRecord.getWroteTime()) {
-                    logger.info("Nothing changed");
+                    log.info("Nothing changed");
                     return;
                 }
 
@@ -137,7 +136,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
                     throw new IllegalStateException("Update failed");
                 }
             } else if (HttpURLConnection.HTTP_OK == loadResponse.code() && loadResponse.body().size() == 0) {
-                logger.info("Remote time record not found, reset remote trackor id and wrote time, then upload again: {}", timeRecord);
+                log.info("Remote time record not found, reset remote trackor id and wrote time, then upload again: {}", timeRecord);
 
                 timeRecord.setRemoteTrackorId(null);
                 timeRecord.setWroteTime(0);
@@ -162,12 +161,12 @@ public class UploadTimeRecordsService extends RoboIntentService {
         Throwable error = null;
 
         for (TimeRecord timeRecord : timeRecordList) {
-            logger.info("Uploading {}", timeRecord);
+            log.info("Uploading {}", timeRecord);
 
             try {
                 uploadSingleTimeRecord(timeRecord);
             } catch (Exception e) {
-                logger.error("Time record upload error", e);
+                log.error("Time record upload error", e);
                 error = e;
                 break;
             }
@@ -180,7 +179,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
             for (TimeRecord timeRecord : oldTimeRecords) {
                 timeRecord.getTimeRecordLogForeignCollection().clear();
                 timeRecordDao.delete(timeRecord);
-                logger.info("Deleted old time record: {}", timeRecord);
+                log.info("Deleted old time record: {}", timeRecord);
             }
         }
 
@@ -188,7 +187,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
         if (error == null && issue.isRemoveAfterUpload()) {
             issueDao.delete(issue);
-            logger.info("Deleted {}", issue);
+            log.info("Deleted {}", issue);
         }
 
         return error;
@@ -216,7 +215,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
         PowerManager.WakeLock wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
         wl.acquire();
 
-        logger.debug("Wakelock acquired");
+        log.debug("Wakelock acquired");
 
         if (ACTION_UPLOAD_ALL.equals(intent.getAction())) {
             for (Issue issue : issueDao.queryForAll()) {
@@ -235,7 +234,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
         wl.release();
 
-        logger.debug("Wakelock released");
+        log.debug("Wakelock released");
     }
 
 }

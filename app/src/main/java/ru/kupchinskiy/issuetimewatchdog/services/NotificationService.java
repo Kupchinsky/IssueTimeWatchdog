@@ -8,17 +8,15 @@ import android.support.v4.app.NotificationCompat;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-
+import lombok.extern.slf4j.Slf4j;
 import roboguice.service.RoboService;
 import ru.kupchinskiy.issuetimewatchdog.R;
 import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordDao;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecord;
 import ru.kupchinskiy.issuetimewatchdog.ui.MainActivity;
 
+@Slf4j
 public class NotificationService extends RoboService {
-
-    private static Logger logger;
 
     public static final String EXTRA_TIME_RECORD_ID = "timeRecordId";
 
@@ -35,10 +33,10 @@ public class NotificationService extends RoboService {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        logger.info("Intent extras: {}", intent.getExtras().keySet());
+        log.info("Intent extras: {}", intent.getExtras().keySet());
 
         TimeRecord timeRecord = timeRecordDao.queryForId(intent.getIntExtra(EXTRA_TIME_RECORD_ID, -1));
-        logger.info("Time record loaded: {}", timeRecord);
+        log.info("Time record loaded: {}", timeRecord);
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.setAction(MainActivity.ACTION_SHOW_TIMERECORD);

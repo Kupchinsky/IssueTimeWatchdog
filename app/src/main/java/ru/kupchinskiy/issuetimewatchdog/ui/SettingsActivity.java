@@ -195,10 +195,12 @@ public class SettingsActivity extends RoboAppCompatActivity
                         return;
                     }
 
+                    String login = input1.getText().toString();
+                    String password = input2.getText().toString();
                     String oldCredentials = apiAuthPrefs.getCredentials();
-                    apiAuthPrefs.updateCredentials(input1.getText().toString(), input2.getText().toString());
+                    apiAuthPrefs.updateCredentials(login, password);
 
-                    // Check
+                    // Check credentials
                     Call<String> call = apiClient.v2Authorize();
                     call.enqueue(new ApiCallback<String>(this) {
                         @Override
@@ -212,7 +214,7 @@ public class SettingsActivity extends RoboAppCompatActivity
 
                         @Override
                         public void onSuccess(Response<String> response) {
-                            apiAuthPrefs.saveCredentials(input1.getText().toString(), input2.getText().toString());
+                            apiAuthPrefs.saveCredentials(login, password);
                             updateLoginCredentials();
                         }
                     });

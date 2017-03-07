@@ -3,10 +3,9 @@ package ru.kupchinskiy.issuetimewatchdog.helper.interceptor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -14,9 +13,8 @@ import ru.kupchinskiy.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient;
 
 @Singleton
+@Slf4j
 public class ApiBasicAuthInterceptor implements Interceptor {
-
-    private static Logger logger;
 
     @Inject
     private ApiAuthPrefs apiAuthPrefs;
@@ -27,7 +25,7 @@ public class ApiBasicAuthInterceptor implements Interceptor {
 
         if (request.url().host().equals(ApiClient.TRACKOR_HOSTNAME) &&
                 (request.url().scheme() + "://").equals(ApiClient.TRACKOR_PROTOCOL)) {
-            logger.info("Handled request to Trackor");
+            log.info("Handled request to Trackor");
 
             String credentials = apiAuthPrefs.getCredentials();
 
