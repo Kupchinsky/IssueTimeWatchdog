@@ -48,6 +48,7 @@ public abstract class ApiCallback<T> implements Callback<T> {
     @Override
     public final void onFailure(Call<T> call, Throwable t) {
         Throwable t2 = null;
+        Throwable t3 = null;
 
         try {
             onComplete();
@@ -56,9 +57,19 @@ public abstract class ApiCallback<T> implements Callback<T> {
             t2 = throwable;
         }
 
+        try {
+            onError();
+        } catch (Throwable throwable2) {
+            throwable2.printStackTrace();
+            t3 = throwable2;
+        }
+
         String message = t.getMessage();
         if (t2 != null) {
             message = "Complete handler error: " + t2.getMessage() + "\n\n" + message;
+        }
+        if (t3 != null) {
+            message = "Error handler error: " + t3.getMessage() + "\n\n" + message;
         }
 
         showErrorDialog(message, null);
@@ -75,6 +86,9 @@ public abstract class ApiCallback<T> implements Callback<T> {
         }
 
         dialogHelper.error("Request failed:\n\n" + errorMessage);
+    }
+
+    public void onError() {
     }
 
     public abstract void onComplete();

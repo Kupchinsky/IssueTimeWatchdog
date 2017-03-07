@@ -17,15 +17,19 @@ import android.widget.TextView;
 
 import com.google.inject.Inject;
 
+import retrofit2.Call;
+import retrofit2.Response;
 import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 import ru.killer666.issuetimewatchdog.R;
-import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
+import ru.killer666.issuetimewatchdog.helper.ApiCallback;
 import ru.killer666.issuetimewatchdog.helper.DialogHelper;
+import ru.killer666.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.killer666.issuetimewatchdog.model.Issue;
 import ru.killer666.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.killer666.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
 import ru.killer666.issuetimewatchdog.prefs.FiltersPrefs;
+import ru.killer666.issuetimewatchdog.services.ApiClient;
 import rx.Subscriber;
 
 @ContentView(R.layout.activity_settings)
@@ -49,6 +53,9 @@ public class SettingsActivity extends RoboAppCompatActivity
 
     @Inject
     private RemoteUserSettings remoteUserSettings;
+
+    @Inject
+    private ApiClient apiClient;
 
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
@@ -188,8 +195,25 @@ public class SettingsActivity extends RoboAppCompatActivity
                         return;
                     }
 
-                    apiAuthPrefs.setCredentials(input1.getText().toString(), input2.getText().toString());
-                    updateLoginCredentials();
+
+
+                    // Check
+                    Call<String> call = apiClient.v2Authorize();
+                    call.enqueue(new ApiCallback<String>(this) {
+                        @Override
+                        public void onComplete() {
+                        }
+
+                        @Override
+                        public void onError() {
+                        }
+
+                        @Override
+                        public void onSuccess(Response<String> response) {
+                            apiAuthPrefs.saveCredentials(input1.getText().toString(), input2.getText().toString());
+                            updateLoginCredentials();
+                        }
+                    });
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                 .show();

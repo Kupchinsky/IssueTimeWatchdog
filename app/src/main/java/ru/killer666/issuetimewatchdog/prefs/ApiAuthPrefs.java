@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.Getter;
+import lombok.Setter;
 import okhttp3.Credentials;
 
 @Singleton
@@ -19,6 +20,7 @@ public class ApiAuthPrefs {
     private final SharedPreferences preferences;
 
     @Getter
+    @Setter
     private String credentials;
 
     @Inject
@@ -39,7 +41,7 @@ public class ApiAuthPrefs {
         credentials = Credentials.basic(login, password);
     }
 
-    public void setCredentials(String login, String password) {
+    public void saveCredentials(String login, String password) {
         SharedPreferences.Editor editor = preferences.edit();
 
         editor.putString(PREFS_LOGIN, login);
@@ -47,6 +49,10 @@ public class ApiAuthPrefs {
         editor.apply();
 
         updateCredentials();
+    }
+
+    public void updateCredentials(String login, String password) {
+        credentials = Credentials.basic(login, password);
     }
 
     public String getLogin() {
