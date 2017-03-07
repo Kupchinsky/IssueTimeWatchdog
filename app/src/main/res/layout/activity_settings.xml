@@ -19,11 +19,20 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
 
+    <Button
+        android:text="Select Issue view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonSelectIssueFilter"
+        android:id="@+id/buttonSelectIssueView"
+        style="@android:style/Widget.Button.Small"
+        android:layout_alignParentStart="true" />
+
     <Switch
         android:text="Automatic create Time Records after day end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonSelectIssueFilter"
+        android:layout_below="@+id/buttonSelectIssueView"
         android:layout_alignParentStart="true"
         android:layout_marginTop="19dp"
         android:id="@+id/switchCreateTimeRecords"
@@ -63,7 +72,20 @@
         android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/buttonSelectIssueFilter"
         android:layout_alignParentTop="true"
-        android:layout_above="@+id/switchCreateTimeRecords" />
+        android:layout_alignBottom="@+id/buttonSelectIssueFilter" />
+
+    <TextView
+        android:id="@+id/textViewIssueView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="None"
+        android:textAllCaps="false"
+        android:textStyle="normal|bold"
+        android:layout_below="@+id/buttonSelectIssueFilter"
+        android:layout_alignBottom="@+id/buttonSelectIssueView"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/buttonSelectIssueFilter" />
 
     <Button
         android:text="Reload user settings"

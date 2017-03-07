@@ -29,7 +29,7 @@ public interface ApiClient {
     String TRACKOR_BASEURL = TRACKOR_PROTOCOL + TRACKOR_HOSTNAME;
 
     @GET("/api/v2/authorize")
-    Call<String> v2Authorize();
+    Call<Void> v2Authorize();
 
     @GET("/api/v3/trackor_types/{trackor_type}/filters")
     Call<List<String>> v3Filters(@Path("trackor_type") String trackorType);
@@ -58,7 +58,7 @@ public interface ApiClient {
                                                   @QueryMap Map<String, String> filterParams,
                                                   @Body V3TrackorCreateRequest request);
 
-    @GET("/v3/user_settings")
+    @GET("/api/v3/user_settings")
     Call<V3UserSettingsResponse> v3UserSettings();
 
     @Data

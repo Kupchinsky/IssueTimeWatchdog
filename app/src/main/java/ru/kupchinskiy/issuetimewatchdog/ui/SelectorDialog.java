@@ -15,7 +15,6 @@ import retrofit2.Response;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
-import roboguice.util.Strings;
 import ru.kupchinskiy.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.kupchinskiy.issuetimewatchdog.helper.ApiCallback;
 import ru.kupchinskiy.issuetimewatchdog.helper.DialogHelper;
@@ -83,6 +82,41 @@ public class SelectorDialog {
         });
     }
 
+    Observable<String> showViewSelect(String trackorType, String currentView) {
+        return Observable.defer(() -> {
+            dialogHelper.showProgressDialog();
+
+            return Observable.create(subscriber -> {
+                Call<List<String>> call = apiClient.v3Views(trackorType);
+                call.enqueue(new ApiCallback<List<String>>(context) {
+
+                    @Override
+                    public void onComplete() {
+                        dialogHelper.dismissProgressDialog();
+                    }
+
+                    @Override
+                    public void onSuccess(Response<List<String>> response) {
+                        List<String> list = response.body();
+
+                        final CharSequence[] items = list.toArray(new CharSequence[list.size()]);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                        builder.setTitle("Select view");
+                        builder.setSingleChoiceItems(items, list.indexOf(currentView), (dialog, item) -> {
+                            dialog.dismiss();
+
+                            subscriber.onNext(items[item].toString());
+                            subscriber.onCompleted();
+                        });
+                        builder.create().show();
+                    }
+
+                });
+            });
+        });
+    }
+
     <T extends Trackor> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
                                                                     String filter, SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
@@ -90,9 +124,10 @@ public class SelectorDialog {
 
             return Observable.create(subscriber -> {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
-                String fields = Strings.join(",", trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass));
+                List<String> fields = trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass);
 
-                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, fields, filter, Maps.newHashMap());
+                // TODO: use view param
+                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, null, fields, filter, Maps.newHashMap());
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override

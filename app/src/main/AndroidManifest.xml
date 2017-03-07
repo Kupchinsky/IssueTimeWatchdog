@@ -17,7 +17,7 @@
 
         <meta-data
             android:name="roboguice.modules"
-            android:value="ru.killer666.issuetimewatchdog.RoboGuiceModule" />
+            android:value="ru.kupchinskiy.issuetimewatchdog.RoboGuiceModule" />
 
         <activity
             android:name="ru.kupchinskiy.issuetimewatchdog.ui.MainActivity"

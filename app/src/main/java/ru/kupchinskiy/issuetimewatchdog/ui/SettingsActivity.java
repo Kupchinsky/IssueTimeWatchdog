@@ -29,6 +29,7 @@ import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.kupchinskiy.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
 import ru.kupchinskiy.issuetimewatchdog.prefs.FiltersPrefs;
+import ru.kupchinskiy.issuetimewatchdog.prefs.ViewPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient;
 import rx.Subscriber;
 
@@ -46,6 +47,9 @@ public class SettingsActivity extends RoboAppCompatActivity
     private FiltersPrefs filtersPrefs;
 
     @Inject
+    private ViewPrefs viewPrefs;
+
+    @Inject
     private SelectorDialog selectorDialog;
 
     @Inject
@@ -60,8 +64,14 @@ public class SettingsActivity extends RoboAppCompatActivity
     @InjectView(R.id.buttonSelectIssueFilter)
     private Button buttonSelectIssueFilter;
 
+    @InjectView(R.id.buttonSelectIssueView)
+    private Button buttonSelectIssueView;
+
     @InjectView(R.id.textViewIssueFilter)
     private TextView textViewIssueFilter;
+
+    @InjectView(R.id.textViewIssueView)
+    private TextView textViewIssueView;
 
     @InjectView(R.id.switchCreateTimeRecords)
     private Switch switchCreateTimeRecords;
@@ -82,6 +92,7 @@ public class SettingsActivity extends RoboAppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         buttonSelectIssueFilter.setOnClickListener(this);
+        buttonSelectIssueView.setOnClickListener(this);
         buttonChangeLoginCredentials.setOnClickListener(this);
         buttonReloadUserSettings.setOnClickListener(this);
 
@@ -90,6 +101,7 @@ public class SettingsActivity extends RoboAppCompatActivity
 
         updateLoginCredentials();
         updateFilters();
+        updateViews();
     }
 
     private void updateLoginCredentials() {
@@ -107,6 +119,16 @@ public class SettingsActivity extends RoboAppCompatActivity
             textViewIssueFilter.setTypeface(textViewIssueFilter.getTypeface(), Typeface.BOLD);
         }
         textViewIssueFilter.setText(issueFilter != null ? issueFilter : "None");
+    }
+
+    private void updateViews() {
+        String issueView = viewPrefs.getView(Issue.class);
+
+        textViewIssueView.setTypeface(null, Typeface.NORMAL);
+        if (issueView == null) {
+            textViewIssueView.setTypeface(textViewIssueView.getTypeface(), Typeface.BOLD);
+        }
+        textViewIssueView.setText(issueView != null ? issueView : "None");
     }
 
     @Override
@@ -129,7 +151,13 @@ public class SettingsActivity extends RoboAppCompatActivity
                     filtersPrefs.setFilter(Issue.class, filter);
                     updateFilters();
                 });
-
+                break;
+            }
+            case R.id.buttonSelectIssueView: {
+                selectorDialog.showViewSelect("Issue", viewPrefs.getView(Issue.class)).subscribe((view) -> {
+                    viewPrefs.setView(Issue.class, view);
+                    updateViews();
+                });
                 break;
             }
             case R.id.buttonChangeLoginCredentials: {
@@ -201,10 +229,12 @@ public class SettingsActivity extends RoboAppCompatActivity
                     apiAuthPrefs.updateCredentials(login, password);
 
                     // Check credentials
-                    Call<String> call = apiClient.v2Authorize();
-                    call.enqueue(new ApiCallback<String>(this) {
+                    dialogHelper.showProgressDialog();
+                    Call<Void> call = apiClient.v2Authorize();
+                    call.enqueue(new ApiCallback<Void>(this) {
                         @Override
                         public void onComplete() {
+                            dialogHelper.dismissProgressDialog();
                         }
 
                         @Override
@@ -213,7 +243,7 @@ public class SettingsActivity extends RoboAppCompatActivity
                         }
 
                         @Override
-                        public void onSuccess(Response<String> response) {
+                        public void onSuccess(Response<Void> response) {
                             apiAuthPrefs.saveCredentials(login, password);
                             updateLoginCredentials();
                         }
