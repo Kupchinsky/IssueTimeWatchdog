@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="ru.killer666.issuetimewatchdog.ui.MainActivity">
+    tools:context="ru.kupchinskiy.issuetimewatchdog.ui.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

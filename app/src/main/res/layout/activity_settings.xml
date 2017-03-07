@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="ru.killer666.issuetimewatchdog.ui.SettingsActivity">
+    tools:context="ru.kupchinskiy.issuetimewatchdog.ui.SettingsActivity">
 
     <Button
         android:text="Select Issue filter"
