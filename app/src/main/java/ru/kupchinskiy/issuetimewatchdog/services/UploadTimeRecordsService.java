@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
@@ -30,6 +31,7 @@ import ru.kupchinskiy.issuetimewatchdog.dao.IssueDao;
 import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordDao;
 import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordLogDao;
 import ru.kupchinskiy.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
+import ru.kupchinskiy.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.model.IssueState;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecord;
@@ -37,9 +39,12 @@ import ru.kupchinskiy.issuetimewatchdog.model.TimeRecordLogType;
 import ru.kupchinskiy.issuetimewatchdog.prefs.CreateTimeRecordsPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateResponse;
 import ru.kupchinskiy.issuetimewatchdog.ui.MainActivity;
+import rx.Observable;
+import rx.internal.util.ActionNotificationObserver;
 
 import static ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
 import static ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequestParents;
+import static rx.Notification.Kind.OnCompleted;
 
 @Slf4j
 public class UploadTimeRecordsService extends RoboIntentService {
@@ -72,6 +77,9 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
     @Inject
     private NotificationManager notificationManager;
+
+    @Inject
+    private RemoteUserSettings remoteUserSettings;
 
     public UploadTimeRecordsService() {
         super(UploadTimeRecordsService.class.getSimpleName());
@@ -210,13 +218,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
         notificationManager.notify(0, notification);
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        PowerManager.WakeLock wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
-        wl.acquire();
-
-        log.debug("Wakelock acquired");
-
+    private void onHandleIntentInternal(Intent intent) {
         if (ACTION_UPLOAD_ALL.equals(intent.getAction())) {
             for (Issue issue : issueDao.queryForAll()) {
                 Throwable error = uploadSingleIssue(issue);
@@ -229,12 +231,37 @@ public class UploadTimeRecordsService extends RoboIntentService {
         } else if (ACTION_UPLOAD_SINGLE.equals(intent.getAction())) {
             int issueId = intent.getIntExtra(EXTRA_ISSUE_ID, 0);
             Issue issue = issueDao.queryForId(issueId);
-            uploadSingleIssue(issue);
+            Throwable error = uploadSingleIssue(issue);
+            if (error != null) {
+                showWarningNotify(error);
+            }
         }
+    }
 
-        wl.release();
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        PowerManager.WakeLock wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
+        wl.acquire();
 
-        log.debug("Wakelock released");
+        log.debug("Wakelock acquired");
+
+        if (!remoteUserSettings.isRemoteUserSettingsLoaded()) {
+            remoteUserSettings.requestRemoteUserSettings()
+                    .retryWhen(errors -> errors
+                            .zipWith(Observable.range(1, 5), (n, i) -> i)
+                            .flatMap(retryCount -> Observable.timer(5, TimeUnit.SECONDS)))
+                    .subscribe(new ActionNotificationObserver<>(notification -> {
+                        if (OnCompleted.equals(notification.getKind())) {
+                            onHandleIntentInternal(intent);
+                            log.debug("Wakelock released");
+                            wl.release();
+                        }
+                    }));
+        } else {
+            onHandleIntentInternal(intent);
+            log.debug("Wakelock released");
+            wl.release();
+        }
     }
 
 }

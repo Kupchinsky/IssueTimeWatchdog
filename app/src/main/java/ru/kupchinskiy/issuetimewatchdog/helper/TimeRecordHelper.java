@@ -76,7 +76,7 @@ public class TimeRecordHelper {
                 .setMessage(message + "\n(Time records of last " + TimeRecordDao.SHOW_LIMIT + " days)")
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
 
-        if (issue.getState() == IssueState.Working) {
+        if (IssueState.Working.equals(issue.getState())) {
             builder.setNeutralButton("Stop working", ((dialog, which) -> {
                 dialog.dismiss();
 

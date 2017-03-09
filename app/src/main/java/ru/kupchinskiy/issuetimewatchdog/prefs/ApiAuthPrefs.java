@@ -63,7 +63,7 @@ public class ApiAuthPrefs {
         return preferences.getString(PREFS_PASSWORD, null);
     }
 
-    public boolean isValid() {
+    public boolean isValidCredentials() {
         return credentials != null;
     }
 

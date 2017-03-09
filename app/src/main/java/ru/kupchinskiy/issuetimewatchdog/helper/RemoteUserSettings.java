@@ -15,4 +15,6 @@ public interface RemoteUserSettings {
 
     Observable<Void> requestRemoteUserSettings();
 
+    boolean isRemoteUserSettingsLoaded();
+
 }

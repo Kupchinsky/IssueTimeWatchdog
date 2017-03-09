@@ -25,13 +25,19 @@ import ru.kupchinskiy.issuetimewatchdog.helper.DialogHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.IssueComparator;
 import ru.kupchinskiy.issuetimewatchdog.helper.IssueHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.IssueSelectorDialogSettings;
+import ru.kupchinskiy.issuetimewatchdog.helper.RemoteUserSettings;
 import ru.kupchinskiy.issuetimewatchdog.helper.ServiceHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.TimeRecordHelper;
 import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.model.IssueState;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecordLogType;
+import ru.kupchinskiy.issuetimewatchdog.prefs.ApiAuthPrefs;
 import ru.kupchinskiy.issuetimewatchdog.prefs.FiltersPrefs;
+import ru.kupchinskiy.issuetimewatchdog.prefs.ViewPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.NotificationService;
+import rx.internal.util.ActionNotificationObserver;
+
+import static rx.Notification.Kind.OnCompleted;
 
 public class MainActivity extends RoboAppCompatActivity implements View.OnClickListener {
 
@@ -56,6 +62,9 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     private FiltersPrefs filtersPrefs;
 
     @Inject
+    private ViewPrefs viewPrefs;
+
+    @Inject
     private IssueSelectorDialogSettings issueSelectorDialogSettings;
 
     @Inject
@@ -69,6 +78,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
 
     @Inject
     private ServiceHelper serviceHelper;
+
+    @Inject
+    private RemoteUserSettings remoteUserSettings;
+
+    @Inject
+    private ApiAuthPrefs apiAuthPrefs;
 
     @InjectView(R.id.recyclerView)
     private RecyclerView recyclerView;
@@ -115,7 +130,15 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             issueHelper.changeState(workingIssue, IssueState.Working, TimeRecordLogType.TypeWorking);
         }
 
-        // TODO: RemoteUserSettings reload if not loaded
+        if (apiAuthPrefs.isValidCredentials() &&
+                !remoteUserSettings.isRemoteUserSettingsLoaded()) {
+            dialogHelper.showProgressDialog();
+            remoteUserSettings.requestRemoteUserSettings().subscribe(new ActionNotificationObserver<>(notification -> {
+                if (OnCompleted.equals(notification.getKind())) {
+                    dialogHelper.dismissProgressDialog();
+                }
+            }));
+        }
     }
 
     @Override
@@ -139,8 +162,9 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
                     dialogHelper.warning("No filter set for Issue");
                     return;
                 }
+                String view = viewPrefs.getView(Issue.class);
 
-                selectorDialog.showTrackorReadSelectByFilter(Issue.class, filter,
+                selectorDialog.showTrackorReadSelectByFilter(Issue.class, view, filter,
                         issueSelectorDialogSettings)
                         .subscribe(issue -> {
                             if (issueDao.trackorKeyExists(issue.getTrackorKey())) {

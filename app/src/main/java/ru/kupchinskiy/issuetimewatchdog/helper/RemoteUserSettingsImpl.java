@@ -36,6 +36,8 @@ public class RemoteUserSettingsImpl implements RemoteUserSettings {
     @Getter
     private NumberFormat numberFormatter = new DecimalFormat("#.##");
 
+    private boolean isLoaded = false;
+
     @Override
     public Observable<Void> requestRemoteUserSettings() {
         return Observable.defer(() -> Observable.create(subscriber -> {
@@ -51,9 +53,16 @@ public class RemoteUserSettingsImpl implements RemoteUserSettings {
                     V3UserSettingsResponse userSettings = response.body();
                     dateFormatter = new SimpleDateFormat(userSettings.getDateFormat(), Locale.ENGLISH);
                     timeFormatter = new SimpleDateFormat(userSettings.getTimeFormat(), Locale.ENGLISH);
+
+                    isLoaded = true;
                 }
             });
         }));
+    }
+
+    @Override
+    public boolean isRemoteUserSettingsLoaded() {
+        return isLoaded;
     }
 
 }

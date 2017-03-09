@@ -91,7 +91,8 @@ public abstract class ApiCallback<T> implements Callback<T> {
     public void onError() {
     }
 
-    public abstract void onComplete();
+    public void onComplete() {
+    }
 
     public abstract void onSuccess(Response<T> response);
 

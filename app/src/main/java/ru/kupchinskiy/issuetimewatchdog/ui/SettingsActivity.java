@@ -32,6 +32,9 @@ import ru.kupchinskiy.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.kupchinskiy.issuetimewatchdog.prefs.ViewPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient;
 import rx.Subscriber;
+import rx.internal.util.ActionNotificationObserver;
+
+import static rx.Notification.Kind.OnCompleted;
 
 @ContentView(R.layout.activity_settings)
 public class SettingsActivity extends RoboAppCompatActivity
@@ -105,7 +108,7 @@ public class SettingsActivity extends RoboAppCompatActivity
     }
 
     private void updateLoginCredentials() {
-        if (apiAuthPrefs.isValid()) {
+        if (apiAuthPrefs.isValidCredentials()) {
             textViewLoginCredentials.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
             textViewLoginCredentials.setText(apiAuthPrefs.getLogin());
         }
@@ -246,6 +249,14 @@ public class SettingsActivity extends RoboAppCompatActivity
                         public void onSuccess(Response<Void> response) {
                             apiAuthPrefs.saveCredentials(login, password);
                             updateLoginCredentials();
+
+                            // Update remoteUserSettings
+                            dialogHelper.showProgressDialog();
+                            remoteUserSettings.requestRemoteUserSettings().subscribe(new ActionNotificationObserver<>(notification -> {
+                                if (OnCompleted.equals(notification.getKind())) {
+                                    dialogHelper.dismissProgressDialog();
+                                }
+                            }));
                         }
                     });
                 })
