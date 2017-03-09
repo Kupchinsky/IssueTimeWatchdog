@@ -1,7 +1,13 @@
 package ru.kupchinskiy.issuetimewatchdog.ui;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -10,17 +16,18 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
+import lombok.Setter;
 import retrofit2.Call;
 import retrofit2.Response;
 import roboguice.context.event.OnDestroyEvent;
 import roboguice.event.EventManager;
 import roboguice.inject.ContextSingleton;
+import ru.kupchinskiy.issuetimewatchdog.R;
 import ru.kupchinskiy.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.kupchinskiy.issuetimewatchdog.helper.ApiCallback;
 import ru.kupchinskiy.issuetimewatchdog.helper.DialogHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.SelectorDialogSettings;
 import ru.kupchinskiy.issuetimewatchdog.model.Trackor;
-import ru.kupchinskiy.issuetimewatchdog.prefs.FiltersPrefs;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient;
 import rx.Observable;
 
@@ -35,9 +42,6 @@ public class SelectorDialog {
 
     @Inject
     private TrackorTypeConverter trackorTypeConverter;
-
-    @Inject
-    private FiltersPrefs filtersPrefs;
 
     @Inject
     private DialogHelper dialogHelper;
@@ -118,16 +122,17 @@ public class SelectorDialog {
     }
 
     <T extends Trackor> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
-                                                                    String filter, SelectorDialogSettings<T> dialogSettings) {
+                                                                    String view,
+                                                                    String filter,
+                                                                    SelectorDialogSettings<T> dialogSettings) {
         return Observable.defer(() -> {
             dialogHelper.showProgressDialog();
 
             return Observable.create(subscriber -> {
                 String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
-                List<String> fields = trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass);
+                List<String> fields = view == null ? trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass) : null;
 
-                // TODO: use view param
-                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, null, fields, filter, Maps.newHashMap());
+                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, view, fields, filter, Maps.newHashMap());
                 call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                     @Override
@@ -147,11 +152,9 @@ public class SelectorDialog {
                             itemsList.add(dialogSettings.getSelectItem(instance));
                         }
 
-                        final CharSequence[] items = itemsList.toArray(new CharSequence[itemsList.size()]);
-                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-                        builder.setTitle(dialogSettings.getSelectTitle());
-                        builder.setItems(items, (dialog, item) -> {
+                        TrackorSelectorDialog<String> trackorSelectorDialog = new TrackorSelectorDialog<>(context,
+                                dialogSettings.getSelectTitle(), itemsList);
+                        trackorSelectorDialog.setOnClickListener((dialog, item) -> {
                             dialog.dismiss();
 
                             T itemInstance = instanceList.get(item);
@@ -164,7 +167,7 @@ public class SelectorDialog {
                                             subscriber.onNext(itemInstance);
                                             subscriber.onCompleted();
                                         })
-                                        .setNeutralButton("Back", (dialog1, which) -> builder.show())
+                                        .setNeutralButton("Back", (dialog1, which) -> trackorSelectorDialog.show())
                                         .setNegativeButton("Cancel", (dialog1, which) -> subscriber.onCompleted())
                                         .create().show();
                             } else {
@@ -172,12 +175,65 @@ public class SelectorDialog {
                                 subscriber.onCompleted();
                             }
                         });
-                        builder.create().show();
+                        trackorSelectorDialog.show();
                     }
 
                 });
             });
         });
+    }
+
+    private class TrackorSelectorDialog<T> extends Dialog {
+
+        private ListView list;
+        private EditText filterText;
+        private ArrayAdapter<T> adapter;
+
+        @Setter
+        private OnClickListener onClickListener;
+
+        private TrackorSelectorDialog(Context context, String title, List<T> items) {
+            super(context);
+
+            setContentView(R.layout.dialog_trackor_selector);
+            setTitle(title);
+
+            list = (ListView) findViewById(R.id.list);
+            filterText = (EditText) findViewById(R.id.editBox);
+
+            adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, items);
+
+            list.setAdapter(adapter);
+            list.setOnItemClickListener((a, v, position, id) -> onClickListener.onClick(this, position));
+        }
+
+        private TextWatcher filterTextWatcher = new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+                adapter.getFilter().filter(s);
+            }
+        };
+
+        @Override
+        protected void onStart() {
+            filterText.addTextChangedListener(filterTextWatcher);
+        }
+
+        @Override
+        public void onStop() {
+            filterText.removeTextChangedListener(filterTextWatcher);
+        }
     }
 
 }
