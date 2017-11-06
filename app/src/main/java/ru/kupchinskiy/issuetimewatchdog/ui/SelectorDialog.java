@@ -134,16 +134,17 @@ public class SelectorDialog {
         return Observable.defer(() -> Observable.create(subscriber -> {
             String trackorTypeName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
             List<String> fields = view == null ? trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass) : null;
+            dialogHelper.showProgressDialog();
 
             apiClientWithObservables.v3TrackorTypeSpecs(trackorTypeClass, view).subscribe(new Observer<List<V3TrackorTypeSpec>>() {
 
                 @Override
                 public void onCompleted() {
-                    dialogHelper.dismissProgressDialog();
                 }
 
                 @Override
                 public void onError(Throwable e) {
+                    dialogHelper.dismissProgressDialog();
                     subscriber.onCompleted();
                 }
 

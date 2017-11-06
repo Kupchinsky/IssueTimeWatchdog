@@ -6,6 +6,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 
@@ -81,8 +84,16 @@ public class UploadTimeRecordsService extends RoboIntentService {
     @Inject
     private RemoteUserSettings remoteUserSettings;
 
+    private final Handler uploadHandler;
+    private final Handler mainHandler;
+
     public UploadTimeRecordsService() {
         super(UploadTimeRecordsService.class.getSimpleName());
+
+        HandlerThread handlerThread = new HandlerThread("ru.kupchinskiy.issuetimewatchdog.services.upload.handler");
+        handlerThread.start();
+        uploadHandler = new Handler(handlerThread.getLooper());
+        mainHandler = new Handler(Looper.getMainLooper());
     }
 
     private void uploadSingleTimeRecord(TimeRecord timeRecord) throws IOException, IllegalStateException {
@@ -202,46 +213,52 @@ public class UploadTimeRecordsService extends RoboIntentService {
     }
 
     private void showWarningNotify(Throwable error) {
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setAction(MainActivity.ACTION_SHOW_UPLOAD_ERROR);
-        notificationIntent.putExtra(MainActivity.EXTRA_ERROR, error);
+        mainHandler.post(() -> {
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            notificationIntent.setAction(MainActivity.ACTION_SHOW_UPLOAD_ERROR);
+            notificationIntent.putExtra(MainActivity.EXTRA_ERROR, error);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Notification notification = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText("Time record upload failed! Click for details")
-                .setContentIntent(pendingIntent)
-                .setSound(soundUri).build();
-        notificationManager.notify(0, notification);
+            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText("Time record upload failed! Click for details")
+                    .setContentIntent(pendingIntent)
+                    .setSound(soundUri).build();
+            notificationManager.notify(0, notification);
+        });
     }
 
     private void onHandleIntentInternal(Intent intent) {
         if (ACTION_UPLOAD_ALL.equals(intent.getAction())) {
-            for (Issue issue : issueDao.queryForAll()) {
-                Throwable error = uploadSingleIssue(issue);
-                if (error != null) {
-                    showWarningNotify(error);
-                    createTimeRecordsPrefs.scheduleRetryCreateTimeRecordsOnce();
-                    break;
+            uploadHandler.post(() -> {
+                for (Issue issue : issueDao.queryForAll()) {
+                    Throwable error = uploadSingleIssue(issue);
+                    if (error != null) {
+                        showWarningNotify(error);
+                        createTimeRecordsPrefs.scheduleRetryCreateTimeRecordsOnce();
+                        break;
+                    }
                 }
-            }
+            });
         } else if (ACTION_UPLOAD_SINGLE.equals(intent.getAction())) {
             int issueId = intent.getIntExtra(EXTRA_ISSUE_ID, 0);
             Issue issue = issueDao.queryForId(issueId);
-            Throwable error = uploadSingleIssue(issue);
-            if (error != null) {
-                showWarningNotify(error);
-            }
+            uploadHandler.post(() -> {
+                Throwable error = uploadSingleIssue(issue);
+                if (error != null) {
+                    showWarningNotify(error);
+                }
+            });
         }
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
         PowerManager.WakeLock wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CreateTimeRecords");
-        wl.acquire();
+        wl.acquire(10*60*1000L /*10 minutes*/);
 
         log.debug("Wakelock acquired");
 

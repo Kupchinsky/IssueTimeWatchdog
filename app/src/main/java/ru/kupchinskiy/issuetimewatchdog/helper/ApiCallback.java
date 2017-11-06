@@ -43,6 +43,13 @@ public abstract class ApiCallback<T> implements Callback<T> {
         } else {
             showErrorDialog(response.code() + " " + response.message(), response);
         }
+
+        try {
+            onComplete2();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            showErrorDialog("Complete2 handler error: " + t.getMessage(), null);
+        }
     }
 
     @Override
@@ -92,6 +99,9 @@ public abstract class ApiCallback<T> implements Callback<T> {
     }
 
     public void onComplete() {
+    }
+
+    public void onComplete2() {
     }
 
     public abstract void onSuccess(Response<T> response);

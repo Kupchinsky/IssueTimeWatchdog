@@ -37,7 +37,7 @@ public class ApiClientWithObservables {
             call.enqueue(new ApiCallback<List<V3TrackorTypeSpec>>(context) {
 
                 @Override
-                public void onComplete() {
+                public void onComplete2() {
                     subscriber.onCompleted();
                 }
 
