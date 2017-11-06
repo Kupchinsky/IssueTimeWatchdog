@@ -1,5 +1,7 @@
 package ru.kupchinskiy.issuetimewatchdog.converter;
 
+import android.support.annotation.NonNull;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -33,6 +35,7 @@ import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecord;
 import ru.kupchinskiy.issuetimewatchdog.model.Trackor;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
+import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorTypeSpec;
 
 @ContextSingleton
 public class TrackorTypeConverterImpl implements TrackorTypeConverter {
@@ -111,7 +114,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
     }
 
     @Override
-    public String instanceToString(Trackor trackor) {
+    public String instanceToString(Trackor trackor, @NonNull List<V3TrackorTypeSpec> trackorTypeSpecs) {
         String result = "";
 
         for (Field field : trackor.getClass().getDeclaredFields()) {
@@ -119,7 +122,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
                 continue;
             }
 
-            String fieldName = getFieldName(field);
+            String fieldName = getFieldName(field, trackorTypeSpecs);
             field.setAccessible(true);
 
             try {
@@ -193,9 +196,18 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
         return result;
     }
 
-    private String getFieldName(Field field) {
-        // TODO: implement
-        return "Not implemented now!";
+    private String getFieldName(Field field, List<V3TrackorTypeSpec> trackorTypeSpecs) {
+        SerializedName serializedName = field.getAnnotation(SerializedName.class);
+        String remoteFieldName = serializedName.value();
+
+        // Find field in trackor specs
+        for (V3TrackorTypeSpec spec : trackorTypeSpecs) {
+            if (spec.getName().equals(remoteFieldName)) {
+                return spec.getLabel();
+            }
+        }
+
+        return remoteFieldName + "[no lbl]";
     }
 
     @Override

@@ -32,6 +32,7 @@ import ru.kupchinskiy.issuetimewatchdog.dao.TimeRecordDao;
 import ru.kupchinskiy.issuetimewatchdog.event.IssueStateChangedEvent;
 import ru.kupchinskiy.issuetimewatchdog.event.IssueTimeRecordChangedEvent;
 import ru.kupchinskiy.issuetimewatchdog.event.IssueTimeRecordsUploadCompleteEvent;
+import ru.kupchinskiy.issuetimewatchdog.helper.ApiClientWithObservables;
 import ru.kupchinskiy.issuetimewatchdog.helper.DialogHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.IssueHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.IssueSelectorDialogSettings;
@@ -43,8 +44,11 @@ import ru.kupchinskiy.issuetimewatchdog.model.Issue;
 import ru.kupchinskiy.issuetimewatchdog.model.IssueState;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecord;
 import ru.kupchinskiy.issuetimewatchdog.model.TimeRecordLogType;
+import ru.kupchinskiy.issuetimewatchdog.prefs.ViewPrefs;
+import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorTypeSpec;
 import ru.kupchinskiy.issuetimewatchdog.services.NotificationService;
 import rx.Observable;
+import rx.Observer;
 
 @ContextSingleton
 class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIssueEntryAdapter.ViewHolder>
@@ -75,6 +79,12 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
 
     @Inject
     private RemoteUserSettings remoteUserSettings;
+
+    @Inject
+    private ApiClientWithObservables apiClientWithObservables;
+
+    @Inject
+    private ViewPrefs viewPrefs;
 
     @Inject
     private Context context;
@@ -231,7 +241,24 @@ class MainActivityIssueEntryAdapter extends RecyclerView.Adapter<MainActivityIss
                 break;
             }
             case R.id.action_show_info: {
-                dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue));
+                String view = viewPrefs.getView(Issue.class);
+
+                dialogHelper.showProgressDialog();
+                apiClientWithObservables.v3TrackorTypeSpecs(Issue.class, view).subscribe(new Observer<List<V3TrackorTypeSpec>>() {
+                    @Override
+                    public void onCompleted() {
+                        dialogHelper.dismissProgressDialog();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                    }
+
+                    @Override
+                    public void onNext(List<V3TrackorTypeSpec> trackorTypeSpecs) {
+                        dialogHelper.info(issueSelectorDialogSettings.getDetailsMessage(issue, trackorTypeSpecs));
+                    }
+                });
                 break;
             }
             case R.id.action_change_status: {

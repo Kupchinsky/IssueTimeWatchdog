@@ -159,12 +159,12 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
             case R.id.fab: {
                 String filter = filtersPrefs.getFilter(Issue.class);
                 if (filter == null) {
-                    dialogHelper.warning("No filter set for Issue");
+                    dialogHelper.warning("No filter set for Issue trackor type. See Settings");
                     return;
                 }
                 String view = viewPrefs.getView(Issue.class);
 
-                selectorDialog.showTrackorReadSelectByFilter(Issue.class, view, filter,
+                selectorDialog.showTrackorSelector(Issue.class, view, filter,
                         issueSelectorDialogSettings)
                         .subscribe(issue -> {
                             if (issueDao.trackorKeyExists(issue.getTrackorKey())) {

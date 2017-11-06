@@ -38,9 +38,9 @@ public interface ApiClient {
     Call<List<String>> v3Views(@Path("trackor_type") String trackorType);
 
     @GET("/api/v3/trackor_types/{trackor_type}")
-    Call<List<String>> v3TrackorTypeSpecs(@Path("trackor_type") String trackorType,
-                                          @Query("view") String view,
-                                          @Query("fields") List<String> fields);
+    Call<List<V3TrackorTypeSpec>> v3TrackorTypeSpecs(@Path("trackor_type") String trackorType,
+                                                     @Query("view") String view,
+                                                     @Query("fields") List<String> fields);
 
     @GET("/api/v3/trackor_types/{trackor_type}/trackors")
     Call<List<JsonObject>> v3Trackors(@Path("trackor_type") String trackorType,
@@ -95,6 +95,27 @@ public interface ApiClient {
         public static V3TrackorCreateRequestParents create() {
             return new V3TrackorCreateRequestParents();
         }
+
+    }
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    class V3TrackorTypeSpec {
+
+        @Expose
+        private String name;
+
+        @Expose
+        private String label;
+
+        @Expose
+        @SerializedName("data_type")
+        private String dataType;
+
+        @Expose
+        @SerializedName("mandatory")
+        private boolean isMandatory;
 
     }
 

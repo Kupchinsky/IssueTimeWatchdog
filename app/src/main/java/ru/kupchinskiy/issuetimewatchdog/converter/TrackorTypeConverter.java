@@ -6,10 +6,11 @@ import java.util.List;
 
 import ru.kupchinskiy.issuetimewatchdog.model.Trackor;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorCreateRequest;
+import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorTypeSpec;
 
 public interface TrackorTypeConverter {
 
-    String instanceToString(Trackor trackor);
+    String instanceToString(Trackor trackor, List<V3TrackorTypeSpec> trackorTypeSpecs);
 
     <T extends Trackor> T fromJson(Class<T> typeClass, JsonObject jsonObject);
 

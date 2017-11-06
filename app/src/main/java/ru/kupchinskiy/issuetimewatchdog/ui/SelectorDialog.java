@@ -25,11 +25,14 @@ import roboguice.inject.ContextSingleton;
 import ru.kupchinskiy.issuetimewatchdog.R;
 import ru.kupchinskiy.issuetimewatchdog.converter.TrackorTypeConverter;
 import ru.kupchinskiy.issuetimewatchdog.helper.ApiCallback;
+import ru.kupchinskiy.issuetimewatchdog.helper.ApiClientWithObservables;
 import ru.kupchinskiy.issuetimewatchdog.helper.DialogHelper;
 import ru.kupchinskiy.issuetimewatchdog.helper.SelectorDialogSettings;
 import ru.kupchinskiy.issuetimewatchdog.model.Trackor;
 import ru.kupchinskiy.issuetimewatchdog.services.ApiClient;
+import ru.kupchinskiy.issuetimewatchdog.services.ApiClient.V3TrackorTypeSpec;
 import rx.Observable;
+import rx.Observer;
 
 @ContextSingleton
 public class SelectorDialog {
@@ -45,6 +48,9 @@ public class SelectorDialog {
 
     @Inject
     private DialogHelper dialogHelper;
+
+    @Inject
+    private ApiClientWithObservables apiClientWithObservables;
 
     @Inject
     public SelectorDialog(EventManager eventManager) {
@@ -121,66 +127,79 @@ public class SelectorDialog {
         });
     }
 
-    <T extends Trackor> Observable<T> showTrackorReadSelectByFilter(Class<T> trackorTypeClass,
-                                                                    String view,
-                                                                    String filter,
-                                                                    SelectorDialogSettings<T> dialogSettings) {
-        return Observable.defer(() -> {
-            dialogHelper.showProgressDialog();
+    <T extends Trackor> Observable<T> showTrackorSelector(Class<T> trackorTypeClass,
+                                                          String view,
+                                                          String filter,
+                                                          SelectorDialogSettings<T> dialogSettings) {
+        return Observable.defer(() -> Observable.create(subscriber -> {
+            String trackorTypeName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
+            List<String> fields = view == null ? trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass) : null;
 
-            return Observable.create(subscriber -> {
-                String trackorName = trackorTypeConverter.getTrackorTypeName(trackorTypeClass);
-                List<String> fields = view == null ? trackorTypeConverter.formatTrackorTypeFields(trackorTypeClass) : null;
+            apiClientWithObservables.v3TrackorTypeSpecs(trackorTypeClass, view).subscribe(new Observer<List<V3TrackorTypeSpec>>() {
 
-                Call<List<JsonObject>> call = apiClient.v3Trackors(trackorName, view, fields, filter, Maps.newHashMap());
-                call.enqueue(new ApiCallback<List<JsonObject>>(context) {
+                @Override
+                public void onCompleted() {
+                    dialogHelper.dismissProgressDialog();
+                }
 
-                    @Override
-                    public void onComplete() {
-                        dialogHelper.dismissProgressDialog();
-                    }
+                @Override
+                public void onError(Throwable e) {
+                    subscriber.onCompleted();
+                }
 
-                    @Override
-                    public void onSuccess(Response<List<JsonObject>> response) {
-                        List<JsonObject> list = response.body();
-                        List<T> instanceList = Lists.newArrayList();
-                        List<String> itemsList = Lists.newArrayList();
+                @Override
+                public void onNext(List<V3TrackorTypeSpec> trackorTypeSpecs) {
+                    Call<List<JsonObject>> call = apiClient.v3Trackors(trackorTypeName, view, fields, filter, Maps.newHashMap());
+                    call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
-                        for (JsonObject jsonObject : list) {
-                            T instance = trackorTypeConverter.fromJson(trackorTypeClass, jsonObject);
-                            instanceList.add(instance);
-                            itemsList.add(dialogSettings.getSelectItem(instance));
+                        @Override
+                        public void onComplete() {
+                            dialogHelper.dismissProgressDialog();
                         }
 
-                        TrackorSelectorDialog<String> trackorSelectorDialog = new TrackorSelectorDialog<>(context,
-                                dialogSettings.getSelectTitle(), itemsList);
-                        trackorSelectorDialog.setOnClickListener((dialog, item) -> {
-                            dialog.dismiss();
+                        @Override
+                        public void onSuccess(Response<List<JsonObject>> response) {
+                            List<JsonObject> list = response.body();
+                            List<T> instanceList = Lists.newArrayList();
+                            List<String> itemsList = Lists.newArrayList();
 
-                            T itemInstance = instanceList.get(item);
-
-                            if (dialogSettings.isConfirmable()) {
-                                (new AlertDialog.Builder(context))
-                                        .setTitle("Confirmation")
-                                        .setMessage(dialogSettings.getDetailsMessage(itemInstance))
-                                        .setPositiveButton("Accept", (dialog1, which) -> {
-                                            subscriber.onNext(itemInstance);
-                                            subscriber.onCompleted();
-                                        })
-                                        .setNeutralButton("Back", (dialog1, which) -> trackorSelectorDialog.show())
-                                        .setNegativeButton("Cancel", (dialog1, which) -> subscriber.onCompleted())
-                                        .create().show();
-                            } else {
-                                subscriber.onNext(itemInstance);
-                                subscriber.onCompleted();
+                            for (JsonObject jsonObject : list) {
+                                T instance = trackorTypeConverter.fromJson(trackorTypeClass, jsonObject);
+                                instanceList.add(instance);
+                                itemsList.add(dialogSettings.getSelectItem(instance));
                             }
-                        });
-                        trackorSelectorDialog.show();
-                    }
 
-                });
+                            TrackorSelectorDialog<String> trackorSelectorDialog = new TrackorSelectorDialog<>(context,
+                                    dialogSettings.getSelectTitle(), itemsList);
+                            trackorSelectorDialog.setOnClickListener((dialog, item) -> {
+                                dialog.dismiss();
+
+                                T itemInstance = instanceList.get(item);
+
+                                if (dialogSettings.isConfirmable()) {
+                                    (new AlertDialog.Builder(context))
+                                            .setTitle("Confirmation")
+                                            .setMessage(dialogSettings.getDetailsMessage(itemInstance, trackorTypeSpecs))
+                                            .setPositiveButton("Accept", (dialog1, which) -> {
+                                                subscriber.onNext(itemInstance);
+                                                subscriber.onCompleted();
+                                            })
+                                            .setNeutralButton("Back", (dialog1, which) -> trackorSelectorDialog.show())
+                                            .setNegativeButton("Cancel", (dialog1, which) -> subscriber.onCompleted())
+                                            .create().show();
+                                } else {
+                                    subscriber.onNext(itemInstance);
+                                    subscriber.onCompleted();
+                                }
+                            });
+                            trackorSelectorDialog.show();
+                        }
+
+                    });
+                }
+
             });
-        });
+        }));
     }
 
     private class TrackorSelectorDialog<T> extends Dialog {
