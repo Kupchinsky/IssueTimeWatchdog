@@ -4,9 +4,9 @@ import android.content.Context;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +34,7 @@ public class TimeRecordLogHelper {
     private List<TimeUnit> historyFormatTimeUnits = Arrays.asList(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS);
 
     public void showForTimeRecord(TimeRecord timeRecord) {
-        List<String> messageList = Lists.newArrayList();
+        List<String> messageList = new ArrayList<>();
 
         TimeRecordLog timeRecordLogNext = null;
         for (TimeRecordLog timeRecordLog : timeRecordLogDao.queryOfTimeRecordList(timeRecord)) {

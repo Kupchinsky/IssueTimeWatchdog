@@ -1,9 +1,8 @@
 package ru.kupchinskiy.issuetimewatchdog.helper;
 
-import com.google.common.collect.Maps;
-
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +33,7 @@ public class MyDateUtils {
     private static Map<TimeUnit, Long> computeDiff(Date date1, Date date2, List<TimeUnit> units) {
         long diffInMillies = date2.getTime() - date1.getTime();
 
-        Map<TimeUnit, Long> result = Maps.newLinkedHashMap();
+        Map<TimeUnit, Long> result = new LinkedHashMap<>();
 
         long milliesRest = diffInMillies;
 

@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -19,6 +18,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -115,7 +115,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
     @Override
     public String instanceToString(Trackor trackor, @NonNull List<V3TrackorTypeSpec> trackorTypeSpecs) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         for (Field field : trackor.getClass().getDeclaredFields()) {
             if (!field.isAnnotationPresent(SerializedName.class)) {
@@ -127,12 +127,12 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
             try {
                 Object value = field.get(trackor);
-                result += fieldName + ": " + (value != null ? value.toString() : "[empty]") + "\n";
+                result.append(fieldName).append(": ").append(value != null ? value.toString() : "[empty]").append("\n");
             } catch (IllegalAccessException ignored) {
             }
         }
 
-        return result;
+        return result.toString();
     }
 
     @Override
@@ -180,7 +180,7 @@ public class TrackorTypeConverterImpl implements TrackorTypeConverter {
 
     @Override
     public <T extends Trackor> List<String> formatTrackorTypeFields(Class<T> typeClass) {
-        List<String> result = Lists.newArrayList();
+        List<String> result = new ArrayList<>();
 
         for (Field field : typeClass.getDeclaredFields()) {
             if (!field.isAnnotationPresent(SerializedName.class)) {

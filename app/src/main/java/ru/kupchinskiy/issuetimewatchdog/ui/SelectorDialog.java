@@ -9,11 +9,11 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import lombok.Setter;
@@ -149,7 +149,7 @@ public class SelectorDialog {
 
                 @Override
                 public void onNext(List<V3TrackorTypeSpec> trackorTypeSpecs) {
-                    Call<List<JsonObject>> call = apiClient.v3Trackors(trackorTypeName, view, fields, filter, Maps.newHashMap());
+                    Call<List<JsonObject>> call = apiClient.v3Trackors(trackorTypeName, view, fields, filter, new HashMap<>());
                     call.enqueue(new ApiCallback<List<JsonObject>>(context) {
 
                         @Override
@@ -160,8 +160,8 @@ public class SelectorDialog {
                         @Override
                         public void onSuccess(Response<List<JsonObject>> response) {
                             List<JsonObject> list = response.body();
-                            List<T> instanceList = Lists.newArrayList();
-                            List<String> itemsList = Lists.newArrayList();
+                            List<T> instanceList = new ArrayList<>();
+                            List<String> itemsList = new ArrayList<>();
 
                             for (JsonObject jsonObject : list) {
                                 T instance = trackorTypeConverter.fromJson(trackorTypeClass, jsonObject);

@@ -10,11 +10,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class MainActivity extends RoboAppCompatActivity implements View.OnClickL
     public static final String EXTRA_ISSUE_ID = "issueId";
     public static final String EXTRA_ERROR = "error";
 
-    private final List<Issue> items = Lists.newArrayList();
+    private final List<Issue> items = new ArrayList<>();
     private MainActivityIssueEntryAdapter listAdapter;
 
     @Inject

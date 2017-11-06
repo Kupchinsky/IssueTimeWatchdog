@@ -9,8 +9,6 @@ import android.net.Uri;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 
@@ -18,6 +16,8 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -107,7 +107,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
                 throw new IllegalStateException("Create failed");
             }
         } else {
-            Map<String, String> filterParams = Maps.newHashMap();
+            Map<String, String> filterParams = new HashMap<>();
             filterParams.put("TRACKOR_ID", String.valueOf(timeRecord.getRemoteTrackorId()));
 
             // Check time changed
@@ -162,7 +162,7 @@ public class UploadTimeRecordsService extends RoboIntentService {
 
         // If issue is in working state: skip first time record
         if (IssueState.Working.equals(issue.getState())) {
-            timeRecordList = Lists.newArrayList(timeRecordList);
+            timeRecordList = new ArrayList<>(timeRecordList);
             timeRecordList.remove(0);
         }
 

@@ -1,11 +1,11 @@
 package ru.kupchinskiy.issuetimewatchdog.services;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,10 +65,10 @@ public interface ApiClient {
     class V3TrackorCreateRequest {
 
         @Expose
-        private Map<String, String> fields = Maps.newHashMap();
+        private Map<String, String> fields = new HashMap<>();
 
         @Expose
-        private List<V3TrackorCreateRequestParents> parents = Lists.newArrayList();
+        private List<V3TrackorCreateRequestParents> parents = new ArrayList<>();
 
     }
 
@@ -80,7 +80,7 @@ public interface ApiClient {
         private String trackorType;
 
         @Expose
-        private Map<String, String> filter = Maps.newHashMap();
+        private Map<String, String> filter = new HashMap<>();
 
         public V3TrackorCreateRequestParents addFilter(String configField, String value) {
             filter.put(configField, value);
